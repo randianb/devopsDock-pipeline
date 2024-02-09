@@ -1,8 +1,7 @@
 version: '3.9'
 
 networks:
-  default:
-    name: nexus-network
+  nexus-network:
     driver: bridge
 
 services:
