@@ -102,7 +102,7 @@ services:
       - nexus-network
 
   gitlab:
-    image: ${GITLAB_IMAG}
+    image: ${GITLAB_IMAGE}
     container_name: gitlab
     restart: always
     labels:
