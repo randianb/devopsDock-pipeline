@@ -113,9 +113,9 @@ services:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://${GITLAB_HOSTNAME}'
     volumes:
-      - '${GITLAB_HOME}/config:/etc/gitlab'
-      - '${GITLAB_HOME}/logs:/var/log/gitlab'
-      - '${GITLAB_HOME}/data:/var/opt/gitlab'
+      - '${GITLAB_HOME}:/etc/gitlab'
+      - '${GITLAB_HOME}:/var/log/gitlab'
+      - '${GITLAB_HOME}:/var/opt/gitlab'
     networks:
       - nexus-network
   gitlab-runner:
@@ -126,6 +126,6 @@ services:
       - gitlab
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - '${GITLAB_HOME}/gitlab-runner:/etc/gitlab-runner'
+      - '${GITLAB_HOME}:/etc/gitlab-runner'
     networks:
       - nexus-network
