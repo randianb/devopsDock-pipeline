@@ -1,0 +1,121 @@
+version: '3.9'
+
+networks:
+  default:
+    name: nexus-network
+    driver: bridge
+
+services:
+  nexus:
+    image: ${NEXUS_IMAGE}
+    container_name: nexus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus.rule=Host(`${NEXUS_HOSTNAME}`)"
+      - "traefik.http.services.nexus.loadbalancer.server.port=${NEXUS_PORT}"
+    networks:
+      - nexus-network
+    volumes:
+      - "${NEXUS_VOLUME}:/var/lib/nexus"
+
+  jenkins:
+    image: ${JENKINS_IMAGE}
+    container_name: jenkins
+    privileged: true
+    user: root
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`)"
+      - "traefik.http.services.jenkins.loadbalancer.server.port=${JENKINS_PORT}"
+    volumes:
+      - "${JENKINS_VOLUME}:/var/jenkins_home"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - nexus-network
+
+  sonarqube:
+    image: ${SONARQUBE_IMAGE}
+    container_name: sonarqube
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`)"
+      - "traefik.http.services.sonarqube.loadbalancer.server.port=${SONARQUBE_PORT}"
+    networks:
+      - nexus-network
+    depends_on:
+      - sonardb
+    links:
+      - sonardb
+    environment:
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/${POSTGRES_DB}
+      - SONARQUBE_JDBC_USERNAME=${POSTGRES_USER}
+      - SONARQUBE_JDBC_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - "${SONARQUBE_VOLUME}:/var/lib/sonar"
+
+  sonardb:
+    networks:
+      - nexus-network
+    image: ${POSTGRES_IMAGE}
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - "${POSTGRES_VOLUME}:/var/lib/postgresql"
+
+  traefik:
+    image: ${TRAEFIK_IMAGE}
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "${TRAEFIK_PORT}:80"
+      - "8080:8080"  # Traefik Dashboard
+    networks:
+      - nexus-network
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+
+  pgadmin:
+    image: ${PGADMIN_IMAGE}
+    container_name: pgadmin
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`${PGADMIN_HOSTNAME}`)"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=sonarqube-devops.com"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      - sonardb
+    networks:
+      - nexus-network
+
+  gitlab:
+    image: ${GITLAB_IMAG}
+    container_name: gitlab
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+    environment:
+      - GITLAB_OMNIBUS_CONFIG= |
+          external_url 'http://${GITLAB_HOSTNAME}'
+    ports:
+      - "${GITLAB_PORT}:80"
+    networks:
+      - nexus-network
