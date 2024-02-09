@@ -93,12 +93,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pgadmin.rule=Host(`${PGADMIN_HOSTNAME}`)"
-      - "traefik.http.services.pgadmin.loadbalancer.server.port=sonarqube-devops.com"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=${PGADMIN_PORT}"
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - "${PGADMIN_PORT}:80"
     depends_on:
       - sonardb
     networks:
@@ -111,11 +109,24 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)"
-      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=${GITLAB_PORT}"
     environment:
-      - GITLAB_OMNIBUS_CONFIG= |
-          external_url 'http://${GITLAB_HOSTNAME}'
-    ports:
-      - "${GITLAB_PORT}:80"
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://${GITLAB_HOSTNAME}'
+    volumes:
+      - '${GITLAB_HOME}/config:/etc/gitlab'
+      - '${GITLAB_HOME}/logs:/var/log/gitlab'
+      - '${GITLAB_HOME}/data:/var/opt/gitlab'
+    networks:
+      - nexus-network
+  gitlab-runner:
+    image: ${GITLAB_RUNNER_IMAG}
+    container_name: gitlab-runner    
+    restart: always
+    depends_on:
+      - gitlab
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - '${GITLAB_HOME}/gitlab-runner:/etc/gitlab-runner'
     networks:
       - nexus-network
