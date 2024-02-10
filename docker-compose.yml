@@ -71,9 +71,10 @@ services:
     depends_on:
       - postgres
     environment:
-      SONAR_JDBC_URL: postgresql://postgres:5432/${POSTGRES_DB}
-      SONAR_JDBC_USERNAME: ${POSTGRES_USER}
-      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - SONARQUBE_JDBC_USERNAME=${POSTGRES_USER}
+      - SONARQUBE_JDBC_PASSWORD=${POSTGRES_PASSWORD}
+
     volumes:
       - sonar-data:/opt/sonarqube/data
       - sonar-extensions:/opt/sonarqube/extensions
@@ -144,6 +145,7 @@ services:
     networks:
       - devops-network
     volumes:
+      - ./traefik.yaml:/etc/traefik/traefik.yaml
       - ./data/letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -173,14 +175,14 @@ services:
     image: ${GITLAB_IMAGE}
     container_name: gitlab
     restart: always
-    hostname: 'gitlab.example.com'
+    hostname: 'gitlab-devops.com'
     volumes:
       - gitlab-data:/var/opt/gitlab
       - gitlab-logs:/var/log/gitlab
       - gitlab-config:/etc/gitlab
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url '${GITLAB_HOSTNAME}:${GITLAB_PORT}'
+        external_url 'http://gitlab-devops.com:8929'
         gitlab_rails['gitlab_shell_ssh_port'] = 2424
     ports:
       - "${GITLAB_PORT}:${GITLAB_PORT}"

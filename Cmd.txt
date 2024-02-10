@@ -1,6 +1,12 @@
+==================================== Jenkins  ====================================
+
 docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ss -antpl | grep docker
-docker exec -it gitlab-ce grep 'Password:' /etc/gitlab/initial_root_password
+
+===================== GitLab Enterprise Edition ===================================
+
+username: root
+password: docker exec -it <gitlab_container_id> grep 'Password:' /etc/gitlab/initial_root_password
 
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres
 

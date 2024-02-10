@@ -1,0 +1,16 @@
+# traefik.yaml
+
+entryPoints:
+  http:
+    address: ":8082"
+
+  https:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "traefik@devops.com"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: "http"
