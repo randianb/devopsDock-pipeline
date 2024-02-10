@@ -21,15 +21,17 @@ services:
     user: root
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nexus.rule=Host(`${NEXUS_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.nexus.rule=Host(`${NEXUS_HOSTNAME}`)"
       - "traefik.http.routers.nexus.entrypoints=web"
-      - "traefik.http.services.nexus.loadbalancer.server.port=${NEXUS_PORT}"
+      - "traefik.http.services.nexus.loadbalancer.server.port=80"
     ports:
-      - "${NEXUS_PORT}:${NEXUS_PORT}"
+      - "8085:8085"
     networks:
       - devops-network
     volumes:
       - nexus:/var/lib/nexus
+    cap_add:
+      - NET_BIND_SERVICE
 
   jenkins:
     image: ${JENKINS_IMAGE}
@@ -38,11 +40,11 @@ services:
     user: root
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`)"
       - "traefik.http.routers.jenkins.entrypoints=web"
-      - "traefik.http.services.jenkins.loadbalancer.server.port=${JENKINS_PORT}"
+      - "traefik.http.services.jenkins.loadbalancer.server.port=80"
     ports:
-      - "${JENKINS_PORT}:${JENKINS_PORT}"
+      - "8080:8080"
     volumes:
       - jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
@@ -55,7 +57,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`)"
       - "traefik.http.routers.jenkins.entrypoints=web"
       - "traefik.http.services.sonarqube.loadbalancer.server.port=${SONARQUBE_PORT}"
     ports:
@@ -144,39 +146,3 @@ services:
       - postgres
     networks:
       - devops-network
-
-  gitlab:
-    image: ${GITLAB_IMAGE}
-    container_name: gitlab
-    volumes:
-      - gitlab-data:/var/opt/gitlab
-      - gitlab-logs:/var/log/gitlab
-      - gitlab-config:/etc/gitlab
-    shm_size: "256m"
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://${GITLAB_HOSTNAME}'
-    ports:
-      - "${GITLAB_PORT}:${GITLAB_PORT}"
-    networks:
-      - devops-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)"
-      - "traefik.http.routers.jenkins.entrypoints=web"
-      - "traefik.http.services.gitlab.loadbalancer.server.port=${GITLAB_PORT}"
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  gitlab-runner:
-    image: ${GITLAB_RUNNER_IMAGE} # Fix typo here
-    volumes:
-      - gitlab-runner-config:/etc/gitlab-runner
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - devops-network
-    depends_on:
-      - gitlab
-    restart: unless-stopped
