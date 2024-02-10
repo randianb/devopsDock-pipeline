@@ -20,10 +20,12 @@ services:
     volumes:
       - "nexus-data:/sonatype-work"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nexus.rule=Host(`nexus-devops.com`)"
-      - "traefik.http.routers.nexus.entrypoints=web"
-      - "traefik.http.services.nexus.loadbalancer.server.port=${NEXUS_PORT}" # Adjust port as needed
+      - traefik.enable=true
+      - traefik.http.routers.nexus.rule=Host(`nexus-devops.com`)
+      - traefik.http.routers.nexus.entrypoints=https
+      - traefik.http.services.nexus.loadbalancer.server.port=${NEXUS_PORT} # Adjust port as needed
+      - traefik.http.routers.https.tls=true
+      - traefik.http.routers.https.tls.certresolver=${CERT_RESOLVER} 
     ports:
       - "${NEXUS_PORT}:${NEXUS_PORT}"
     networks:
@@ -35,10 +37,12 @@ services:
     privileged: true
     user: root
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`)"
-      - "traefik.http.routers.jenkins.entrypoints=web"
-      - "traefik.http.services.jenkins.loadbalancer.server.port=${JENKINS_PORT}"
+      - traefik.enable=true
+      - traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`)
+      - traefik.http.services.jenkins.loadbalancer.server.port=${JENKINS_PORT}
+      - traefik.http.routers.jenkins.entrypoints=https
+      - traefik.http.routers.https.tls=true
+      - traefik.http.routers.https.tls.certresolver=${CERT_RESOLVER}
     ports:
       - "8080:8080"
     volumes:
@@ -52,10 +56,12 @@ services:
     container_name: sonarqube
     restart: always
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`)"
-      - "traefik.http.routers.jenkins.entrypoints=web"
-      - "traefik.http.services.sonarqube.loadbalancer.server.port=${SONARQUBE_PORT}"
+      - traefik.enable=true
+      - traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`)
+      - traefik.http.routers.sonarqube.entrypoints=https
+      - traefik.http.services.sonarqube.loadbalancer.server.port=${SONARQUBE_PORT}
+      - traefik.http.routers.https.tls=true
+      - traefik.http.routers.https.tls.certresolver=${CERT_RESOLVER}
     ports:
       - "${SONARQUBE_PORT}:${SONARQUBE_PORT}"
     networks:
@@ -96,17 +102,39 @@ services:
     image: ${TRAEFIK_IMAGE}
     container_name: traefik
     command:
-      - "--log.level=${TRAEFIK_LOG_LEVEL}"
-      - "--accesslog=true"
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--ping=true"
-      - "--ping.entrypoint=ping"
-      - "--entryPoints.web.address=:80"
-      - "--entryPoints.websecure.address=:443"
-      - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
-      - "--providers.docker.exposedByDefault=false"
+      - --log.level=${TRAEFIK_LOG_LEVEL}
+      - --api=true
+      - --accesslog=true
+      - --api.dashboard=true
+      - --ping=true
+      - --ping.entrypoint=ping
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedByDefault=false
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+      - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)
+      - traefik.http.routers.to-https.entrypoints=http
+      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.to-https.middlewares=to-https
+      - traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)
+      - traefik.http.routers.traefik.middlewares=auth
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.routers.dashboard.entrypoints=https
+      - traefik.http.services.dashboard.loadbalancer.server.port=8082
+      - traefik.http.routers.http-catchall.entrypoints=https
+      - traefik.http.routers.http-catchall.middlewares=redirect-to-https
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_PASSWORD_HASH}
     ports:
       - "80:80"
       - "443:443"
@@ -114,27 +142,21 @@ services:
     networks:
       - devops-network
     volumes:
+      - ./data/letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=8082"
-      - "traefik.http.routers.http-catchall.entrypoints=web"
-      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-
+      
   pgadmin:
     image: ${PGADMIN_IMAGE}
     container_name: pgadmin
     restart: always
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin.rule=Host(`${PGADMIN_HOSTNAME}`)"
-      - "traefik.http.routers.pgadmin.entrypoints=web"
-      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - traefik.enable=true
+      - traefik.http.routers.pgadmin.rule=Host(`${PGADMIN_HOSTNAME}`)
+      - traefik.http.routers.pgadmin.entrypoints=https
+      - traefik.http.services.pgadmin.loadbalancer.server.port=80
+      - traefik.http.routers.gitlab.entrypoints=https
+      - traefik.http.routers.https.tls=true
+      - traefik.http.routers.https.tls.certresolver=${CERT_RESOLVER}
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
@@ -165,10 +187,12 @@ services:
     networks:
       - devops-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)"
-      - "traefik.http.routers.jenkins.entrypoints=web"
-      - "traefik.http.services.gitlab.loadbalancer.server.port=${GITLAB_PORT}"
+      - traefik.enable=true
+      - traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)
+      - traefik.http.services.gitlab.loadbalancer.server.port=${GITLAB_PORT}
+      - traefik.http.routers.gitlab.entrypoints=https
+      - traefik.http.routers.https.tls=true
+      - traefik.http.routers.https.tls.certresolver=${CERT_RESOLVER}
     depends_on:
       postgres:
         condition: service_healthy
