@@ -4,15 +4,14 @@ networks:
   devops-network:  
 
 volumes:
-  jenkins:
-  nexus:
-  sonarqube:
-  gitlab-data:
-  gitlab-logs:
-  gitlab-config:
-  gitlab-runner-config:
-  postgres:
-
+  jenkins: {}
+  nexus: {}
+  sonarqube: {}
+  gitlab-data: {}
+  gitlab-logs: {}
+  gitlab-config: {}
+  gitlab-runner-config: {}
+  postgres: {}
 
 services:
   nexus:
@@ -22,14 +21,15 @@ services:
     user: root
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nexus.rule=Host(`${NEXUS_HOSTNAME}`)"
-      - "traefik.http.services.nexus.loadbalancer.server.port=80"
+      - "traefik.http.routers.nexus.rule=Host(`${NEXUS_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.nexus.entrypoints=web"
+      - "traefik.http.services.nexus.loadbalancer.server.port=${NEXUS_PORT}"
     ports:
-      - "${NEXUS_PORT}:80"
+      - "${NEXUS_PORT}:${NEXUS_PORT}"
     networks:
       - devops-network
     volumes:
-      - "nexus:/var/lib/nexus"
+      - nexus:/var/lib/nexus
 
   jenkins:
     image: ${JENKINS_IMAGE}
@@ -38,11 +38,14 @@ services:
     user: root
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`)"
+      - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.jenkins.entrypoints=web"
       - "traefik.http.services.jenkins.loadbalancer.server.port=${JENKINS_PORT}"
+    ports:
+      - "${JENKINS_PORT}:${JENKINS_PORT}"
     volumes:
-      - "jenkins:/var/jenkins_home"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - devops-network
 
@@ -52,20 +55,21 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`)"
+      - "traefik.http.routers.sonarqube.rule=Host(`${SONARQUBE_HOSTNAME}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.jenkins.entrypoints=web"
       - "traefik.http.services.sonarqube.loadbalancer.server.port=${SONARQUBE_PORT}"
+    ports:
+      - "${SONARQUBE_PORT}:${SONARQUBE_PORT}"
     networks:
       - devops-network
     depends_on:
-      - postgres
-    links:
       - postgres
     environment:
       - SONARQUBE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - SONARQUBE_JDBC_USERNAME=${POSTGRES_USER}
       - SONARQUBE_JDBC_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - "sonarqube:/var/lib/sonar"
+      - sonarqube:/var/lib/sonar
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -77,12 +81,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "postgres:/var/lib/postgresql"
+      - postgres:/var/lib/postgresql
     restart: unless-stopped
     networks:
       - devops-network
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -q -d ${POSTGRES_DB} -U ${POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -91,13 +95,36 @@ services:
   traefik:
     image: ${TRAEFIK_IMAGE}
     container_name: traefik
-    command: --api.insecure=true --providers.docker
+    command:
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
+      - "--accesslog=true"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--ping=true"
+      - "--ping.entrypoint=ping"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
     ports:
-      - "${TRAEFIK_PORT}:80"  # Traefik Dashboard
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik Dashboard
     networks:
       - devops-network
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
   pgadmin:
     image: ${PGADMIN_IMAGE}
@@ -106,12 +133,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pgadmin.rule=Host(`${PGADMIN_HOSTNAME}`)"
-      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - "traefik.http.routers.jenkins.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=5050"
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "5050:80"
+      - "5050:5050"
     depends_on:
       - postgres
     networks:
@@ -128,20 +156,22 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://${GITLAB_HOSTNAME}'
+    ports:
+      - "${GITLAB_PORT}:${GITLAB_PORT}"
     networks:
       - devops-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_HOSTNAME}`)"
+      - "traefik.http.routers.jenkins.entrypoints=web"
       - "traefik.http.services.gitlab.loadbalancer.server.port=${GITLAB_PORT}"
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
 
-
   gitlab-runner:
-    image: ${GITLAB_RUNNER_IMAG}
+    image: ${GITLAB_RUNNER_IMAGE} # Fix typo here
     volumes:
       - gitlab-runner-config:/etc/gitlab-runner
       - /var/run/docker.sock:/var/run/docker.sock
