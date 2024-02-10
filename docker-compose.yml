@@ -110,7 +110,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  # Traefik Dashboard
+      - "8081:8081"  # Traefik Dashboard
     networks:
       - devops-network
     volumes:
@@ -121,7 +121,7 @@ services:
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8081"
       - "traefik.http.routers.http-catchall.entrypoints=web"
       - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
