@@ -6,7 +6,7 @@ networks:
 volumes:
   jenkins: {}
   nexus-data: {}
-  sonarqube: {}
+  sonar-data: {}
   gitlab-data: {}
   gitlab-logs: {}
   gitlab-config: {}
@@ -67,7 +67,9 @@ services:
       SONAR_JDBC_USERNAME: ${POSTGRES_USER}
       SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - sonarqube:/var/lib/sonar
+      - sonar-data/data:/opt/sonarqube/data
+      - sonar-data/extensions:/opt/sonarqube/extensions
+      - sonar-data/logs:/opt/sonarqube/logs
 
   postgres:
     image: ${POSTGRES_IMAGE}
