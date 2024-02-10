@@ -184,7 +184,6 @@ services:
         gitlab_rails['gitlab_shell_ssh_port'] = 2424
     ports:
       - "${GITLAB_PORT}:${GITLAB_PORT}"
-      - '443:443'
       - '2424:2424'
     networks:
       - devops-network
