@@ -13,7 +13,6 @@ services:
       - "traefik.http.services.nexus.loadbalancer.server.port=8081" # Adjust port as needed
     ports:
       - "8081:8081"
-      - "8085:8085"
     networks:
       - devops-network
 
