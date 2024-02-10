@@ -63,9 +63,9 @@ services:
     depends_on:
       - postgres
     environment:
-      - SONARQUBE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      - SONARQUBE_JDBC_USERNAME=${POSTGRES_USER}
-      - SONARQUBE_JDBC_PASSWORD=${POSTGRES_PASSWORD}
+      SONAR_JDBC_URL: postgresql://postgres:5432/${POSTGRES_DB}
+      SONAR_JDBC_USERNAME: ${POSTGRES_USER}
+      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - sonarqube:/var/lib/sonar
 
