@@ -7,6 +7,8 @@ volumes:
   jenkins: {}
   nexus-data: {}
   sonar-data: {}
+  sonar-extensions: {}
+  sonar-logs: {}
   gitlab-data: {}
   gitlab-logs: {}
   gitlab-config: {}
@@ -73,9 +75,9 @@ services:
       SONAR_JDBC_USERNAME: ${POSTGRES_USER}
       SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - sonar-data/data:/opt/sonarqube/data
-      - sonar-data/extensions:/opt/sonarqube/extensions
-      - sonar-data/logs:/opt/sonarqube/logs
+      - sonar-data:/opt/sonarqube/data
+      - sonar-extensions:/opt/sonarqube/extensions
+      - sonar-logs:/opt/sonarqube/logs
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -144,7 +146,7 @@ services:
     volumes:
       - ./data/letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      
+
   pgadmin:
     image: ${PGADMIN_IMAGE}
     container_name: pgadmin
