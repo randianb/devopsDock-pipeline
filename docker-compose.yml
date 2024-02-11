@@ -71,10 +71,9 @@ services:
     depends_on:
       - postgres
     environment:
-      - SONARQUBE_JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
       - SONARQUBE_JDBC_USERNAME=${POSTGRES_USER}
       - SONARQUBE_JDBC_PASSWORD=${POSTGRES_PASSWORD}
-
     volumes:
       - sonar-data:/opt/sonarqube/data
       - sonar-extensions:/opt/sonarqube/extensions
@@ -109,17 +108,15 @@ services:
       - --api=true
       - --accesslog=true
       - --api.dashboard=true
-      - --ping=true
-      - --ping.entrypoint=ping
-      - --entrypoints.http.address=:80
+      - --configFile=./traefik.yaml
+      - --entrypoints.http.address=:8082
       - --entrypoints.https.address=:443
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
-      - --providers.docker.exposedByDefault=false
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
       - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.storage=/data/letsencrypt/acme.json
     labels:
       - traefik.enable=true
       - traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)
@@ -144,8 +141,7 @@ services:
       - "8082:8082"  # Traefik Dashboard
     networks:
       - devops-network
-    volumes:
-      - ./traefik.yaml:/etc/traefik/traefik.yaml
+    volumes:     
       - ./data/letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
