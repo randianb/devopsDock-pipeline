@@ -64,7 +64,8 @@ The Docker Compose configuration includes the following services:
 5. Visit Traefik Dashboard at `http://traefik-devops.com:8082` for monitoring and management.
 
 
-To start the cluster, run the following command:
+To stop the cluster, run the following command:
+
 ```bash
 docker-compose down
 ```
