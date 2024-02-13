@@ -101,49 +101,43 @@ services:
       start_period: 60s
 
   traefik:
-    image: ${TRAEFIK_IMAGE}
-    container_name: traefik
-    command:
-      - --log.level=${TRAEFIK_LOG_LEVEL}
-      - --api=true
-      - --accesslog=true
-      - --api.dashboard=true
-      - --configFile=./traefik.yaml
-      - --entrypoints.http.address=:8082
-      - --entrypoints.https.address=:443
-      - --providers.docker=true
-      - --providers.docker.endpoint=unix:///var/run/docker.sock
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
-      - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/data/letsencrypt/acme.json
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)
-      - traefik.http.routers.to-https.entrypoints=http
-      - traefik.http.routers.traefik.entrypoints=https
-      - traefik.http.routers.to-https.middlewares=to-https
-      - traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)
-      - traefik.http.routers.traefik.middlewares=auth
-      - traefik.http.routers.traefik.tls=true
-      - traefik.http.routers.traefik.tls.certresolver=${CERT_RESOLVER}
-      - traefik.http.routers.dashboard.service=api@internal
-      - traefik.http.routers.dashboard.entrypoints=https
-      - traefik.http.services.dashboard.loadbalancer.server.port=8082
-      - traefik.http.routers.http-catchall.entrypoints=https
-      - traefik.http.routers.http-catchall.middlewares=redirect-to-https
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - traefik.http.middlewares.to-https.redirectscheme.scheme=https
-      - traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_PASSWORD_HASH}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8082:8082"  # Traefik Dashboard
-    networks:
-      - devops-network
-    volumes:     
-      - ./data/letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      image: ${TRAEFIK_IMAGE}
+      container_name: traefik
+      command:
+        - --log.level=${TRAEFIK_LOG_LEVEL}
+        - --api=true
+        - --accesslog=true
+        - --api.insecure=true
+        - --api.dashboard=true
+        - --entrypoints.web.address=:8082
+        - --entrypoints.websecure.address=:443
+        - --providers.docker=true
+        - --providers.docker.endpoint=unix:///var/run/docker.sock
+        - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+        - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+        - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
+        - --certificatesresolvers.letsencrypt.acme.storage=./data/letsencrypt/acme.json
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.traefik.rule=Host(`${TRAEFIK_HOSTNAME}`)
+        - traefik.http.routers.traefik.entrypoints=websecure
+        - traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)
+        - traefik.http.routers.dashboard.entrypoints=websecure
+        - traefik.http.routers.dashboard.service=api@internal
+        - traefik.http.services.dashboard.loadbalancer.server.port=8082
+        - traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)
+        - traefik.http.routers.to-https.entrypoints=web
+        - traefik.http.middlewares.to-https.redirectscheme.scheme=https
+        - traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_PASSWORD_HASH}
+      ports:
+        - "80:80"
+        - "443:443"
+        - "8082:8082"  # Traefik Dashboard
+      networks:
+        - devops-network
+      volumes:     
+        - ./data/letsencrypt:/letsencrypt
+        - /var/run/docker.sock:/var/run/docker.sock:ro
 
   pgadmin:
     image: ${PGADMIN_IMAGE}

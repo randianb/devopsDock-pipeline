@@ -11,4 +11,5 @@ password: docker exec -it <gitlab_container_id> grep 'Password:' /etc/gitlab/ini
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres
 
 
+docker exec -it <nexus_container_id> cat /nexus-data/admin.password
 
