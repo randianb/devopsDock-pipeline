@@ -116,7 +116,7 @@ services:
         - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
         - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
         - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
-        - --certificatesresolvers.letsencrypt.acme.storage=./data/letsencrypt/acme.json
+        - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       labels:
         - traefik.enable=true
         - traefik.http.routers.traefik.rule=Host(`${TRAEFIK_HOSTNAME}`)
@@ -136,7 +136,7 @@ services:
       networks:
         - devops-network
       volumes:     
-        - ./data/letsencrypt:/letsencrypt
+        - ./letsencrypt:/letsencrypt
         - /var/run/docker.sock:/var/run/docker.sock:ro
 
   pgadmin:
