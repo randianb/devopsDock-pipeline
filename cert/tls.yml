@@ -1,0 +1,11 @@
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /home/devops/data/certificates/cer.crt
+        keyFile: /home/devops/data/certificates/key.key
+  certificates:
+    - certFile: /home/devops/data/certificates/cer.crt
+      keyFile: /home/devops/data/certificates/key.key
+      stores:
+        - default

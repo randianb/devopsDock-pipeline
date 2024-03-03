@@ -13,3 +13,5 @@ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pos
 
 docker exec -it <nexus_container_id> cat /nexus-data/admin.password
 
+openssl req -x509 -newkey rsa:2048 -keyout /home/appuser/data/certificates/key.key -out /home/appuser/data/certificates/cer.crt -days 3560 -nodes -subj "/C=DE/ST=Bavarian/L=Muenich/O=cicd/CN=cicd.frickeldave"
+
