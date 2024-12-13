@@ -111,3 +111,15 @@ def send_email_alert(log_line):
         logging.error(f"Failed to send email alert: {e}")
         logging.debug(f"Traceback:\n{traceback.format_exc()}")
         print(f"Error: Failed to send email alert. Check logs for details.")
+
+
+####
+ERROR 
+2024-12-13 10:38:57,037 - ERROR - Failed to send email alert: (554, b'irpapptig601ret.hermes.si.socgen')
+2024-12-13 10:38:57,040 - DEBUG - Traceback:
+Traceback (most recent call last):
+  File "/home/cloud-user/logMonitor.py", line 39, in send_email_alert
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+  File "/usr/lib64/python3.9/smtplib.py", line 258, in __init__
+    raise SMTPConnectError(code, msg)
+smtplib.SMTPConnectError: (554, b'irpapptig601ret.hermes.si.socgen')
