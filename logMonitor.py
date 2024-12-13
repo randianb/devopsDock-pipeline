@@ -87,16 +87,32 @@ if __name__ == "__main__":
         print("\nStopping log file monitoring.")
 
 
+###Fix
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_email_alert(log_line):
+    """Send an email alert when an error is detected."""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_SENDER
+        msg['To'] = EMAIL_RECEIVER
+        msg['Subject'] = "ALERT: Error Detected in Log File"
+        body = f"The following error was detected in the log file:\n\n{log_line}"
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Connect without encryption for port 25
+        with smtplib.SMTP(SMTP_SERVER, 25) as server:
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+        logging.info(f"Email alert sent to {EMAIL_RECEIVER}")
+    except Exception as e:
+        logging.error(f"Failed to send email alert: {e}")
+        logging.debug(f"Traceback:\n{traceback.format_exc()}")
+        print(f"Error: Failed to send email alert. Check logs for details.")
+
 
 
 ####
 ERROR 
-2024-12-13 10:55:32,184 - INFO - Preparing to send email alert.
-2024-12-13 10:55:32,234 - ERROR - Failed to send email alert: STARTTLS extension not supported by server.
-2024-12-13 10:55:32,234 - DEBUG - Traceback:
-Traceback (most recent call last):
-  File "/home/cloud-user/logMonitor.py", line 40, in send_email_alert
-    server.starttls()
-  File "/usr/lib64/python3.9/smtplib.py", line 771, in starttls
-    raise SMTPNotSupportedError(
-smtplib.SMTPNotSupportedError: STARTTLS extension not supported by server.
