@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
+import traceback
 
 # Configuration
 LOG_FILE_PATH = "/var/log/application.log"  # Path to monitor
@@ -84,3 +85,29 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logging.info("Log monitoring stopped by user.")
         print("\nStopping log file monitoring.")
+
+
+######import traceback
+
+def send_email_alert(log_line):
+    """Send an email alert when an error is detected."""
+    logging.info("Preparing to send email alert.")
+    try:
+        # Create the email message
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_SENDER
+        msg['To'] = EMAIL_RECEIVER
+        msg['Subject'] = "ALERT: Error Detected in Log File"
+        body = f"The following error was detected in the log file:\n\n{log_line}"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send the email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+        logging.info(f"Email alert sent to {EMAIL_RECEIVER}")
+    except Exception as e:
+        logging.error(f"Failed to send email alert: {e}")
+        logging.debug(f"Traceback:\n{traceback.format_exc()}")
+        print(f"Error: Failed to send email alert. Check logs for details.")
