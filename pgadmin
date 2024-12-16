@@ -1,122 +1,60 @@
-1  sudo yum install httpd
-2  sudo systemctl start httpd
-3  sudo systemctl status httpd
-4  sudo systemctl enable httpd
-5  curl http://localhost
-6  cd /home/cloud-user/
-7  mkdir RPMS
-8  cd RPMS/
-9  wget https://*****/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
-10  yum install wget
-11  wget https://*****/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
-12  wget https://*****/rpms/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
-13  wget https://*****/rpms/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
-14  wget https://*****/rpms/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
-15  ls -la
-16  chmod 777 ./*
-17  ls -la
-18  yum install ./postgresql15*.rpm
-19  cd /home/cloud-user/RPMS/
-20  cp ../pgadmin4-web-8.9-1.el9.noarch.rpm .
-21  chmod 777 *
-22  sudo yum install pgadmin4-web-8.9-1.el9.noarch.rpm
-23  wget https://*****/rpms/pgadmin4-server-8.9-1.el9.x86_64.rpm
-24  yum install pgadmin4-server-8.9-1.el9.x86_64.rpm
-25  yum install pgadmin4-server-8.9-1.el9.x86_64.rpm
-26  yum install pgadmin4-web-8.9-1.el9.noarch.rpm
-27  cd /
-28  ls -la
-29  mkdir /usr/pgadmin4/pgadmin_dat
-30  ls -la
-31  cd /usr/pgadmin4/
-32  ls -la
-33  cat /usr/pgadmin4/web/config.py
-34  vi /usr/pgadmin4/web/config.py
-35  cat /usr/pgadmin4/web/config.py
-36  clear
-37  cat /usr/pgadmin4/web/config.py
-38  hsitory
-39  history
-40  cd /usr/pgadmin4/
-41  ls -la
-42  cd /etc/pgadmin
-43  cd /etc/pgadmin4
-44  cd /etc/
-45  ls -la
-46  mkdir pgadmin4
-47  ls -la
-48  cd pgadmin4/
-49  touch config_local.py
-50  vi config_local.py
-51  ls -la
-52  cat config_local.py
-53  ls -la /usr/pgadmin4
-54  history
-55  cat /usr/pgadmin4/bin/setup-web.sh
-56  vi /usr/pgadmin4/bin/setup-web.sh
-57  cat /etc/httpd/conf/httpd.conf
-58  vi /etc/httpd/conf/httpd.conf
-59  cat /etc/httpd/conf/httpd.conf | grep 8080
-60  export PGADMIN_SETUP_EMAIL="superadmin@local.com"
-63  export PGADMIN_SETUP_PASSWORD="*****"
-64  cd /usr/pgadmin4/bin/
-65  ./setup-web.sh
-66  sudo systemctl restart httpd
-67  sudo systemctl status httpd
-68  ls -la
-69  cd /
-70  ls -la
-71  dnf update -y
-72  dnf install python3 -y
-73  dnf install python3-pip
-74  pip3
-75  pip install boto3
-76  df -h
-77  cd /boot/
-78  ls -la
-79  cd ..
-80  ls -la
-81  ps aux | grep pgadmin
-82  ps aux | grep sh
-83  ls -la
-84  df -h
-85  cd /
-86  lsls -la
-87  ls -la
-88  cd /usr/pgadmin4/
-89  ls
-90  cat /etc/pgadmin4/config_local.py
-91  cd /
-92  ls -la
-93  df -h
-94  cd /etc/systemd/system
-95  ls
-96  ps -ef | grep pgadmin
-97  df -h
-98  systemctl status httpd
-99  systemctl restart httpd
-100  curl http://182.2.30.204:8080/pgadmin4
-101  df -h
-102  df -h
-103  ls -la
-104  history
-105  uname -o
-106  uname -a
-107  hsitory
-108  history
-109  cat /etc/httpd/conf/httpd.conf
-110  cat /etc/httpd/conf.d/
-111  history
-112  cat /etc/pgadmin4/config_local.py
-113  ps -ef | grep pgadmin
-114  ps -ef | grep pg
-115  curl http://182.2.30.204:8080/pgadmin4
-116  df èh
-117  df èh
-118  df -h
-119  history
-120  systemctl status httpd
-121  cat /usr/pgadmin4/web/config.py
-122  cat /usr/pgadmin4/bin/setup-web.sh
-123  cat /etc/httpd/conf/httpd.conf | grep 8080
-124  cat /etc/httpd/conf/httpd.conf
+TASK [pgadmin4 : Set permissions on /home/cloud-user/rpms] *********************
+changed: [182.2.26.251]
+
+TASK [pgadmin4 : Install local rpms] *******************************************
+changed: [182.2.26.251] => (item=httpd)
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378572.5466435-224-85861668034965/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378572.5466435-224-85861668034965/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378572.5466435-224-85861668034965/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_lsyzh8d1/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_lsyzh8d1/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_lsyzh8d1/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_lsyzh8d1/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_lsyzh8d1/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378573.8156016-224-11916270467995/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378573.8156016-224-11916270467995/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378573.8156016-224-11916270467995/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_a8p_gk5f/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_a8p_gk5f/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_a8p_gk5f/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_a8p_gk5f/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_a8p_gk5f/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378575.0947037-224-276173545942291/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378575.0947037-224-276173545942291/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378575.0947037-224-276173545942291/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_r3soxno0/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_r3soxno0/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_r3soxno0/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_r3soxno0/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_r3soxno0/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378576.3826966-224-174690111020045/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378576.3826966-224-174690111020045/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378576.3826966-224-174690111020045/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_l42s1c5t/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_l42s1c5t/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_l42s1c5t/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_l42s1c5t/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_l42s1c5t/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378577.7794182-224-145460459647430/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378577.7794182-224-145460459647430/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378577.7794182-224-145460459647430/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_8wcxeg9v/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_8wcxeg9v/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_8wcxeg9v/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_8wcxeg9v/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_8wcxeg9v/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: OSError: Could not open: /home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm
+failed: [182.2.26.251] (item=/home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm) => {"ansible_loop_var": "item", "changed": false, "item": "/home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm", "module_stderr": "Shared connection to 182.2.26.251 closed.\r\n", "module_stdout": "Traceback (most recent call last):\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378579.2312334-224-71874659916592/AnsiballZ_dnf.py\", line 100, in <module>\r\n    _ansiballz_main()\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378579.2312334-224-71874659916592/AnsiballZ_dnf.py\", line 92, in _ansiballz_main\r\n    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)\r\n  File \"/home/cloud-user/.ansible/tmp/ansible-tmp-1734378579.2312334-224-71874659916592/AnsiballZ_dnf.py\", line 40, in invoke_module\r\n    runpy.run_module(mod_name='ansible.modules.dnf', init_globals=dict(_module_fqn='ansible.modules.dnf', _modlib_path=modlib_path),\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 225, in run_module\r\n    return _run_module_code(code, init_globals, run_name, mod_spec)\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 97, in _run_module_code\r\n    _run_code(code, mod_globals, init_globals,\r\n  File \"/usr/lib64/python3.9/runpy.py\", line 87, in _run_code\r\n    exec(code, run_globals)\r\n  File \"/tmp/ansible_dnf_payload_55_7fy03/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1363, in <module>\r\n  File \"/tmp/ansible_dnf_payload_55_7fy03/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1352, in main\r\n  File \"/tmp/ansible_dnf_payload_55_7fy03/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 1326, in run\r\n  File \"/tmp/ansible_dnf_payload_55_7fy03/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 984, in ensure\r\n  File \"/tmp/ansible_dnf_payload_55_7fy03/ansible_dnf_payload.zip/ansible/modules/dnf.py\", line 884, in _install_remote_rpms\r\n  File \"/usr/lib/python3.9/site-packages/dnf/base.py\", line 1343, in add_remote_rpms\r\n    raise IOError(_(\"Could not open: {}\").format(' '.join(pkgs_error)))\r\nOSError: Could not open: /home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm\r\n", "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error", "rc": 1}
+...ignoring
+
+TASK [pgadmin4 : Delete RPMs directory after install] **************************
+changed: [182.2.26.251]
+
+TASK [pgadmin4 : Unmount volume if mounted "{{ volume_name }}"] ****************
+skipping: [182.2.26.251]
+
+TASK [pgadmin4 : Mount "{{ volume_name }}" in "{{ pgadmin_install_path|default('/pgadmin') }}"] ***
+skipping: [182.2.26.251]
+
+TASK [pgadmin4 : Make pgAdmin data directory] **********************************
+changed: [182.2.26.251]
+
+TASK [pgadmin4 : Ensure local config directory exists] *************************
+changed: [182.2.26.251]
+
+TASK [pgadmin4 : Create local config file] *************************************
+changed: [182.2.26.251]
+
+TASK [pgadmin4 : Switch setup-web.sh to AUTOMATED=1] ***************************
+fatal: [182.2.26.251]: FAILED! => {"changed": false, "msg": "Destination /usr/pgadmin4/bin/setup-web.sh does not exist !", "rc": 257}
+
+PLAY RECAP *********************************************************************
+182.2.26.251               : ok=11   changed=10   unreachable=0    failed=1    skipped=2    rescued=0    ignored=1   
+
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withVault
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // podTemplate
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 2
+Finished: FAILURE
