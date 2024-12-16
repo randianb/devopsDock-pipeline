@@ -1,0 +1,142 @@
+
+
+- name: Disable SELinux temporarily
+  become: yes
+  become_method: sudo
+  command: setenforce 0
+
+- name: Create pgadmin data path "{{ pgadmin_install_path|default('/pgadmin') }}"
+  become: true
+  file:
+    path: "{{ pgadmin_install_path|default('/pgadmin') }}"
+    state: directory
+    mode: '0755'
+
+- name: create RPMs directory
+  become: true
+  file:
+    path: /home/cloud-user/rpms
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download RPMs using wget
+  become: true
+  get_url: 
+    url: "{{ item }}"
+    dest: /home/cloud-user/rpms
+    mode: '0644'
+  loop:
+    - artifacts/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
+    - artifacts/rpms/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
+    - artifacts/rpms/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
+    - artifacts/rpms/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
+    - artifacts/rpms/pgadmin4-server-8.9-1.el9.x86_64.rpm
+    - artifacts/rpms/pgadmin4-web-8.9-1.el9.noarch.rpm
+
+- name: Set permissions on /home/cloud-user/rpms
+  become: true
+  file:
+    path: /home/cloud-user/rpms
+    owner: root
+    group: root
+    mode: '0777'
+    recurse: yes
+
+- name: Install local rpms
+  become: true
+  dnf:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: yes
+  loop:
+    - httpd
+    - /home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
+    - /home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
+    - /home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
+    - /home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
+    - /home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm
+    - /home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm 
+  ignore_errors: true
+
+- name: Delete RPMs directory after install
+  become: true
+  file:
+    path: /home/cloud-user/rpms
+    state: absent        
+
+# Make the volume mounted in specific path
+- block:
+    - name: Unmount volume if mounted "{{ volume_name }}"
+      shell: |
+        umount -l {{ volume_name }}
+      ignore_errors: true
+
+    - name: Mount "{{ volume_name }}" in "{{ pgadmin_install_path|default('/pgadmin') }}"
+      mount:
+        path: "{{ pgadmin_install_path|default('/pgadmin/') }}"
+        src: "{{ volume_name }}"
+        fstype: xfs
+        opts: rw,nosuid,nodev,relatime,seclabel,attr2,inode64,noquota
+        state: mounted
+  when: mount_attached_volume|default(false)|bool == true
+  become: true
+
+- name: Make pgAdmin data directory
+  become: true
+  file:
+    path: "{{ pgadmin_install_path|default('/pgadmin/') }}pgadmin_data"
+    owner: apache
+    group: apache
+    state: directory
+
+- name: Ensure local config directory exists
+  become: true
+  file:
+    path: /etc/pgadmin4
+    mode: '0755'
+    owner: root
+    group: root
+    state: directory
+
+- name: Create local config file
+  become: true
+  copy:
+    dest: /etc/pgadmin4/config_local.py
+    content: |
+      DATA_DIR = '/pgadmin/pgadmin_data'
+      APP_DIR = '/usr/pgadmin4'
+    mode: '0644'
+    owner: root
+    group: root
+    
+
+- name: Switch setup-web.sh to AUTOMATED=1
+  become: true
+  lineinfile:
+    path: "/usr/pgadmin4/bin/setup-web.sh"
+    regexp: "^AUTOMATED=0"
+    line: "AUTOMATED=1"
+
+- name: Change HTTPD listing port to 8080
+  become: true
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: "^Listen"
+    line: "Listen 8080"
+
+- name: Execute setup-web script
+  become: true
+  shell: |
+    /usr/pgadmin4/bin/setup-web.sh
+  environment:
+    PGADMIN_SETUP_EMAIL: "{{ pgadmin_setup_email }}"
+    PGADMIN_SETUP_PASSWORD: "{{ pgadmin_setup_password }}"
+
+- name: Restart HTTPD service
+  become: true
+  systemd:
+    name: httpd.service
+    daemon_reload: yes
+    state: restarted
