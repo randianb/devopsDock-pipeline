@@ -1,142 +1,122 @@
-
-
-- name: Disable SELinux temporarily
-  become: yes
-  become_method: sudo
-  command: setenforce 0
-
-- name: Create pgadmin data path "{{ pgadmin_install_path|default('/pgadmin') }}"
-  become: true
-  file:
-    path: "{{ pgadmin_install_path|default('/pgadmin') }}"
-    state: directory
-    mode: '0755'
-
-- name: create RPMs directory
-  become: true
-  file:
-    path: /home/cloud-user/rpms
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
-
-- name: Download RPMs using wget
-  become: true
-  get_url: 
-    url: "{{ item }}"
-    dest: /home/cloud-user/rpms
-    mode: '0644'
-  loop:
-    - artifacts/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
-    - artifacts/rpms/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
-    - artifacts/rpms/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
-    - artifacts/rpms/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
-    - artifacts/rpms/pgadmin4-server-8.9-1.el9.x86_64.rpm
-    - artifacts/rpms/pgadmin4-web-8.9-1.el9.noarch.rpm
-
-- name: Set permissions on /home/cloud-user/rpms
-  become: true
-  file:
-    path: /home/cloud-user/rpms
-    owner: root
-    group: root
-    mode: '0777'
-    recurse: yes
-
-- name: Install local rpms
-  become: true
-  dnf:
-    name: "{{ item }}"
-    state: present
-    disable_gpg_check: yes
-  loop:
-    - httpd
-    - /home/cloud-user/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
-    - /home/cloud-user/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
-    - /home/cloud-user/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
-    - /home/cloud-user/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
-    - /home/cloud-user/pgadmin4-server-8.9-1.el9.x86_64.rpm
-    - /home/cloud-user/pgadmin4-web-8.9-1.el9.noarch.rpm 
-  ignore_errors: true
-
-- name: Delete RPMs directory after install
-  become: true
-  file:
-    path: /home/cloud-user/rpms
-    state: absent        
-
-# Make the volume mounted in specific path
-- block:
-    - name: Unmount volume if mounted "{{ volume_name }}"
-      shell: |
-        umount -l {{ volume_name }}
-      ignore_errors: true
-
-    - name: Mount "{{ volume_name }}" in "{{ pgadmin_install_path|default('/pgadmin') }}"
-      mount:
-        path: "{{ pgadmin_install_path|default('/pgadmin/') }}"
-        src: "{{ volume_name }}"
-        fstype: xfs
-        opts: rw,nosuid,nodev,relatime,seclabel,attr2,inode64,noquota
-        state: mounted
-  when: mount_attached_volume|default(false)|bool == true
-  become: true
-
-- name: Make pgAdmin data directory
-  become: true
-  file:
-    path: "{{ pgadmin_install_path|default('/pgadmin/') }}pgadmin_data"
-    owner: apache
-    group: apache
-    state: directory
-
-- name: Ensure local config directory exists
-  become: true
-  file:
-    path: /etc/pgadmin4
-    mode: '0755'
-    owner: root
-    group: root
-    state: directory
-
-- name: Create local config file
-  become: true
-  copy:
-    dest: /etc/pgadmin4/config_local.py
-    content: |
-      DATA_DIR = '/pgadmin/pgadmin_data'
-      APP_DIR = '/usr/pgadmin4'
-    mode: '0644'
-    owner: root
-    group: root
-    
-
-- name: Switch setup-web.sh to AUTOMATED=1
-  become: true
-  lineinfile:
-    path: "/usr/pgadmin4/bin/setup-web.sh"
-    regexp: "^AUTOMATED=0"
-    line: "AUTOMATED=1"
-
-- name: Change HTTPD listing port to 8080
-  become: true
-  lineinfile:
-    path: /etc/httpd/conf/httpd.conf
-    regexp: "^Listen"
-    line: "Listen 8080"
-
-- name: Execute setup-web script
-  become: true
-  shell: |
-    /usr/pgadmin4/bin/setup-web.sh
-  environment:
-    PGADMIN_SETUP_EMAIL: "{{ pgadmin_setup_email }}"
-    PGADMIN_SETUP_PASSWORD: "{{ pgadmin_setup_password }}"
-
-- name: Restart HTTPD service
-  become: true
-  systemd:
-    name: httpd.service
-    daemon_reload: yes
-    state: restarted
+1  sudo yum install httpd
+2  sudo systemctl start httpd
+3  sudo systemctl status httpd
+4  sudo systemctl enable httpd
+5  curl http://localhost
+6  cd /home/cloud-user/
+7  mkdir RPMS
+8  cd RPMS/
+9  wget https://*****/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
+10  yum install wget
+11  wget https://*****/rpms/postgresql15-libs-15.1-1PGDG.rhel9.x86_64.rpm
+12  wget https://*****/rpms/postgresql15-15.1-1PGDG.rhel9.x86_64.rpm
+13  wget https://*****/rpms/postgresql15-server-15.1-1PGDG.rhel9.x86_64.rpm
+14  wget https://*****/rpms/postgresql15-contrib-15.1-1PGDG.rhel9.x86_64.rpm
+15  ls -la
+16  chmod 777 ./*
+17  ls -la
+18  yum install ./postgresql15*.rpm
+19  cd /home/cloud-user/RPMS/
+20  cp ../pgadmin4-web-8.9-1.el9.noarch.rpm .
+21  chmod 777 *
+22  sudo yum install pgadmin4-web-8.9-1.el9.noarch.rpm
+23  wget https://*****/rpms/pgadmin4-server-8.9-1.el9.x86_64.rpm
+24  yum install pgadmin4-server-8.9-1.el9.x86_64.rpm
+25  yum install pgadmin4-server-8.9-1.el9.x86_64.rpm
+26  yum install pgadmin4-web-8.9-1.el9.noarch.rpm
+27  cd /
+28  ls -la
+29  mkdir /usr/pgadmin4/pgadmin_dat
+30  ls -la
+31  cd /usr/pgadmin4/
+32  ls -la
+33  cat /usr/pgadmin4/web/config.py
+34  vi /usr/pgadmin4/web/config.py
+35  cat /usr/pgadmin4/web/config.py
+36  clear
+37  cat /usr/pgadmin4/web/config.py
+38  hsitory
+39  history
+40  cd /usr/pgadmin4/
+41  ls -la
+42  cd /etc/pgadmin
+43  cd /etc/pgadmin4
+44  cd /etc/
+45  ls -la
+46  mkdir pgadmin4
+47  ls -la
+48  cd pgadmin4/
+49  touch config_local.py
+50  vi config_local.py
+51  ls -la
+52  cat config_local.py
+53  ls -la /usr/pgadmin4
+54  history
+55  cat /usr/pgadmin4/bin/setup-web.sh
+56  vi /usr/pgadmin4/bin/setup-web.sh
+57  cat /etc/httpd/conf/httpd.conf
+58  vi /etc/httpd/conf/httpd.conf
+59  cat /etc/httpd/conf/httpd.conf | grep 8080
+60  export PGADMIN_SETUP_EMAIL="superadmin@local.com"
+63  export PGADMIN_SETUP_PASSWORD="*****"
+64  cd /usr/pgadmin4/bin/
+65  ./setup-web.sh
+66  sudo systemctl restart httpd
+67  sudo systemctl status httpd
+68  ls -la
+69  cd /
+70  ls -la
+71  dnf update -y
+72  dnf install python3 -y
+73  dnf install python3-pip
+74  pip3
+75  pip install boto3
+76  df -h
+77  cd /boot/
+78  ls -la
+79  cd ..
+80  ls -la
+81  ps aux | grep pgadmin
+82  ps aux | grep sh
+83  ls -la
+84  df -h
+85  cd /
+86  lsls -la
+87  ls -la
+88  cd /usr/pgadmin4/
+89  ls
+90  cat /etc/pgadmin4/config_local.py
+91  cd /
+92  ls -la
+93  df -h
+94  cd /etc/systemd/system
+95  ls
+96  ps -ef | grep pgadmin
+97  df -h
+98  systemctl status httpd
+99  systemctl restart httpd
+100  curl http://182.2.30.204:8080/pgadmin4
+101  df -h
+102  df -h
+103  ls -la
+104  history
+105  uname -o
+106  uname -a
+107  hsitory
+108  history
+109  cat /etc/httpd/conf/httpd.conf
+110  cat /etc/httpd/conf.d/
+111  history
+112  cat /etc/pgadmin4/config_local.py
+113  ps -ef | grep pgadmin
+114  ps -ef | grep pg
+115  curl http://182.2.30.204:8080/pgadmin4
+116  df èh
+117  df èh
+118  df -h
+119  history
+120  systemctl status httpd
+121  cat /usr/pgadmin4/web/config.py
+122  cat /usr/pgadmin4/bin/setup-web.sh
+123  cat /etc/httpd/conf/httpd.conf | grep 8080
+124  cat /etc/httpd/conf/httpd.conf
