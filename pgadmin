@@ -1,40 +1,66 @@
-- name: Write Vault Role ID to file
-  become: true
-  copy:
-    content: |
-      VAULT_ROLE: {{ VAULT_ROLE }}
-      VAULT_SECRET: {{ VAULT_SECRET }}
-      VAULT_URL: "{{ VAULT_URL }}"
-      VAULT_NAMESPACE: "{{ VAULT_NAMESPACE }}"
-    dest: /tmp/vault_info.txt
-    mode: '0644'
+- name: Configure SSL for Apache HTTPD
+  hosts: webservers
+  become: yes
+  vars:
+    ssl_cert_src: "/app/products/proxy/host.pem"
+    ssl_key_src: "/app/products/proxy/host.key"
+    ssl_dir: "/etc/httpd/ssl"
+    ssl_conf_file: "/etc/httpd/conf.d/ssl.conf"
 
-- name: Read Vault configuration from file
-  become: true
-  slurp:
-    src: /tmp/vault_info.txt
-  register: vault_info_file
+  tasks:
+    - name: Install Apache and mod_ssl
+      yum:
+        name:
+          - httpd
+          - mod_ssl
+        state: present
 
-- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
-  set_fact:
-    vault_role_id: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_ROLE:') | first | split(': ')[1] }}"
-    vault_secret_id: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_SECRET:') | first | split(': ')[1] }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_URL:') | first | split(': ')[1] }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_NAMESPACE:') | first | split(': ')[1] }}"
+    - name: Create SSL directory
+      file:
+        path: "{{ ssl_dir }}"
+        state: directory
+        mode: '0755'
 
-- name: Debug Vault Variables
-  copy:
-    content: "Vault URL: {{ vault_url }}\nVault Namespace: {{ vault_namespace }}"
-    dest: /tmp/vault_url.txt
-    mode: '0644'
+    - name: Copy SSL certificate
+      copy:
+        src: "{{ ssl_cert_src }}"
+        dest: "{{ ssl_dir }}/server.crt"
+        owner: root
+        group: root
+        mode: '0600'
 
-- name: Retrieve client token
-  become: true
-  command: >
-    curl --request POST --data '{"role_id": "{{ vault_role_id }}", "secret_id": "{{ vault_secret_id }}"}'
-    {{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login
-  register: vault_auth_response
+    - name: Copy SSL private key
+      copy:
+        src: "{{ ssl_key_src }}"
+        dest: "{{ ssl_dir }}/server.key"
+        owner: root
+        group: root
+        mode: '0600'
 
-- name: Extract Vault Token
-  set_fact:
-    vault_client_token: "{{ vault_auth_response.stdout | from_json | json_query('auth.client_token') }}"
+    - name: Configure SSL VirtualHost
+      blockinfile:
+        path: "{{ ssl_conf_file }}"
+        marker: "# {mark} SSL CONFIGURATION"
+        block: |
+          <VirtualHost *:443>
+              ServerName example.com
+              DocumentRoot /var/www/html
+
+              SSLEngine on
+              SSLCertificateFile {{ ssl_dir }}/server.crt
+              SSLCertificateKeyFile {{ ssl_dir }}/server.key
+
+              <Directory "/var/www/html">
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+
+              ErrorLog /var/log/httpd/ssl_error_log
+              CustomLog /var/log/httpd/ssl_access_log combined
+          </VirtualHost>
+
+    - name: Restart Apache HTTPD
+      service:
+        name: httpd
+        state: restarted
+        enabled: yes
