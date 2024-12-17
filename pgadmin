@@ -8,20 +8,57 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
 
 ####ansible tasks:
 
-- name: Configure pgAdmin to use external PostgreSQL
-  template:
-    src: config_local.py.j2
-    dest: /etc/pgadmin4/config_local.py
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart Apache HTTPD
+- name: Read Vault configuration from file
+  become: true
+  slurp:
+    src: /tmp/vault_info.txt
+  register: vault_info_file
 
-###handelers
-- name: Restart Apache HTTPD
-  systemd:
-    name: httpd
-    state: restarted
+- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
+  set_fact:
+    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
+    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') }}"
+
+- name: Authenticate with Vault and retrieve client token
+  uri:
+    url: "{{ vault_url }}/v1/{{ vault_namespace }}/auth/approle/login"
+    method: POST
+    body_format: json
+    body:
+      role_id: "{{ vault_role_id }}"
+      secret_id: "{{ vault_secret_id }}"
+    return_content: yes
+    status_code: 200
+  register: vault_auth_response
+
+- name: Extract Vault Token
+  set_fact:
+    vault_client_token: "{{ vault_auth_response.json.auth.client_token }}"
+
+- name: Fetch pgAdmin4 setup credentials from Vault
+  uri:
+    url: "{{ vault_url }}/v1/{{ vault_namespace }}/kv/data/xsf/pgadmin4"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_client_token }}"
+    return_content: yes
+    status_code: 200
+  register: vault_secret_response
+
+- name: Set pgAdmin4 setup variables
+  set_fact:
+    pgadmin_setup_email: "{{ vault_secret_response.json.data.data.pgadmin_setup_email }}"
+    pgadmin_setup_password: "{{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
+
+- name: Debug Vault Variables
+  debug:
+    msg: 
+      - "pgAdmin Setup Email: {{ pgadmin_setup_email }}"
+      - "pgAdmin Setup Password: {{ pgadmin_setup_password }}"
+      - "Vault URL: {{ vault_url }}"
+      - "Vault Namespace: {{ vault_namespace }}"
 
 ###error
 create ansible task that will used vault role id and secret id stored on this task " name: Write Vault Role ID to file
