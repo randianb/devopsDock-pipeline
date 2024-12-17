@@ -63,3 +63,12 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
 \[|\\]
 
 |\\'|\"', '') }}"
+
+
+###solution 
+- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
+  set_fact:
+    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
+    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') | regex_replace('[\\n\\r\\\"\\\\\', '') }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') | regex_replace('[\\n\\r\\\"\\\\\', '') }}"
