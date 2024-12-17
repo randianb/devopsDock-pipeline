@@ -49,10 +49,22 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
 
 
 ###error
- name: Write Vault Role ID to file
+i got this error on console ouput : TASK [pgadmin4 : Debug Vault Variables] ****************************************
+ok: [182.2.26.251]
+
+TASK [pgadmin4 : Retrieve client token] ****************************************
+fatal: [182.2.26.251]: FAILED! => {"changed": true, "cmd": ["curl", "--request", "POST", "--data", "{\"role_id\": \"[****]\", \"secret_id\": \"[****]\"}", "[****]/v1/myVault/[****]/auth/approle/login"], "delta": "0:00:00.010308", "end": "2024-12-17 12:00:57.044855", "msg": "non-zero return code", "rc": 3, "start": "2024-12-17 12:00:57.034547", "stderr": "curl: (3) bad range in URL position 2:\n[****]/v1/myVault/[****]/auth/approle/login\n ^", "stderr_lines": ["curl: (3) bad range in URL position 2:", "[****]/v1/myVault/[****]/auth/approle/login", " ^"], "stdout": "", "stdout_lines": []}
+ i noticed that the content of file is the following cat /tmp/vault_url.txt
+['https://vault-non-prod.cloud.socgen']/v1/myVault/['XSF_AF567_DEV_master']/auth/approle/login
+the problem is on the followng task that stored the varibles as list 
+- name: Write Vault Role ID to file
   become: true
   copy:
-    content: "VAULT_ROLE: {{ VAULT_ROLE }}\nVAULT_SECRET: {{ VAULT_SECRET }}\nVAULT_URL: {{ VAULT_URL }}\nVAULT_NAMESPACE: {{ VAULT_NAMESPACE }}"
+    content: |
+      VAULT_ROLE: {{ VAULT_ROLE }}
+      VAULT_SECRET: {{ VAULT_SECRET }}
+      VAULT_URL: {{ VAULT_URL }}
+      VAULT_NAMESPACE: {{ VAULT_NAMESPACE }}
     dest: /tmp/vault_info.txt
     mode: '0644'
 
@@ -66,25 +78,8 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
   set_fact:
     vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
     vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') | regex_replace('[\\n\\r\\\"\\\\\', '') }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') | regex_replace('[\\n\\r\\\"\\\\\', '') }}"
-    
-- name: Debug Vault Variables
-  copy: 
-    content: "{{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login"
-    dest: /tmp/vault_url.txt
-    mode: '0644'
-
-- name: Retrieve client token 
-  become: true
-  command: >
-    curl --request POST --data '{"role_id": "{{ vault_role_id }}", "secret_id": "{{ vault_secret_id }}"}' 
-    {{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login
-  register: vault_auth_response
-
-- name: Extract Vault Token
-  set_fact:
-    vault_client_token: "{{ vault_auth_response.stdout | from_json | json_query('auth.client_token') }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') }}"
 
 
 ###solution 
