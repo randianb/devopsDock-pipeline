@@ -1,70 +1,11 @@
-# pgAdmin 4 configuration for external PostgreSQL
-CONFIG_DATABASE_URI = "postgresql://{{ pgadmin_db_user }}:{{ pgadmin_db_password }}@{{ pgadmin_db_host }}:{{ pgadmin_db_port }}/{{ pgadmin_db_name }}"
-
-DATA_DIR = '/pgadmin/data'
-LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
-
-
-
-####ansible tasks:
-- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
-  set_fact:
-    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
-    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') | regex_replace('\\[|\\]|\'', '') }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') | regex_replace('\\[|\\]|\'', '') }}"
-
-- name: Debug Vault Variables
-  debug:
-    msg: "Role ID: {{ vault_role_id }}, Secret ID: {{ vault_secret_id }}, URL: {{ vault_url }}, Namespace: {{ vault_namespace }}"
-
-- name: Retrieve client token 
-  become: true
-  command: >
-    curl --request POST --data '{"role_id": "{{ vault_role_id }}", "secret_id": "{{ vault_secret_id }}"}' 
-    {{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login
-  register: vault_auth_response
-
-- name: Extract Vault Token
-  set_fact:
-    vault_client_token: "{{ vault_auth_response.stdout | from_json | json_query('auth.client_token') }}"
-
-- name: Debug Vault Token
-  debug:
-    msg: "Vault Client Token: {{ vault_client_token }}"
-
-- name: Fetch pgAdmin4 setup credentials from Vault
-  uri:
-    url: "{{ vault_url }}/v1/myVault/{{ vault_namespace }}/kv/data/xsf/pgadmin4"
-    method: GET
-    headers:
-      X-Vault-Token: "{{ vault_client_token }}"
-    return_content: yes
-    status_code: 200
-  register: vault_secret_response
-
-- name: Debug Vault Credentials
-  debug:
-    msg: "pgadmin_setup_email: {{ vault_secret_response.json.data.data.pgadmin_setup_email }}, pgadmin_setup_password: {{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
-
-
-###error
-i got this error on console ouput : TASK [pgadmin4 : Debug Vault Variables] ****************************************
-ok: [182.2.26.251]
-
-TASK [pgadmin4 : Retrieve client token] ****************************************
-fatal: [182.2.26.251]: FAILED! => {"changed": true, "cmd": ["curl", "--request", "POST", "--data", "{\"role_id\": \"[****]\", \"secret_id\": \"[****]\"}", "[****]/v1/myVault/[****]/auth/approle/login"], "delta": "0:00:00.010308", "end": "2024-12-17 12:00:57.044855", "msg": "non-zero return code", "rc": 3, "start": "2024-12-17 12:00:57.034547", "stderr": "curl: (3) bad range in URL position 2:\n[****]/v1/myVault/[****]/auth/approle/login\n ^", "stderr_lines": ["curl: (3) bad range in URL position 2:", "[****]/v1/myVault/[****]/auth/approle/login", " ^"], "stdout": "", "stdout_lines": []}
- i noticed that the content of file is the following cat /tmp/vault_url.txt
-['https://vault-non-prod.cloud.socgen']/v1/myVault/['XSF_AF567_DEV_master']/auth/approle/login
-the problem is on the followng task that stored the varibles as list 
 - name: Write Vault Role ID to file
   become: true
   copy:
     content: |
       VAULT_ROLE: {{ VAULT_ROLE }}
       VAULT_SECRET: {{ VAULT_SECRET }}
-      VAULT_URL: {{ VAULT_URL }}
-      VAULT_NAMESPACE: {{ VAULT_NAMESPACE }}
+      VAULT_URL: "{{ VAULT_URL }}"
+      VAULT_NAMESPACE: "{{ VAULT_NAMESPACE }}"
     dest: /tmp/vault_info.txt
     mode: '0644'
 
@@ -76,40 +17,14 @@ the problem is on the followng task that stored the varibles as list
 
 - name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
   set_fact:
-    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
-    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') }}"
-
-
-###solution 
- - name: Write Vault Role ID to file
-  become: true
-  copy:
-    content: |
-      VAULT_ROLE: {{ VAULT_ROLE }}
-      VAULT_SECRET: {{ VAULT_SECRET }}
-      VAULT_URL: {{ VAULT_URL }}
-      VAULT_NAMESPACE: {{ VAULT_NAMESPACE }}
-    dest: /tmp/vault_info.txt
-    mode: '0644'
-
-- name: Read Vault configuration from file
-  become: true
-  slurp:
-    src: /tmp/vault_info.txt
-  register: vault_info_file
-
-- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
-  set_fact:
-    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
-    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') }}"
+    vault_role_id: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_ROLE:') | first | split(': ')[1] }}"
+    vault_secret_id: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_SECRET:') | first | split(': ')[1] }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_URL:') | first | split(': ')[1] }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | splitlines | select('match', 'VAULT_NAMESPACE:') | first | split(': ')[1] }}"
 
 - name: Debug Vault Variables
   copy:
-    content: "{{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login"
+    content: "Vault URL: {{ vault_url }}\nVault Namespace: {{ vault_namespace }}"
     dest: /tmp/vault_url.txt
     mode: '0644'
 
