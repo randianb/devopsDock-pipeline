@@ -32,3 +32,11 @@ create ansible task that will used vault role id and secret id stored on this ta
     mode: '0644'
 " and do a curl that look like this to get the content of the following varible stored on the vault "pgadmin_setup_email" and "pgadmin_setup_password", the curl look like this "curl --request POST --data '{"role_id": "", "secret_id": ""}' https://vault.com/v1/myVault/XSF_AF567_DEV_master/auth/approle/login
 curl --header "X-Vault-Token: hvs.CAESIEOHhnSl8z0FPSQI2U5tkS_1fibFyeNKUNVFaJEZzuGvGisKImh2cy5GQWVwOXpTM0pDTm5CRkFXVWZMdkI5SDMuU01VVVgQw9ybDhgD" https://vault.com/v1/myVault/XSF_AF567_DEV_master/kv/data/xsf/pgadmin4"
+
+id i do it manullt on the server it look like this "curl --request POST --data '{"role_id": "3841ee58-24a3-e2dc-c7cd-99052b498147", "secret_id": "4d3f88a4-1301-ddaf-0960-0c23f27c4bc2"}' https://vault.com/v1/myVault/XSF_AF567_DEV_master/auth/approle/login
+{"request_id":"99e9d857-b032-eb6b-581c-545c6f75ad4d","lease_id":"","renewable":false,"lease_duration":0,"data":null,"wrap_info":null,"warnings":null,"auth":{"client_token":"hvs.CAESIDAZZxdFnz7yIaYgxAHCRDw9zAtRaMYPSSYcXSTWMdkRGisKImh2cy5TSFk2NDBTWVVvNWxSSXZEMko5YVlFcmcuU01VVVgQstHPDhgD","accessor":"JFEd0eZy4Vtk9MkSU0wXI28X.SMUUX","policies":["default","xsf-af567-dev-policy"],"token_policies":["default","xsf-af567-dev-policy"],"metadata":{"role_name":"xsf-af567-dev"},"lease_duration":600,"renewable":true,"entity_id":"aff8ab86-abd1-d43e-03cf-db1f0ddd275f","token_type":"service","orphan":true,"mfa_requirement":null,"num_uses":0},"mount_type":""}
+[0][root:/home/cloud-user]
+$ curl --header "X-Vault-Token: hvs.CAESIDAZZxdFnz7yIaYgxAHCRDw9zAtRaMYPSSYcXSTWMdkRGisKImh2cy5TSFk2NDBTWVVvNWxSSXZEMko5YVlFcmcuU01VVVgQstHPDhgD" https://vault.com/v1/myVault/XSF_AF567_DEV_master/kv/data/xsf/pgadmin4
+{"request_id":"5f41fa3a-7132-6612-e35c-eecc79d83257","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"pgadmin_setup_email":"superadmin@local.comn","pgadmin_setup_password":"password"},"metadata":{"created_time":"2024-12-16T21:06:59.095856237Z","custom_metadata":null,"deletion_time":"","destroyed":false,"version":2}},"wrap_info":null,"warnings":null,"auth":null,"mount_type":"kv"}
+"
+i waant to do the same with ansible
