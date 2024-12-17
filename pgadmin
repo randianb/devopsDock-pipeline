@@ -7,39 +7,35 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
 
 
 ####ansible tasks:
-
-- name: Read Vault configuration from file
-  become: true
-  slurp:
-    src: /tmp/vault_info.txt
-  register: vault_info_file
-
 - name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
   set_fact:
     vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
     vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
-    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') }}"
-    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') | regex_replace('\\[|\\]|\'', '') }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') | regex_replace('\\[|\\]|\'', '') }}"
 
-- name: Authenticate with Vault and retrieve client token
-  uri:
-    url: "{{ vault_url }}/v1/{{ vault_namespace }}/auth/approle/login"
-    method: POST
-    body_format: json
-    body:
-      role_id: "{{ vault_role_id }}"
-      secret_id: "{{ vault_secret_id }}"
-    return_content: yes
-    status_code: 200
+- name: Debug Vault Variables
+  debug:
+    msg: "Role ID: {{ vault_role_id }}, Secret ID: {{ vault_secret_id }}, URL: {{ vault_url }}, Namespace: {{ vault_namespace }}"
+
+- name: Retrieve client token 
+  become: true
+  command: >
+    curl --request POST --data '{"role_id": "{{ vault_role_id }}", "secret_id": "{{ vault_secret_id }}"}' 
+    {{ vault_url }}/v1/myVault/{{ vault_namespace }}/auth/approle/login
   register: vault_auth_response
 
 - name: Extract Vault Token
   set_fact:
-    vault_client_token: "{{ vault_auth_response.json.auth.client_token }}"
+    vault_client_token: "{{ vault_auth_response.stdout | from_json | json_query('auth.client_token') }}"
+
+- name: Debug Vault Token
+  debug:
+    msg: "Vault Client Token: {{ vault_client_token }}"
 
 - name: Fetch pgAdmin4 setup credentials from Vault
   uri:
-    url: "{{ vault_url }}/v1/{{ vault_namespace }}/kv/data/xsf/pgadmin4"
+    url: "{{ vault_url }}/v1/myVault/{{ vault_namespace }}/kv/data/xsf/pgadmin4"
     method: GET
     headers:
       X-Vault-Token: "{{ vault_client_token }}"
@@ -47,19 +43,23 @@ LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
     status_code: 200
   register: vault_secret_response
 
-- name: Set pgAdmin4 setup variables
-  set_fact:
-    pgadmin_setup_email: "{{ vault_secret_response.json.data.data.pgadmin_setup_email }}"
-    pgadmin_setup_password: "{{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
-
-- name: Debug Vault Variables
+- name: Debug Vault Credentials
   debug:
-    msg: 
-      - "pgAdmin Setup Email: {{ pgadmin_setup_email }}"
-      - "pgAdmin Setup Password: {{ pgadmin_setup_password }}"
-      - "Vault URL: {{ vault_url }}"
-      - "Vault Namespace: {{ vault_namespace }}"
+    msg: "pgadmin_setup_email: {{ vault_secret_response.json.data.data.pgadmin_setup_email }}, pgadmin_setup_password: {{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
+
 
 ###error
-ASK [pgadmin4 : Authenticate with Vault and retrieve client token] ************
-fatal: []: FAILED! => {"changed": false, "content": "", "elapsed": 0, "msg": "Status code was -1 and not [200]: Request failed: <urlopen error unknown url type: ['https>", "redirected": false, "status": -1, "url": "[****]/v1/myVault/[****]/auth/approle/login"}
+- name: Extract Vault Configuration (Role ID, Secret ID, URL, and Namespace)
+  set_fact:
+    vault_role_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_ROLE: (.*)', '\\1') }}"
+    vault_secret_id: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_SECRET: (.*)', '\\1') }}"
+    vault_url: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_URL: (.*)', '\\1') | regex_replace('\
+
+\[|\\]
+
+|\\'|\"', '') }}"
+    vault_namespace: "{{ vault_info_file['content'] | b64decode | regex_search('VAULT_NAMESPACE: (.*)', '\\1') | regex_replace('\
+
+\[|\\]
+
+|\\'|\"', '') }}"
