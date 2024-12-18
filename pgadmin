@@ -1,1 +1,4 @@
 the password stored on vault look like this "pgadmin_db_password": "dEK4wM8d4\\6sNi9p*Py5", but w=on the server now look lik this "dEK4wM8d4\6sNi9p*Py5"
+
+#solution 
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:{{ pgadmin_db_password | replace('\\', '\\\\') }}@{{ pgadmin_host }}:{{ pgadmin_port }}/{{ pgadmin_db_name }}"
