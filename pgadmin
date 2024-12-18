@@ -1,4 +1,12 @@
-the task that you provide earlier : 
+this the result: 
+cat /etc/pgadmin4/config_local.py
+# pgAdmin 4 configuration for external PostgreSQL
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@host:100/  pgadmin_dev
+"
+but i should be like this instead with no space 
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@host:100/pgadmin_dev"
+
+this's the tasks : 
 - name: Set pgAdmin4 database name based on ENVI
   set_fact:
     pgadmin_db_name: >-
@@ -9,9 +17,16 @@ the task that you provide earlier :
       {% else %}
         "unknown_environment"
       {% endif %}
-if retrive pgadmin_db_name = pgadmin_db_name_oat if ENVI = OAT and pgadmin_db_name = pgadmin_db_name_prd if ENVI = prd, the idea was to to retrive the content of pgadmin_db_name_oat and pgadmin_db_name_prd stored on vault_secret_response
-help fix this issue and debug it 
+
+- name: Configure pgAdmin to use external PostgreSQL
+  become: true
+  template:
+    src: config_local.py.j2
+    dest: /etc/pgadmin4/config_local.py
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Apache HTTPD
 
 
 
-####solution
