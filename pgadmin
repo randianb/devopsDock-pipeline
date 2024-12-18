@@ -24,3 +24,37 @@ here's my whole tasks to understand the context:
     pgadmin_db_host: "{{ vault_secret_response.json.data.data.pgadmin_db_host }}"
     pgadmin_db_port: "{{ vault_secret_response.json.data.data.pgadmin_db_port }}"
     pgadmin_db_name_{{ ENVI }}: "{{ vault_secret_response.json.data.data.pgadmin_db_name_ }}"
+
+
+
+
+####solution
+- name: Fetch pgAdmin4 setup credentials from Vault
+  uri:
+    url: "{{ VAULT_URL }}/v1/myVault/{{ VAULT_NAMESPACE }}/kv/data/xsf/pgadmin4"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_client_token }}"
+    return_content: yes
+    status_code: 200
+  register: vault_secret_response
+
+- name: Set pgAdmin4 setup variables
+  set_fact:
+    pgadmin_setup_email: "{{ vault_secret_response.json.data.data.pgadmin_setup_email }}"
+    pgadmin_setup_password: "{{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
+    pgadmin_db_user: "{{ vault_secret_response.json.data.data.pgadmin_db_user }}"
+    pgadmin_db_password: "{{ vault_secret_response.json.data.data.pgadmin_db_password }}"
+    pgadmin_db_host: "{{ vault_secret_response.json.data.data.pgadmin_db_host }}"
+    pgadmin_db_port: "{{ vault_secret_response.json.data.data.pgadmin_db_port }}"
+
+- name: Set pgAdmin4 database name based on ENVI
+  set_fact:
+    pgadmin_db_name: >-
+      {% if ENVI == 'oat' %}
+        {{ vault_secret_response.json.data.data.pgadmin_db_name_oat }}
+      {% elif ENVI == 'prd' %}
+        {{ vault_secret_response.json.data.data.pgadmin_db_name_prd }}
+      {% else %}
+        "unknown_environment"
+      {% endif %}
