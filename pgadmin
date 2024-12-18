@@ -1,30 +1,12 @@
-i got this error "The error appears to be in '/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/pgadmin4/tasks/pgadmin4.yml': line 201, column 3, but may
-be elsewhere in the file depending on the exact syntax problem.
+ cat /etc/pgadmin4/config_local.py
+# pgAdmin 4 configuration for external PostgreSQL
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\\6sNi9p*Py5@host:12400/pgadmin_dev"
+DATA_DIR = '/pgadmin/data'
+LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
+APP_DIR = '/usr/pgadmin4'[0][root@pgadmin4_oat_blue_1:/home/cloud-user]
+$ ls /var/lib/pgadmin/
+azurecredentialcache  pgadmin4.db  sessions  storage
+[0][root@pgadmin4_oat_blue_1:/home/cloud-user]
+$ cat /var/log/pgadmin4/pgadmin4.log
+cat: /var/log/pgadmin4/pgadmin4.log: No such file or directory
 
-The offending line appears to be:
-
-
-- name: Execute setup-web script
-  ^ here"
-here 's my ansible tasks: 
-- name: Configure pgAdmin to use external PostgreSQL
-  become: true
-  template:
-    src: config_local.py.j2
-    dest: /etc/pgadmin4/config_local.py
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart Apache HTTPD
-
-- name: Execute setup-web script
-  become: true
-  shell: |
-    /usr/pgadmin4/bin/setup-web.sh
-  args:
-    creates: /var/lib/pgadmin/pgadmin4.db
-  environment:
-    PGADMIN_SETUP_EMAIL: "{{ pgadmin_setup_email }}"
-    PGADMIN_SETUP_PASSWORD: "{{ pgadmin_setup_password }}"
-  ignore_errors: true
-  force: yes
