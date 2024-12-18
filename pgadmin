@@ -1,43 +1,13 @@
 this the result: 
-cat /etc/pgadmin4/config_local.py
-# pgAdmin 4 configuration for external PostgreSQL
-CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@host:100/  pgadmin_dev
-"
-but i should be like this instead with no space 
-CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@host:100/pgadmin_dev"
-
-this's the tasks : 
-- name: Set pgAdmin4 database name based on ENVI
-  set_fact:
-    pgadmin_db_name: >-
-      {% if ENVI == 'oat' %}
-        {{ vault_secret_response.json.data.data.pgadmin_db_name_oat }}
-      {% elif ENVI == 'prd' %}
-        {{ vault_secret_response.json.data.data.pgadmin_db_name_prd }}
-      {% else %}
-        "unknown_environment"
-      {% endif %}
-
-- name: Configure pgAdmin to use external PostgreSQL
-  become: true
-  template:
-    src: config_local.py.j2
-    dest: /etc/pgadmin4/config_local.py
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart Apache HTTPD
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<LinkedHashMap>
+<timestamp>2024-12-18T09:24:49.063+00:00</timestamp>
+<status>500</status>
+<message>java.lang.NoSuchMethodError</message>
+<identifier>1a77ed4f-cdf5-4b56-afb9-3b109b3b9932</identifier>
+<path>/</path>
+</LinkedHashMap>
 
 
 
 ###solution
-- name: Set pgAdmin4 database name based on ENVI
-  set_fact:
-    pgadmin_db_name: >-
-      {% if ENVI == 'oat' %}
-        {{ vault_secret_response.json.data.data.pgadmin_db_name_oat | trim }}
-      {% elif ENVI == 'prd' %}
-        {{ vault_secret_response.json.data.data.pgadmin_db_name_prd | trim }}
-      {% else %}
-        "unknown_environment"
-      {% endif %}
