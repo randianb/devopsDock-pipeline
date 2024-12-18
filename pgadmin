@@ -1,1 +1,1 @@
-based on this "- name: Execute setup-web script become: true shell: | /usr/pgadmin4/bin/setup-web.sh args: creates: /var/lib/pgadmin/pgadmin4.db environment: PGADMIN_SETUP_EMAIL: "{{ pgadmin_setup_email }}" PGADMIN_SETUP_PASSWORD: "{{ pgadmin_setup_password }}" ignore_errors: true" how can print to see the contains of the environment variables ?
+the password stored on vault look like this "pgadmin_db_password": "dEK4wM8d4\\6sNi9p*Py5", but w=on the server now look lik this "dEK4wM8d4\6sNi9p*Py5"
