@@ -1,2 +1,22 @@
-this the vars/main.yml 
-config_database_uri: "postgresql://{{ pgadmin_db_user }}:{{ pgadmin_db_password }}@{{ pgadmin_db_host }}:{{ pgadmin_db_port }}/{{ pgadmin_db_name | trim }}"
+[Wed Dec 18 15:24:01.486925 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118] mod_wsgi (pid=429909): Exception occurred processing WSGI script '/usr/pgadmin4/web/pgAdmin4.wsgi'.
+[Wed Dec 18 15:24:01.487109 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118] Traceback (most recent call last):
+[Wed Dec 18 15:24:01.487161 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/web/pgAdmin4.wsgi", line 36, in <module>
+[Wed Dec 18 15:24:01.487179 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     from pgAdmin4 import app as application
+[Wed Dec 18 15:24:01.487188 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/web/pgAdmin4.py", line 103, in <module>
+[Wed Dec 18 15:24:01.487196 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     app = create_app()
+[Wed Dec 18 15:24:01.487206 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/web/pgadmin/__init__.py", line 352, in create_app
+[Wed Dec 18 15:24:01.487221 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     db.init_app(app)
+[Wed Dec 18 15:24:01.487332 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/flask_sqlalchemy/extension.py", line 374, in init_app
+[Wed Dec 18 15:24:01.487350 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     engines[key] = self._make_engine(key, options, app)
+[Wed Dec 18 15:24:01.487361 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/flask_sqlalchemy/extension.py", line 665, in _make_engine
+[Wed Dec 18 15:24:01.487376 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     return sa.engine_from_config(options, prefix="")
+[Wed Dec 18 15:24:01.487393 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/engine/create.py", line 820, in engine_from_config
+[Wed Dec 18 15:24:01.487407 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     return create_engine(url, **options)
+[Wed Dec 18 15:24:01.487424 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "<string>", line 2, in create_engine
+[Wed Dec 18 15:24:01.487441 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+[Wed Dec 18 15:24:01.487492 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     return fn(*args, **kwargs)  # type: ignore[no-any-return]
+[Wed Dec 18 15:24:01.487502 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/engine/create.py", line 599, in create_engine
+[Wed Dec 18 15:24:01.487509 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     dbapi = dbapi_meth(**dbapi_args)
+[Wed Dec 18 15:24:01.487517 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/dialects/postgresql/psycopg2.py", line 690, in import_dbapi
+[Wed Dec 18 15:24:01.487532 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118]     import psycopg2
+[Wed Dec 18 15:24:01.487557 2024] [wsgi:error] [pid 429909:tid 430009] [remote ::1:56118] ModuleNotFoundError: No module named 'psycopg2'
