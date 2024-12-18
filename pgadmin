@@ -1,19 +1,2 @@
-# tasks/main.yml
-- name: Ensure config.py exists
-  ansible.builtin.stat:
-    path: /use/pgadmin4/web/config.py
-  register: config_file_stat
-
-- name: Backup existing config.py
-  ansible.builtin.copy:
-    src: /use/pgadmin4/web/config.py
-    dest: /use/pgadmin4/web/config.py.bak
-    remote_src: yes
-  when: config_file_stat.stat.exists
-
-- name: Update CONFIG_DATABASE_URI in config.py
-  ansible.builtin.lineinfile:
-    path: /use/pgadmin4/web/config.py
-    regexp: '^CONFIG_DATABASE_URI\s*=\s*.*$'
-    line: "CONFIG_DATABASE_URI = '{{ config_database_uri }}'"
-    backup: yes
+this the vars/main.yml 
+config_database_uri: "postgresql://{{ pgadmin_db_user }}:{{ pgadmin_db_password }}@{{ pgadmin_db_host }}:{{ pgadmin_db_port }}/{{ pgadmin_db_name | trim }}"
