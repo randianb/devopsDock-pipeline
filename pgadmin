@@ -11,3 +11,13 @@ This XML file does not appear to have any style information associated with it. 
 
 
 ###solution
+- name: Set pgAdmin4 database name based on ENVI
+  set_fact:
+    pgadmin_db_name: >-
+      {% if ENVI == 'oat' %}
+        {{ vault_secret_response.json.data.data.pgadmin_db_name_oat | trim | replace('\n', '') }}
+      {% elif ENVI == 'prd' %}
+        {{ vault_secret_response.json.data.data.pgadmin_db_name_prd | trim | replace('\n', '') }}
+      {% else %}
+        "unknown_environment"
+      {% endif %}
