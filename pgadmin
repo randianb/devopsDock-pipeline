@@ -36,3 +36,10 @@ here's the ansible tasks:
     group: root
     mode: '0644'
   notify: Restart Apache HTTPD
+
+
+####solution:
+# pgAdmin 4 configuration for external PostgreSQL
+CONFIG_DATABASE_URI = "postgresql://{{ pgadmin_user }}:{{ pgadmin_password | replace('\\', '\\\\') }}@{{ pgadmin_host }}:{{ pgadmin_port }}/{{ pgadmin_db_name | trim }}"
+DATA_DIR = '{{ pgadmin_data_dir }}'
+LOG_FILE = '{{ pgadmin_log_file }}'
