@@ -1,16 +1,21 @@
-this the result: 
-This XML file does not appear to have any style information associated with it. The document tree is shown below.
-<LinkedHashMap>
-<timestamp>2024-12-18T09:24:49.063+00:00</timestamp>
-<status>500</status>
-<message>java.lang.NoSuchMethodError</message>
-<identifier>1a77ed4f-cdf5-4b56-afb9-3b109b3b9932</identifier>
-<path>/</path>
-</LinkedHashMap>
+still got this : 
+cat /etc/pgadmin4/config_local.py
+# pgAdmin 4 configuration for external PostgreSQL
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@host:12400/  pgadmin_dev
+"
 
+DATA_DIR = '/pgadmin/data'
+LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
 
+instead of this : 
+cat /etc/pgadmin4/config_local.py
+# pgAdmin 4 configuration for external PostgreSQL
+CONFIG_DATABASE_URI = "postgresql://pgadmin4:dEK4wM8d4\6sNi9p*Py5@hostn:12400/pgadmin_dev"
 
-###solution
+DATA_DIR = '/pgadmin/data'
+LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
+
+here's the ansible tasks: 
 - name: Set pgAdmin4 database name based on ENVI
   set_fact:
     pgadmin_db_name: >-
@@ -21,3 +26,13 @@ This XML file does not appear to have any style information associated with it. 
       {% else %}
         "unknown_environment"
       {% endif %}
+
+- name: Configure pgAdmin to use external PostgreSQL
+  become: true
+  template:
+    src: config_local.py.j2
+    dest: /etc/pgadmin4/config_local.py
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Apache HTTPD
