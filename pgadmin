@@ -1,66 +1,26 @@
-- name: Configure SSL for Apache HTTPD
-  hosts: webservers
-  become: yes
-  vars:
-    ssl_cert_src: "/app/products/proxy/host.pem"
-    ssl_key_src: "/app/products/proxy/host.key"
-    ssl_dir: "/etc/httpd/ssl"
-    ssl_conf_file: "/etc/httpd/conf.d/ssl.conf"
+the content of the register vault_secret_response will conatin the following varaiables pgadmin_db_name_oat and pgadmin_db_name_prd, based on the {{ ENVI }} make a condition if {{ ENVI }} than 
 
-  tasks:
-    - name: Install Apache and mod_ssl
-      yum:
-        name:
-          - httpd
-          - mod_ssl
-        state: present
+pgadmin_db_name_oat: "{{ vault_secret_response.json.data.data.pgadmin_db_name_oat }}"
+pgadmin_db_name_prdt: "{{ vault_secret_response.json.data.data.pgadmin_db_name_prd }}"
 
-    - name: Create SSL directory
-      file:
-        path: "{{ ssl_dir }}"
-        state: directory
-        mode: '0755'
+here's my whole tasks to understand the context: 
+- name: Fetch pgAdmin4 setup credentials from Vault
+  uri:
+    url: "{{ VAULT_URL }}/v1/myVault/{{ VAULT_NAMESPACE }}/kv/data/xsf/pgadmin4"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_client_token }}"
+    return_content: yes
+    status_code: 200
+  register: vault_secret_response
 
-    - name: Copy SSL certificate
-      copy:
-        src: "{{ ssl_cert_src }}"
-        dest: "{{ ssl_dir }}/server.crt"
-        owner: root
-        group: root
-        mode: '0600'
 
-    - name: Copy SSL private key
-      copy:
-        src: "{{ ssl_key_src }}"
-        dest: "{{ ssl_dir }}/server.key"
-        owner: root
-        group: root
-        mode: '0600'
-
-    - name: Configure SSL VirtualHost
-      blockinfile:
-        path: "{{ ssl_conf_file }}"
-        marker: "# {mark} SSL CONFIGURATION"
-        block: |
-          <VirtualHost *:443>
-              ServerName example.com
-              DocumentRoot /var/www/html
-
-              SSLEngine on
-              SSLCertificateFile {{ ssl_dir }}/server.crt
-              SSLCertificateKeyFile {{ ssl_dir }}/server.key
-
-              <Directory "/var/www/html">
-                  AllowOverride All
-                  Require all granted
-              </Directory>
-
-              ErrorLog /var/log/httpd/ssl_error_log
-              CustomLog /var/log/httpd/ssl_access_log combined
-          </VirtualHost>
-
-    - name: Restart Apache HTTPD
-      service:
-        name: httpd
-        state: restarted
-        enabled: yes
+- name: Set pgAdmin4 setup variables
+  set_fact:
+    pgadmin_setup_email: "{{ vault_secret_response.json.data.data.pgadmin_setup_email }}"
+    pgadmin_setup_password: "{{ vault_secret_response.json.data.data.pgadmin_setup_password }}"
+    pgadmin_db_user: "{{ vault_secret_response.json.data.data.pgadmin_db_user }}"
+    pgadmin_db_password: "{{ vault_secret_response.json.data.data.pgadmin_db_password }}"
+    pgadmin_db_host: "{{ vault_secret_response.json.data.data.pgadmin_db_host }}"
+    pgadmin_db_port: "{{ vault_secret_response.json.data.data.pgadmin_db_port }}"
+    pgadmin_db_name_{{ ENVI }}: "{{ vault_secret_response.json.data.data.pgadmin_db_name_ }}"
