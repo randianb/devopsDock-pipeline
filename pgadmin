@@ -1,3 +1,18 @@
+zip_safe flag not set; analyzing archive contents...
+psycopg2.__pycache__._psycopg.cpython-39: module references __file__
+creating dist
+creating 'dist/psycopg2-2.9.10-py3.9-linux-x86_64.egg' and adding 'build/bdist.linux-x86_64/egg' to it
+removing 'build/bdist.linux-x86_64/egg' (and everything under it)
+Processing psycopg2-2.9.10-py3.9-linux-x86_64.egg
+creating /usr/local/lib64/python3.9/site-packages/psycopg2-2.9.10-py3.9-linux-x86_64.egg
+Extracting psycopg2-2.9.10-py3.9-linux-x86_64.egg to /usr/local/lib64/python3.9/site-packages
+Adding psycopg2 2.9.10 to easy-install.pth file
+
+Installed /usr/local/lib64/python3.9/site-packages/psycopg2-2.9.10-py3.9-linux-x86_64.egg
+Processing dependencies for psycopg2==2.9.10
+Finished processing dependencies for psycopg2==2.9.10
+
+
 python -m site
 sys.path = [
     '/home/cloud-user/psycopg2-2.9.10',
