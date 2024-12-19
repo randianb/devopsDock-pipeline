@@ -1,33 +1,16 @@
-zip_safe flag not set; analyzing archive contents...
-psycopg2.__pycache__._psycopg.cpython-39: module references __file__
-creating dist
-creating 'dist/psycopg2-2.9.10-py3.9-linux-x86_64.egg' and adding 'build/bdist.linux-x86_64/egg' to it
-removing 'build/bdist.linux-x86_64/egg' (and everything under it)
-Processing psycopg2-2.9.10-py3.9-linux-x86_64.egg
-creating /usr/local/lib64/python3.9/site-packages/psycopg2-2.9.10-py3.9-linux-x86_64.egg
-Extracting psycopg2-2.9.10-py3.9-linux-x86_64.egg to /usr/local/lib64/python3.9/site-packages
-Adding psycopg2 2.9.10 to easy-install.pth file
-
-Installed /usr/local/lib64/python3.9/site-packages/psycopg2-2.9.10-py3.9-linux-x86_64.egg
-Processing dependencies for psycopg2==2.9.10
-Finished processing dependencies for psycopg2==2.9.10
-
-
-python -m site
-sys.path = [
-    '/home/cloud-user/psycopg2-2.9.10',
-    '/usr/lib64/python39.zip',
-    '/usr/lib64/python3.9',
-    '/usr/lib64/python3.9/lib-dynload',
-    '/usr/pgadmin4/venv/lib64/python3.9/site-packages',
-    '/usr/pgadmin4/venv/lib/python3.9/site-packages',
-]
-USER_BASE: '/root/.local' (doesn't exist)
-USER_SITE: '/root/.local/lib/python3.9/site-packages' (doesn't exist)
-ENABLE_USER_SITE: False
-(venv) [0][root@(pgadmin4_oat_blue_1):/home/cloud-user/psycopg2-2.9.10]
-$ mv /home/cloud-user/psycopg2-2.9.10 /usr/pgadmin4/venv/lib64/python3.9/site-packages/
-(venv) [0][root@(pgadmin4_oat_blue_1):/home/cloud-user/psycopg2-2.9.10]
+sudo tail -f /var/log/httpd/error_log
+[Thu Dec 19 09:01:49.935233 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/engine/create.py", line 820, in engine_from_config
+[Thu Dec 19 09:01:49.935260 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]     return create_engine(url, **options)
+[Thu Dec 19 09:01:49.935311 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]   File "<string>", line 2, in create_engine
+[Thu Dec 19 09:01:49.935350 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+[Thu Dec 19 09:01:49.935374 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]     return fn(*args, **kwargs)  # type: ignore[no-any-return]
+[Thu Dec 19 09:01:49.935395 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/engine/create.py", line 599, in create_engine
+[Thu Dec 19 09:01:49.935421 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]     dbapi = dbapi_meth(**dbapi_args)
+[Thu Dec 19 09:01:49.935448 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]   File "/usr/pgadmin4/venv/lib64/python3.9/site-packages/sqlalchemy/dialects/postgresql/psycopg2.py", line 690, in import_dbapi
+[Thu Dec 19 09:01:49.935472 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594]     import psycopg2
+[Thu Dec 19 09:01:49.935523 2024] [wsgi:error] [pid 517348:tid 517448] [remote ::1:43594] ModuleNotFoundError: No module named 'psycopg2'
+^C
+(venv) [130][root@(pgadmin4_oat_blue_1):/home/cloud-user/psycopg2-2.9.10]
 $ pip list
 Package                  Version
 ------------------------ ------------
@@ -111,6 +94,7 @@ protobuf                 5.27.1
 psutil                   5.9.8
 psycopg                  3.1.19
 psycopg-c                3.1.19
+psycopg2                 2.9.10
 pyasn1                   0.6.0
 pyasn1_modules           0.4.0
 pycparser                2.22
