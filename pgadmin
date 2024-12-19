@@ -1,21 +1,12 @@
- python -c "import psycopg2; print(psycopg2.__version__)"
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-ModuleNotFoundError: No module named 'psycopg2'
-(venv) [1][root@(pgadmin4_oat_blue_1):/home/cloud-user/psycopg2-2.9.10]
-$ echo $VIRTUAL_ENV
-/usr/pgadmin4/venv
-(venv) [0][root@(pgadmin4_oat_blue_1):/home/cloud-user/psycopg2-2.9.10]
-$ python -m site
-sys.path = [
-    '/usr/pgadmin4/venv/lib/python3.9/site-packages/psycopg2-2.9.10',
-    '/usr/local/lib64/python3.9/site-packages',
-    '/usr/lib64/python39.zip',
-    '/usr/lib64/python3.9',
-    '/usr/lib64/python3.9/lib-dynload',
-    '/usr/pgadmin4/venv/lib64/python3.9/site-packages',
-    '/usr/pgadmin4/venv/lib/python3.9/site-packages',
-]
-USER_BASE: '/root/.local' (doesn't exist)
-USER_SITE: '/root/.local/lib/python3.9/site-packages' (doesn't exist)
-ENABLE_USER_SITE: False
+yum groupinstall 'Development Tools'
+yum install python3-devel postgresql-devel
+
+wget https://objs3parstd01.fr.world.socgen/xsf-af567-prd-artifacts/public/python/psycopg2-2.9.10.tar.gz
+tar -xzf psycopg2-2.9.10.tar.gz
+cd psycopg2-2.9.10
+
+python3 setup.py build
+python3 setup.py install
+
+export PYTHONPATH=/usr/local/lib64/python3.9/site-packages/:$PYTHONPATH
+pip list 
