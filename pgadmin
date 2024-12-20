@@ -1,77 +1,57 @@
-ls -lsrh
+mdkir -p /var/lib/pgadmin/sessions
+bash: mdkir: command not found
+[127][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ mkdir -p /var/lib/pgadmin/sessions
+[0][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ chown apache:apache /var/lib/pgadmin/sessions
+[0][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ chmod 700 /var/lib/pgadmin/sessions
+[0][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ ls -lsrh
 total 0
 0 drwxr-xr-x. 2 root   root   6 Dec 19 15:08 storage
-0 drwxr-xr-x. 2 apache apache 6 Dec 19 15:08 sessions
+0 drwx------. 2 apache apache 6 Dec 19 15:08 sessions
 0 drwxr-xr-x. 2 root   root   6 Dec 19 15:08 azurecredentialcache
-
-
-i still got this : 
- tail -f /var/log/httpd/error_log
-[Fri Dec 20 11:01:29.258543 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994] Traceback (most recent call last):
-[Fri Dec 20 11:01:29.258555 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]   File "/usr/pgadmin4/web/pgAdmin4.wsgi", line 36, in <module>
-[Fri Dec 20 11:01:29.258558 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]     from pgAdmin4 import app as application
-[Fri Dec 20 11:01:29.258562 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]   File "/usr/pgadmin4/web/pgAdmin4.py", line 103, in <module>
-[Fri Dec 20 11:01:29.258566 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]     app = create_app()
-[Fri Dec 20 11:01:29.258570 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]   File "/usr/pgadmin4/web/pgadmin/__init__.py", line 252, in create_app
-[Fri Dec 20 11:01:29.258573 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]     create_app_data_directory(config)
-[Fri Dec 20 11:01:29.258578 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
-[Fri Dec 20 11:01:29.258581 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994]     sys.exit(1)
-[Fri Dec 20 11:01:29.258587 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:57994] SystemExit: 1
-[Fri Dec 20 11:01:40.964386 2024] [wsgi:error] [pid 213436:tid 213560] ERROR  : Failed to create the directory /var/lib/pgadmin/sessions:
-[Fri Dec 20 11:01:40.964448 2024] [wsgi:error] [pid 213436:tid 213560]            [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
-[Fri Dec 20 11:01:40.964458 2024] [wsgi:error] [pid 213436:tid 213560]
-[Fri Dec 20 11:01:40.964535 2024] [wsgi:error] [pid 213436:tid 213560] HINT   : Create the directory /var/lib/pgadmin/sessions, ensure it is writeable by
-[Fri Dec 20 11:01:40.964554 2024] [wsgi:error] [pid 213436:tid 213560]          'apache', and try again, or, create a config_local.py file
-[Fri Dec 20 11:01:40.964561 2024] [wsgi:error] [pid 213436:tid 213560]          and override the SESSION_DB_PATH setting per
-[Fri Dec 20 11:01:40.964567 2024] [wsgi:error] [pid 213436:tid 213560]          https://www.pgadmin.org/docs/pgadmin4/8.9/config_py.html
-[Fri Dec 20 11:01:40.964584 2024] [wsgi:error] [pid 213436:tid 213560]
-[Fri Dec 20 11:01:40.964611 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] mod_wsgi (pid=213436): SystemExit exception raised when doing exec of Python script file '/usr/pgadmin4/web/pgAdmin4.wsgi'.
-[Fri Dec 20 11:01:40.964639 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] mod_wsgi (pid=213436): SystemExit exception raised by WSGI script '/usr/pgadmin4/web/pgAdmin4.wsgi' ignored.
-[Fri Dec 20 11:01:40.964784 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] Traceback (most recent call last):
-[Fri Dec 20 11:01:40.964815 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 83, in create_app_data_directory
-[Fri Dec 20 11:01:40.964830 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     _create_directory_if_not_exists(config.SESSION_DB_PATH)
-[Fri Dec 20 11:01:40.964862 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 21, in _create_directory_if_not_exists
-[Fri Dec 20 11:01:40.964885 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     os.mkdir(_path)
-[Fri Dec 20 11:01:40.964967 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] PermissionError: [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
-[Fri Dec 20 11:01:40.965039 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]
-[Fri Dec 20 11:01:40.965056 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] During handling of the above exception, another exception occurred:
-[Fri Dec 20 11:01:40.965122 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]
-[Fri Dec 20 11:01:40.965132 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] Traceback (most recent call last):
-[Fri Dec 20 11:01:40.965155 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgAdmin4.wsgi", line 36, in <module>
-[Fri Dec 20 11:01:40.965162 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     from pgAdmin4 import app as application
-[Fri Dec 20 11:01:40.965170 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgAdmin4.py", line 103, in <module>
-[Fri Dec 20 11:01:40.965177 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     app = create_app()
-[Fri Dec 20 11:01:40.965185 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgadmin/__init__.py", line 252, in create_app
-[Fri Dec 20 11:01:40.965192 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     create_app_data_directory(config)
-[Fri Dec 20 11:01:40.965206 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
-[Fri Dec 20 11:01:40.965261 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364]     sys.exit(1)
-[Fri Dec 20 11:01:40.965276 2024] [wsgi:error] [pid 213436:tid 213560] [remote ::1:33364] SystemExit: 1
-[Fri Dec 20 11:01:42.708921 2024] [wsgi:error] [pid 213436:tid 213536] ERROR  : Failed to create the directory /var/lib/pgadmin/sessions:
-[Fri Dec 20 11:01:42.708968 2024] [wsgi:error] [pid 213436:tid 213536]            [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
-[Fri Dec 20 11:01:42.708975 2024] [wsgi:error] [pid 213436:tid 213536]
-[Fri Dec 20 11:01:42.709043 2024] [wsgi:error] [pid 213436:tid 213536] HINT   : Create the directory /var/lib/pgadmin/sessions, ensure it is writeable by
-[Fri Dec 20 11:01:42.709057 2024] [wsgi:error] [pid 213436:tid 213536]          'apache', and try again, or, create a config_local.py file
-[Fri Dec 20 11:01:42.709061 2024] [wsgi:error] [pid 213436:tid 213536]          and override the SESSION_DB_PATH setting per
-[Fri Dec 20 11:01:42.709065 2024] [wsgi:error] [pid 213436:tid 213536]          https://www.pgadmin.org/docs/pgadmin4/8.9/config_py.html
-[Fri Dec 20 11:01:42.709070 2024] [wsgi:error] [pid 213436:tid 213536]
-[Fri Dec 20 11:01:42.709105 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] mod_wsgi (pid=213436): SystemExit exception raised when doing exec of Python script file '/usr/pgadmin4/web/pgAdmin4.wsgi'.
-[Fri Dec 20 11:01:42.709192 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] mod_wsgi (pid=213436): SystemExit exception raised by WSGI script '/usr/pgadmin4/web/pgAdmin4.wsgi' ignored.
-[Fri Dec 20 11:01:42.709292 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] Traceback (most recent call last):
-[Fri Dec 20 11:01:42.709315 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 83, in create_app_data_directory
-[Fri Dec 20 11:01:42.709320 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     _create_directory_if_not_exists(config.SESSION_DB_PATH)
-[Fri Dec 20 11:01:42.709326 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 21, in _create_directory_if_not_exists
-[Fri Dec 20 11:01:42.709335 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     os.mkdir(_path)
-[Fri Dec 20 11:01:42.709399 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] PermissionError: [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
-[Fri Dec 20 11:01:42.709413 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]
-[Fri Dec 20 11:01:42.709417 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] During handling of the above exception, another exception occurred:
-[Fri Dec 20 11:01:42.709421 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]
-[Fri Dec 20 11:01:42.709426 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] Traceback (most recent call last):
-[Fri Dec 20 11:01:42.709439 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgAdmin4.wsgi", line 36, in <module>
-[Fri Dec 20 11:01:42.709444 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     from pgAdmin4 import app as application
-[Fri Dec 20 11:01:42.709449 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgAdmin4.py", line 103, in <module>
-[Fri Dec 20 11:01:42.709460 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     app = create_app()
-[Fri Dec 20 11:01:42.709511 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgadmin/__init__.py", line 252, in create_app
-[Fri Dec 20 11:01:42.709560 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     create_app_data_directory(config)
-[Fri Dec 20 11:01:42.709565 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
-[Fri Dec 20 11:01:42.709570 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366]     sys.exit(1)
-[Fri Dec 20 11:01:42.709577 2024] [wsgi:error] [pid 213436:tid 213536] [remote ::1:33366] SystemExit: 1
+[0][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ systemctl restart httpd
+[0][root@(pgadmin4_oat_blue_1):/var/lib/pgadmin]
+$ tail -f /var/log/httpd/error_log
+[Fri Dec 20 11:07:23.862089 2024] [wsgi:error] [pid 213948:tid 214048] [remote ::1:43512]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
+[Fri Dec 20 11:07:23.862098 2024] [wsgi:error] [pid 213948:tid 214048] [remote ::1:43512]     sys.exit(1)
+[Fri Dec 20 11:07:23.862111 2024] [wsgi:error] [pid 213948:tid 214048] [remote ::1:43512] SystemExit: 1
+[Fri Dec 20 11:08:23.437874 2024] [mpm_event:notice] [pid 213945:tid 213945] AH00492: caught SIGWINCH, shutting down gracefully
+[Fri Dec 20 11:08:27.544341 2024] [core:notice] [pid 214220:tid 214220] SELinux policy enabled; httpd running as context system_u:system_r:httpd_t:s0
+[Fri Dec 20 11:08:27.545379 2024] [suexec:notice] [pid 214220:tid 214220] AH01232: suEXEC mechanism enabled (wrapper: /usr/sbin/suexec)
+[Fri Dec 20 11:08:27.560279 2024] [so:warn] [pid 214220:tid 214220] AH01574: module wsgi_module is already loaded, skipping
+[Fri Dec 20 11:08:27.565362 2024] [lbmethod_heartbeat:notice] [pid 214220:tid 214220] AH02282: No slotmem from mod_heartmonitor
+[Fri Dec 20 11:08:27.571286 2024] [mpm_event:notice] [pid 214220:tid 214220] AH00489: Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.2.2 mod_wsgi/4.7.1 Python/3.9 configured -- resuming normal operations
+[Fri Dec 20 11:08:27.571305 2024] [core:notice] [pid 214220:tid 214220] AH00094: Command line: '/usr/sbin/httpd -D FOREGROUND'
+[Fri Dec 20 11:08:37.127137 2024] [wsgi:error] [pid 214223:tid 214323] ERROR  : Failed to create the directory /var/lib/pgadmin/sessions:
+[Fri Dec 20 11:08:37.127219 2024] [wsgi:error] [pid 214223:tid 214323]            [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
+[Fri Dec 20 11:08:37.127226 2024] [wsgi:error] [pid 214223:tid 214323]
+[Fri Dec 20 11:08:37.127306 2024] [wsgi:error] [pid 214223:tid 214323] HINT   : Create the directory /var/lib/pgadmin/sessions, ensure it is writeable by
+[Fri Dec 20 11:08:37.127314 2024] [wsgi:error] [pid 214223:tid 214323]          'apache', and try again, or, create a config_local.py file
+[Fri Dec 20 11:08:37.127363 2024] [wsgi:error] [pid 214223:tid 214323]          and override the SESSION_DB_PATH setting per
+[Fri Dec 20 11:08:37.127368 2024] [wsgi:error] [pid 214223:tid 214323]          https://www.pgadmin.org/docs/pgadmin4/8.9/config_py.html
+[Fri Dec 20 11:08:37.127374 2024] [wsgi:error] [pid 214223:tid 214323]
+[Fri Dec 20 11:08:37.127410 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] mod_wsgi (pid=214223): SystemExit exception raised when doing exec of Python script file '/usr/pgadmin4/web/pgAdmin4.wsgi'.
+[Fri Dec 20 11:08:37.127443 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] mod_wsgi (pid=214223): SystemExit exception raised by WSGI script '/usr/pgadmin4/web/pgAdmin4.wsgi' ignored.
+[Fri Dec 20 11:08:37.127940 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] Traceback (most recent call last):
+[Fri Dec 20 11:08:37.127983 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 83, in create_app_data_directory
+[Fri Dec 20 11:08:37.127990 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     _create_directory_if_not_exists(config.SESSION_DB_PATH)
+[Fri Dec 20 11:08:37.127995 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 21, in _create_directory_if_not_exists
+[Fri Dec 20 11:08:37.128001 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     os.mkdir(_path)
+[Fri Dec 20 11:08:37.128019 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] PermissionError: [Errno 13] Permission denied: '/var/lib/pgadmin/sessions'
+[Fri Dec 20 11:08:37.128034 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]
+[Fri Dec 20 11:08:37.128038 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] During handling of the above exception, another exception occurred:
+[Fri Dec 20 11:08:37.128043 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]
+[Fri Dec 20 11:08:37.128049 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] Traceback (most recent call last):
+[Fri Dec 20 11:08:37.128067 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgAdmin4.wsgi", line 36, in <module>
+[Fri Dec 20 11:08:37.128073 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     from pgAdmin4 import app as application
+[Fri Dec 20 11:08:37.128079 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgAdmin4.py", line 103, in <module>
+[Fri Dec 20 11:08:37.128101 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     app = create_app()
+[Fri Dec 20 11:08:37.128142 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgadmin/__init__.py", line 252, in create_app
+[Fri Dec 20 11:08:37.128148 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     create_app_data_directory(config)
+[Fri Dec 20 11:08:37.128158 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
+[Fri Dec 20 11:08:37.128166 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     sys.exit(1)
+[Fri Dec 20 11:08:37.128179 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] SystemExit: 1
