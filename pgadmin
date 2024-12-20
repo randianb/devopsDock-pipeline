@@ -1,30 +1,28 @@
-##########################################################################
-# Mail server settings
-##########################################################################
+- name: Replace mail server settings in pgAdmin config
+  replace:
+    path: /usr/pgadmin4/web/config.py
+    regexp: |
+      (?s)##########################################################################\n# Mail server settings\n##########################################################################.*?##########################################################################
+    replace: |
+      ##########################################################################
+      # Mail server settings
+      ##########################################################################
 
-# These settings are used when running in web server mode for confirming
-# and resetting passwords etc.
-# See: http://pythonhosted.org/Flask-Mail/ for more info
-MAIL_SERVER = 'localhost'
-MAIL_PORT = 25
-MAIL_USE_SSL = False
-MAIL_USE_TLS = False
-MAIL_USERNAME = ''
-MAIL_PASSWORD = ''
-MAIL_DEBUG = False
+      # These settings are used when running in web server mode for confirming
+      # and resetting passwords etc.
+      # See: http://pythonhosted.org/Flask-Mail/ for more info
+      MAIL_SERVER = 'smtp.example.com'
+      MAIL_PORT = 587
+      MAIL_USE_SSL = False
+      MAIL_USE_TLS = True
+      MAIL_USERNAME = 'your-email@example.com'
+      MAIL_PASSWORD = 'your-email-password'
+      MAIL_DEBUG = False
 
-# Flask-Security overrides Flask-Mail's MAIL_DEFAULT_SENDER setting, so
-# that should be set as such:
-SECURITY_EMAIL_SENDER = 'no-reply@localhost'
+      # Flask-Security overrides Flask-Mail's MAIL_DEFAULT_SENDER setting, so
+      # that should be set as such:
+      SECURITY_EMAIL_SENDER = 'no-reply@example.com'
 
-##########################################################################
-# Mail content settings
-##########################################################################
-
-# These settings define the content of password reset emails
-SECURITY_EMAIL_SUBJECT_PASSWORD_RESET = "Password reset instructions for %s" \
-                                        % APP_NAME
-SECURITY_EMAIL_SUBJECT_PASSWORD_NOTICE = "Your %s password has been reset" \
-                                         % APP_NAME
-SECURITY_EMAIL_SUBJECT_PASSWORD_CHANGE_NOTICE = \
-    "Your password for %s has been changed" % APP_NAME
+      ##########################################################################
+- notify:
+    - restart pgadmin
