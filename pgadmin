@@ -55,3 +55,42 @@ $ tail -f /var/log/httpd/error_log
 [Fri Dec 20 11:08:37.128158 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]   File "/usr/pgadmin4/web/pgadmin/setup/data_directory.py", line 95, in create_app_data_directory
 [Fri Dec 20 11:08:37.128166 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014]     sys.exit(1)
 [Fri Dec 20 11:08:37.128179 2024] [wsgi:error] [pid 214223:tid 214323] [remote ::1:39014] SystemExit: 1
+
+
+ getent passwd
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+sync:x:5:0:sync:/sbin:/bin/sync
+shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+halt:x:7:0:halt:/sbin:/sbin/halt
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+operator:x:11:0:operator:/root:/sbin/nologin
+games:x:12:100:games:/usr/games:/sbin/nologin
+ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+nobody:x:65534:65534:Kernel Overflow User:/:/sbin/nologin
+tss:x:59:59:Account used for TPM access:/:/usr/sbin/nologin
+systemd-coredump:x:999:997:systemd Core Dumper:/:/sbin/nologin
+dbus:x:81:81:System message bus:/:/sbin/nologin
+sssd:x:998:996:User for sssd:/:/sbin/nologin
+chrony:x:997:995:chrony system user:/var/lib/chrony:/sbin/nologin
+sshd:x:74:74:Privilege-separated SSH:/usr/share/empty.sshd:/usr/sbin/nologin
+fluentd:x:996:993:fluentd:/var/lib/fluent:/sbin/nologin
+sg-telegraf:x:995:992::/etc/sg-telegraf:/bin/false
+postfix:x:89:89::/var/spool/postfix:/sbin/nologin
+gtsadmin:x:1001:1001:GTS admin account:/home/gtsadmin:/bin/bash
+cloud-user:x:1002:1002:Cloud user account:/home/cloud-user:/bin/bash
+puppet-runner:x:1003:1003:GTS Puppet apply account for CMaaS:/home/puppet-runner:/bin/bash
+app:x:1040:1004:app user:/app:/bin/bash
+apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
+polkitd:x:994:991:User for polkitd:/:/sbin/nologin
+rtkit:x:172:172:RealtimeKit:/:/sbin/nologin
+stapunpriv:x:159:159:systemtap unprivileged user:/var/lib/stapunpriv:/sbin/nologin
+geoclue:x:993:990:User for geoclue:/var/lib/geoclue:/sbin/nologin
+pipewire:x:992:989:PipeWire System Daemon:/run/pipewire:/usr/sbin/nologin
+flatpak:x:991:988:User for flatpak system helper:/:/sbin/nologin
+pesign:x:990:987:Group for the pesign signing daemon:/run/pesign:/sbin/nologin
+postgres:x:26:26:PostgreSQL Server:/var/lib/pgsql:/sbin/nologin
+
