@@ -1,15 +1,30 @@
-- name: Configure pgAdmin mail server
-  blockinfile:
-    path: /usr/pgadmin4/web/config.py
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Mail Server Configuration"
-    block: |
-      # Mail Server Settings
-      MAIL_SERVER = "smtp.example.com"
-      MAIL_PORT = 587
-      MAIL_USE_TLS = True
-      MAIL_USE_SSL = False
-      MAIL_USERNAME = "your-email@example.com"
-      MAIL_PASSWORD = "your-email-password"
-      MAIL_DEFAULT_SENDER = "your-email@example.com"
-  notify:
-    - restart pgadmin
+##########################################################################
+# Mail server settings
+##########################################################################
+
+# These settings are used when running in web server mode for confirming
+# and resetting passwords etc.
+# See: http://pythonhosted.org/Flask-Mail/ for more info
+MAIL_SERVER = 'localhost'
+MAIL_PORT = 25
+MAIL_USE_SSL = False
+MAIL_USE_TLS = False
+MAIL_USERNAME = ''
+MAIL_PASSWORD = ''
+MAIL_DEBUG = False
+
+# Flask-Security overrides Flask-Mail's MAIL_DEFAULT_SENDER setting, so
+# that should be set as such:
+SECURITY_EMAIL_SENDER = 'no-reply@localhost'
+
+##########################################################################
+# Mail content settings
+##########################################################################
+
+# These settings define the content of password reset emails
+SECURITY_EMAIL_SUBJECT_PASSWORD_RESET = "Password reset instructions for %s" \
+                                        % APP_NAME
+SECURITY_EMAIL_SUBJECT_PASSWORD_NOTICE = "Your %s password has been reset" \
+                                         % APP_NAME
+SECURITY_EMAIL_SUBJECT_PASSWORD_CHANGE_NOTICE = \
+    "Your password for %s has been changed" % APP_NAME
