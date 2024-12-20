@@ -1,33 +1,5 @@
-- name: Ensure pgAdmin session directory exists and has correct permissions
-  block:
-    - name: Create session directory if it doesn't exist
-      file:
-        path: /var/lib/pgadmin/sessions
-        state: directory
-        mode: '0755'
-        owner: apache
-        group: apache
-
-    - name: Set the correct SELinux context for pgAdmin sessions directory
-      command: semanage fcontext -a -t httpd_sys_rw_content_t "/var/lib/pgadmin(/.*)?"
-      when: ansible_facts['selinux']['status'] == 'enabled'
-
-    - name: Restore SELinux context for pgAdmin sessions directory
-      command: restorecon -Rv /var/lib/pgadmin
-      when: ansible_facts['selinux']['status'] == 'enabled'
-
-    - name: Ensure the correct permissions are set for pgAdmin sessions directory
-      file:
-        path: /var/lib/pgadmin/sessions
-        state: directory
-        mode: '0755'
-        owner: apache
-        group: apache
-
-    - name: Restart Apache service to apply changes
-      service:
-        name: httpd
-        state: restarted
-
-  become: true
-  become_user: root
+ls -lsrh
+total 0
+0 drwxr-xr-x. 2 root   root   6 Dec 19 15:08 storage
+0 drwxr-xr-x. 2 apache apache 6 Dec 19 15:08 sessions
+0 drwxr-xr-x. 2 root   root   6 Dec 19 15:08 azurecredentialcache
