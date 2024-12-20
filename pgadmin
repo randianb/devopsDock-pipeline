@@ -1,17 +1,31 @@
-- name: Replace mail server settings block in config.py
-  replace:
-    path: /usr/pgadmin4/web/config.py
-    regexp: |
-      MAIL_SERVER\s*=\s*'[^']*'\s*\nMAIL_PORT\s*=\s*\d+\s*\nMAIL_USE_SSL\s*=\s*(True|False)\s*\nMAIL_USE_TLS\s*=\s*(True|False)\s*\nMAIL_USERNAME\s*=\s*'[^']*'\s*\nMAIL_PASSWORD\s*=\s*'[^']*'\s*\nMAIL_DEBUG\s*=\s*(True|False)\s*\n\n# Flask-Security overrides Flask-Mail's MAIL_DEFAULT_SENDER setting, so\n# that should be set as such:\nSECURITY_EMAIL_SENDER\s*=\s*'[^']*'
-    replace: |
-      MAIL_SERVER = 'smtp.example.com'
-      MAIL_PORT = 587
-      MAIL_USE_SSL = False
-      MAIL_USE_TLS = True
-      MAIL_USERNAME = 'your-email@example.com'
-      MAIL_PASSWORD = 'your-email-password'
-      MAIL_DEBUG = False
-
-      # Flask-Security overrides Flask-Mail's MAIL_DEFAULT_SENDER setting, so
-      # that should be set as such:
-      SECURITY_EMAIL_SENDER = 'no-reply@example.com'
+ curl -k -v http://localhost:8080/pgadmin4
+*   Trying ::1:8080...
+* Connected to localhost (::1) port 8080 (#0)
+> GET /pgadmin4 HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.76.1
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 500 Internal Server Error
+< Date: Fri, 20 Dec 2024 10:42:19 GMT
+< Server: Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.2.2 mod_wsgi/4.7.1 Python/3.9
+< Content-Length: 527
+< Connection: close
+< Content-Type: text/html; charset=iso-8859-1
+<
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>500 Internal Server Error</title>
+</head><body>
+<h1>Internal Server Error</h1>
+<p>The server encountered an internal error or
+misconfiguration and was unable to complete
+your request.</p>
+<p>Please contact the server administrator at
+ root@localhost to inform them of the time this error occurred,
+ and the actions you performed just before this error.</p>
+<p>More information about this error may be available
+in the server error log.</p>
+</body></html>
+* Closing connection 0
