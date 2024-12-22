@@ -1,36 +1,81 @@
-create an asible role that will perform thee following: 
+---
+# Copy static folders (CRONS, LOGS) to the target system
+- name: Copy CRONS and LOGS folders to target
+  copy:
+    src: WSO2_DB_CLEANUP/
+    dest: /home/cloud-user/WSO2_DB_CLEANUP/
+    owner: cloud-user
+    group: cloud-user
+    mode: '0755'
+  with_items:
+    - CRONS
+    - LOGS
+  loop_control:
+    loop_var: folder
 
-main.ymlk will include 2 roles pgadmin4.yml and WSO2_DB_CLEANUP.yml
-i want to help to create the second ansible playbook WSO2_DB_CLEANUP 
-simply gona create crontab -e with the following : 
-0 1 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_token_cleanup_runner.sh
-0 1 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_session_data_cleanup_runner.sh
-0 4 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-session-data-cleanup-ruuner.sh
-0 4 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-token-cleanup-runner.sh
+# Replace sensitive variables in scripts using templates
+- name: Copy SCRIPTS with sensitive variables replaced
+  template:
+    src: "WSO2_DB_CLEANUP/SCRIPTS/{{ item }}.j2"
+    dest: "/home/cloud-user/WSO2_DB_CLEANUP/SCRIPTS/{{ item }}"
+    owner: cloud-user
+    group: cloud-user
+    mode: '0755'
+  with_items:
+    - script-session-data-cleanup-runner.sh
+    - script-stop-process-session-data-cleanup-ruuner.sh
+    - script-stop-process-token-cleanup-runner.sh
+    - script-token-cleanup-runner.sh
 
-after that will transfer a folder that i will stored on the files of ansible directory 
-the folders contain all the crontab and script script and also a directory of logs where the logs data will be stored. the tree of the folders's follow: 
-/home/cloud-user]
-$ tree
-└── WSO2_DB_CLEANUP
-    ├── CRONS
-    │   ├── cron_session_data_cleanup_runner.sh
-    │   ├── cron-stop-process-session-data-cleanup-ruuner.sh
-    │   ├── cron-stop-process-token-cleanup-runner.sh
-    │   └── cron_token_cleanup_runner.sh
-    ├── LOGS
-    │   ├── LOGS_ARCHIVE
-    │   ├── LOGS_CRON_SESSION_DATA_CLEANUP_RUNNER
-    │   ├── LOGS_CRON_STOP_PROCESS_SESSION_DATA_CLEANUP_RUNNER
-    │   ├── LOGS_CRON_STOP_PROCESS_TOKEN_CLEANUP_RUNNER
-    │   ├── LOGS_CRON_TOKEN_CLEANUP_RUNNER
-    │   ├── LOGS_SCRIPT_SESSION_DATA_CLEANUP_RUNNER
-    │   ├── LOGS_SCRIPT_STOP_PROCESS_SESSION_DATA_CLEANUP_RUNNER
-    │   ├── LOGS_SCRIPT_STOP_PROCESS_TOKEN_CLEANUP_RUNNER
-    │   └── LOGS_SCRIPT_TOKEN_CLEANUP_RUNNER
-    └── SCRIPTS
-        ├── script-session-data-cleanup-runner.sh
-        ├── script-stop-process-session-data-cleanup-ruuner.sh
-        ├── script-stop-process-token-cleanup-runner.sh
-        └── script-token-cleanup-runner.sh
-make the folders excutable to cloud-user and Disable SELinux temporarily
+# Set up crontab for cleanup tasks
+- name: Set up crontab for cloud-user
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    job: "{{ item.job }}"
+    user: cloud-user
+  loop:
+    - { name: "Token Cleanup Runner", minute: "0", hour: "1", job: "/bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_token_cleanup_runner.sh" }
+    - { name: "Session Data Cleanup Runner", minute: "0", hour: "1", job: "/bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_session_data_cleanup_runner.sh" }
+    - { name: "Stop Process Session Data Cleanup", minute: "0", hour: "4", job: "/bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-session-data-cleanup-ruuner.sh" }
+    - { name: "Stop Process Token Cleanup", minute: "0", hour: "4", job: "/bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-token-cleanup-runner.sh" }
+
+# Disable SELinux temporarily
+- name: Disable SELinux temporarily
+  command: setenforce 0
+  when: ansible_selinux.status == "enabled"
+
+# Ensure SELinux is permissive in the config
+- name: Ensure SELinux is permissive in config
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=permissive'
+    state: present
+
+
+
+###structure 
+roles/
+├── WSO2_DB_CLEANUP/
+│   ├── tasks/
+│   │   └── main.yml
+│   ├── templates/
+│   │   └── WSO2_DB_CLEANUP/
+│   │       └── SCRIPTS/
+│   │           ├── script-session-data-cleanup-runner.sh.j2
+│   │           ├── script-stop-process-session-data-cleanup-ruuner.sh.j2
+│   │           ├── script-stop-process-token-cleanup-runner.sh.j2
+│   │           └── script-token-cleanup-runner.sh.j2
+│   ├── files/
+│   │   └── WSO2_DB_CLEANUP/
+│   │       ├── CRONS/
+│   │       │   ├── cron_session_data_cleanup_runner.sh
+│   │       │   ├── cron-stop-process-session-data-cleanup-ruuner.sh
+│   │       │   ├── cron-stop-process-token-cleanup-runner.sh
+│   │       │   └── cron_token_cleanup_runner.sh
+│   │       ├── LOGS/
+│   │       └── (empty directories or placeholder files)
+│   └── meta/
+│       └── main.yml
