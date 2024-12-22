@@ -1,1 +1,36 @@
-Environment=LANG=C PYTHONPATH=/usr/local/lib64/python3.9/site-packages/:$PYTHONPATH
+create an asible role that will perform thee following: 
+
+main.ymlk will include 2 roles pgadmin4.yml and WSO2_DB_CLEANUP.yml
+i want to help to create the second ansible playbook WSO2_DB_CLEANUP 
+simply gona create crontab -e with the following : 
+0 1 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_token_cleanup_runner.sh
+0 1 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron_session_data_cleanup_runner.sh
+0 4 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-session-data-cleanup-ruuner.sh
+0 4 * * * /bin/sh /home/cloud-user/WSO2_DB_CLEANUP/CRONS/cron-stop-process-token-cleanup-runner.sh
+
+after that will transfer a folder that i will stored on the files of ansible directory 
+the folders contain all the crontab and script script and also a directory of logs where the logs data will be stored. the tree of the folders's follow: 
+/home/cloud-user]
+$ tree
+└── WSO2_DB_CLEANUP
+    ├── CRONS
+    │   ├── cron_session_data_cleanup_runner.sh
+    │   ├── cron-stop-process-session-data-cleanup-ruuner.sh
+    │   ├── cron-stop-process-token-cleanup-runner.sh
+    │   └── cron_token_cleanup_runner.sh
+    ├── LOGS
+    │   ├── LOGS_ARCHIVE
+    │   ├── LOGS_CRON_SESSION_DATA_CLEANUP_RUNNER
+    │   ├── LOGS_CRON_STOP_PROCESS_SESSION_DATA_CLEANUP_RUNNER
+    │   ├── LOGS_CRON_STOP_PROCESS_TOKEN_CLEANUP_RUNNER
+    │   ├── LOGS_CRON_TOKEN_CLEANUP_RUNNER
+    │   ├── LOGS_SCRIPT_SESSION_DATA_CLEANUP_RUNNER
+    │   ├── LOGS_SCRIPT_STOP_PROCESS_SESSION_DATA_CLEANUP_RUNNER
+    │   ├── LOGS_SCRIPT_STOP_PROCESS_TOKEN_CLEANUP_RUNNER
+    │   └── LOGS_SCRIPT_TOKEN_CLEANUP_RUNNER
+    └── SCRIPTS
+        ├── script-session-data-cleanup-runner.sh
+        ├── script-stop-process-session-data-cleanup-ruuner.sh
+        ├── script-stop-process-token-cleanup-runner.sh
+        └── script-token-cleanup-runner.sh
+make the folders excutable to cloud-user and Disable SELinux temporarily
