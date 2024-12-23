@@ -1,1 +1,80 @@
-(item=LOGS) => {"ansible_loop_var": "folder", "changed": false, "folder": "LOGS", "msg": "Could not find or access 'WSO2_DB_CLEANUP/'\nSearched in:\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/wso2_db_cleanup/files/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/wso2_db_cleanup/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/pgadmin4/files/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/pgadmin4/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/wso2_db_cleanup/tasks/files/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/pipeline/app/v2/ansible/roles/wso2_db_cleanup/tasks/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/projects/xsf/pgadmin4/oat/files/WSO2_DB_CLEANUP/\n\t/home/jenkins/agent/workspace/XSF/APPS/PGADMIN4/CD_DEPLOY/PGADMIN4_DEV/projects/xsf/pgadmin4/oat/WSO2_DB_CLEANUP/ on the Ansible Controller.\nIf you are using a module and expect the file to exist on the remote, see the remote_src option"} this my task : - name: Copy CRONS and LOGS folders to target copy: src: WSO2_DB_CLEANUP/ dest: "{{ WORKSPACE }}/WSO2_DB_CLEANUP/" owner: cloud-user group: cloud-user mode: '0755' with_items: - CRONS - LOGS loop_control: loop_var: folder
+based on the following ansinle tasks, how i can make psycopg2 visible for pgadmin4 because i when the pip list the psycopg show up but when i do : pip show psycopg2
+Name: psycopg2
+Version: 2.9.10
+Summary: psycopg2 - Python-PostgreSQL Database Adapter
+Home-page: https://psycopg.org/
+Author: Federico Di Gregorio
+Author-email: fog@initd.org
+License: LGPL with exceptions
+Location: /usr/local/lib64/python3.9/site-packages/psycopg2-2.9.10-py3.9-linux-x86_64.egg
+Requires:
+Required-by:
+[0][root@(pgadmin4_oat_blue_1):/home/cloud-user]
+$ source /usr/pgadmin4/venv/bin/activate
+(venv) [0][root@(pgadmin4_oat_blue_1):/home/cloud-user]
+$ pip show psycopg2
+WARNING: Package(s) not found: psycopg2
+
+here's the ansible tasks: 
+
+- name: Verify Python 3 is installed
+  command: python3 --version
+  register: python_version
+
+- name: Print Python version
+  debug:
+    msg: "Python version installed: {{ python_version.stdout }}"
+
+- name: Download psycopg2 tarball
+  become: true
+  get_url:
+    url: "{{ psycopg2_tarball_url }}"
+    dest: /tmp/psycopg2-{{ psycopg2_version }}.tar.gz
+
+- name: Extract psycopg2 tarball
+  become: true
+  unarchive:
+    src: /tmp/psycopg2-{{ psycopg2_version }}.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+
+- name: Ensure proper permissions for extracted files
+  become: true
+  file:
+    path: "/tmp/psycopg2-{{ psycopg2_version }}"
+    state: directory
+    mode: '0755'
+    recurse: yes
+
+- name: Create or Update setup.cfg with [build_ext] section
+  become: true
+  copy:
+    content: |
+      [build_ext]
+      define=
+    dest: "/tmp/psycopg2-{{ psycopg2_version }}/setup.cfg"
+
+
+- name: Build psycopg2
+  shell: "python3 /tmp/psycopg2-{{ psycopg2_version }}/setup.py build"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  args:
+    chdir: "/tmp/psycopg2-{{ psycopg2_version }}"
+
+- name: Install psycopg2
+  shell: "python3 /tmp/psycopg2-{{ psycopg2_version }}/setup.py install"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  args:
+    chdir: "/tmp/psycopg2-{{ psycopg2_version }}"
+
+- name: Update PYTHONPATH environment variable
+  become: true
+  lineinfile:
+    path: /etc/environment
+    line: "PYTHONPATH=/usr/local/lib64/python{{ python_version }}/site-packages/:$PYTHONPATH"
+    create: yes
+
+
