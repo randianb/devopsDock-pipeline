@@ -1,21 +1,62 @@
-cat /etc/httpd/conf.d/pgadmin4.conf
-LoadModule wsgi_module modules/mod_wsgi.so
-WSGIDaemonProcess pgadmin processes=1 threads=25 python-home=/usr/pgadmin4/venv
-WSGIScriptAlias /pgadmin4 /usr/pgadmin4/web/pgAdmin4.wsgi
-
-<Directory /usr/pgadmin4/web/>
-    WSGIProcessGroup pgadmin
-    WSGIApplicationGroup %{GLOBAL}
-    <IfModule mod_authz_core.c>
-        Require all granted
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order Deny,Allow
-        Deny from All
-        Allow from 127.0.0.1
-        Allow from ::1
-    </IfModule>
-</Directory>
-
-LimitRequestFieldSize 16380
-LimitRequestLine 16380
+tail -f /var/log/httpd/error_log
+[Mon Dec 23 11:18:09.238780 2024] [wsgi:debug] [pid 488433:tid 488581] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488433): Started thread 21 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:09.238817 2024] [wsgi:debug] [pid 488433:tid 488582] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488433): Started thread 22 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:09.238856 2024] [wsgi:debug] [pid 488433:tid 488583] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488433): Started thread 23 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:09.238883 2024] [wsgi:debug] [pid 488433:tid 488584] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488433): Started thread 24 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:09.241449 2024] [wsgi:info] [pid 488435:tid 488435] mod_wsgi (pid=488435): Imported 'mod_wsgi'.
+[Mon Dec 23 11:18:09.241459 2024] [wsgi:info] [pid 488434:tid 488434] mod_wsgi (pid=488434): Imported 'mod_wsgi'.
+[Mon Dec 23 11:18:09.241709 2024] [mpm_event:debug] [pid 488435:tid 488585] event.c(2402): AH02471: start_threads: Using epoll (wakeable)
+[Mon Dec 23 11:18:09.241717 2024] [mpm_event:debug] [pid 488434:tid 488586] event.c(2402): AH02471: start_threads: Using epoll (wakeable)
+[Mon Dec 23 11:18:09.244762 2024] [wsgi:info] [pid 488437:tid 488437] mod_wsgi (pid=488437): Imported 'mod_wsgi'.
+[Mon Dec 23 11:18:09.245022 2024] [mpm_event:debug] [pid 488437:tid 488639] event.c(2402): AH02471: start_threads: Using epoll (wakeable)
+[Mon Dec 23 11:18:16.258719 2024] [authz_core:debug] [pid 488434:tid 488587] mod_authz_core.c(815): [client ::1:52094] AH01626: authorization result of Require all granted: granted
+[Mon Dec 23 11:18:16.258795 2024] [authz_core:debug] [pid 488434:tid 488587] mod_authz_core.c(815): [client ::1:52094] AH01626: authorization result of <RequireAny>: granted
+[Mon Dec 23 11:18:16.259020 2024] [authz_core:debug] [pid 488434:tid 488587] mod_authz_core.c(815): [client ::1:52094] AH01626: authorization result of Require all granted: granted
+[Mon Dec 23 11:18:16.259038 2024] [authz_core:debug] [pid 488434:tid 488587] mod_authz_core.c(815): [client ::1:52094] AH01626: authorization result of <RequireAny>: granted
+[Mon Dec 23 11:18:16.259450 2024] [wsgi:info] [pid 488432:tid 488533] [remote ::1:52094] mod_wsgi (pid=488432, process='pgadmin', application=''): Loading Python script file '/usr/pgadmin4/web/pgAdmin4.wsgi'.
+[Mon Dec 23 11:18:17.228202 2024] [mpm_event:debug] [pid 488429:tid 488429] event.c(740): Child 3 started: pid 488667, gen 0, active 4/16, total 4/4/16
+[Mon Dec 23 11:18:17.230976 2024] [watchdog:debug] [pid 488667:tid 488667] mod_watchdog.c(582): AH02981: Watchdog: Created child worker thread (_proxy_hcheck_).
+[Mon Dec 23 11:18:17.231360 2024] [proxy:debug] [pid 488667:tid 488667] proxy_util.c(2254): AH00925: initializing worker proxy:reverse shared
+[Mon Dec 23 11:18:17.231401 2024] [proxy:debug] [pid 488667:tid 488667] proxy_util.c(2325): AH00927: initializing worker proxy:reverse local
+[Mon Dec 23 11:18:17.231424 2024] [proxy:debug] [pid 488667:tid 488667] proxy_util.c(2356): AH00930: initialized pool in child 488667 for (*:80) min=0 max=61 smax=61
+[Mon Dec 23 11:18:17.231456 2024] [http2:info] [pid 488667:tid 488667] h2_workers: created with min=25 max=37 idle_ms=600000
+[Mon Dec 23 11:18:17.232916 2024] [wsgi:info] [pid 488667:tid 488667] mod_wsgi (pid=488667): Initializing Python.
+[Mon Dec 23 11:18:17.242486 2024] [wsgi:info] [pid 488667:tid 488667] mod_wsgi (pid=488667): Attach interpreter ''.
+[Mon Dec 23 11:18:17.253485 2024] [wsgi:info] [pid 488667:tid 488667] mod_wsgi (pid=488667): Imported 'mod_wsgi'.
+[Mon Dec 23 11:18:17.253826 2024] [mpm_event:debug] [pid 488667:tid 488694] event.c(2402): AH02471: start_threads: Using epoll (wakeable)
+double free or corruption (out)
+[Mon Dec 23 11:18:17.513208 2024] [wsgi:error] [pid 488434:tid 488587] [client ::1:52094] Truncated or oversized response headers received from daemon process 'pgadmin': /usr/pgadmin4/web/pgAdmin4.wsgi
+[Mon Dec 23 11:18:18.229722 2024] [core:notice] [pid 488429:tid 488429] AH00052: child pid 488432 exit signal Abort (6)
+[Mon Dec 23 11:18:18.229793 2024] [wsgi:info] [pid 488429:tid 488429] mod_wsgi (pid=488432): Process 'pgadmin' has died, deregister and restart it.
+[Mon Dec 23 11:18:18.229802 2024] [wsgi:info] [pid 488429:tid 488429] mod_wsgi (pid=488432): Process 'pgadmin' terminated by signal 6
+[Mon Dec 23 11:18:18.229808 2024] [wsgi:info] [pid 488429:tid 488429] mod_wsgi (pid=488432): Process 'pgadmin' has been deregistered and will no longer be monitored.
+[Mon Dec 23 11:18:18.231653 2024] [wsgi:info] [pid 488721:tid 488721] mod_wsgi (pid=488721): Starting process 'pgadmin' with uid=48, gid=48 and threads=25.
+[Mon Dec 23 11:18:18.234715 2024] [wsgi:info] [pid 488721:tid 488721] mod_wsgi (pid=488721): Python home /usr/pgadmin4/venv.
+[Mon Dec 23 11:18:18.234807 2024] [wsgi:info] [pid 488721:tid 488721] mod_wsgi (pid=488721): Initializing Python.
+[Mon Dec 23 11:18:18.245434 2024] [wsgi:info] [pid 488721:tid 488721] mod_wsgi (pid=488721): Attach interpreter ''.
+[Mon Dec 23 11:18:18.256510 2024] [wsgi:info] [pid 488721:tid 488721] mod_wsgi (pid=488721): Imported 'mod_wsgi'.
+[Mon Dec 23 11:18:18.256879 2024] [wsgi:debug] [pid 488721:tid 488724] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 0 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.256878 2024] [wsgi:debug] [pid 488721:tid 488725] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 1 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.256990 2024] [wsgi:debug] [pid 488721:tid 488726] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 2 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257036 2024] [wsgi:debug] [pid 488721:tid 488727] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 3 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257152 2024] [wsgi:debug] [pid 488721:tid 488729] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 5 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257157 2024] [wsgi:debug] [pid 488721:tid 488728] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 4 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257210 2024] [wsgi:debug] [pid 488721:tid 488730] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 6 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257334 2024] [wsgi:debug] [pid 488721:tid 488732] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 8 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257376 2024] [wsgi:debug] [pid 488721:tid 488733] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 9 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257420 2024] [wsgi:debug] [pid 488721:tid 488734] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 10 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257458 2024] [wsgi:debug] [pid 488721:tid 488735] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 11 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257541 2024] [wsgi:debug] [pid 488721:tid 488736] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 12 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257613 2024] [wsgi:debug] [pid 488721:tid 488737] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 13 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257686 2024] [wsgi:debug] [pid 488721:tid 488738] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 14 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257716 2024] [wsgi:debug] [pid 488721:tid 488739] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 15 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257764 2024] [wsgi:debug] [pid 488721:tid 488740] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 16 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257809 2024] [wsgi:debug] [pid 488721:tid 488741] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 17 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257877 2024] [wsgi:debug] [pid 488721:tid 488742] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 18 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257815 2024] [wsgi:debug] [pid 488721:tid 488731] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 7 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.257964 2024] [wsgi:debug] [pid 488721:tid 488743] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 19 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.258011 2024] [wsgi:debug] [pid 488721:tid 488744] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 20 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.258053 2024] [wsgi:debug] [pid 488721:tid 488745] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 21 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.258110 2024] [wsgi:debug] [pid 488721:tid 488746] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 22 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.258157 2024] [wsgi:debug] [pid 488721:tid 488747] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 23 in daemon process 'pgadmin'.
+[Mon Dec 23 11:18:18.258196 2024] [wsgi:debug] [pid 488721:tid 488748] src/server/mod_wsgi.c(9115): mod_wsgi (pid=488721): Started thread 24 in daemon process 'pgadmin'.
