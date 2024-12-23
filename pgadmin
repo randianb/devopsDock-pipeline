@@ -1,1 +1,21 @@
-tail -f /var/log/httpd/error_log [Mon Dec 23 10:58:27.377581 2024] [mpm_event:notice] [pid 479607:tid 479607] AH00492: caught SIGWINCH, shutting down gracefully [Mon Dec 23 10:58:28.519651 2024] [core:notice] [pid 486531:tid 486531] SELinux policy enabled; httpd running as context system_u:system_r:httpd_t:s0 [Mon Dec 23 10:58:28.520407 2024] [suexec:notice] [pid 486531:tid 486531] AH01232: suEXEC mechanism enabled (wrapper: /usr/sbin/suexec) [Mon Dec 23 10:58:28.534007 2024] [so:warn] [pid 486531:tid 486531] AH01574: module wsgi_module is already loaded, skipping [Mon Dec 23 10:58:28.539131 2024] [lbmethod_heartbeat:notice] [pid 486531:tid 486531] AH02282: No slotmem from mod_heartmonitor [Mon Dec 23 10:58:28.545331 2024] [mpm_event:notice] [pid 486531:tid 486531] AH00489: Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.2.2 mod_wsgi/4.7.1 Python/3.9 configured -- resuming normal operations [Mon Dec 23 10:58:28.545352 2024] [core:notice] [pid 486531:tid 486531] AH00094: Command line: '/usr/sbin/httpd -D FOREGROUND' double free or corruption (out) [Mon Dec 23 10:58:32.104014 2024] [wsgi:error] [pid 486537:tid 486660] [client ::1:34902] Truncated or oversized response headers received from daemon process 'pgadmin': /usr/pgadmin4/web/pgAdmin4.wsgi [Mon Dec 23 10:58:32.551602 2024] [core:notice] [pid 486531:tid 486531] AH00052: child pid 486534 exit signal Abort (6) double free or corruption (out) [Mon Dec 23 10:58:45.637580 2024] [wsgi:error] [pid 486536:tid 486665] [client ::1:43584] Truncated or oversized response headers received from daemon process 'pgadmin': /usr/pgadmin4/web/pgAdmin4.wsgi [Mon Dec 23 10:58:46.568722 2024] [core:notice] [pid 486531:tid 486531] AH00052: child pid 486795 exit signal Abort (6) ^C [130][root@(pgadmin4_oat_blue_1):/etc/httpd/conf.d] $ cat /usr/pgadmin4/web/pgAdmin4.wsgi ########################################################################## # # pgAdmin 4 - PostgreSQL Tools # # Copyright (C) 2013 - 2024, The pgAdmin Development Team # This software is released under the PostgreSQL Licence # ########################################################################## import os import sys if sys.version_info < (3, 7): raise Exception('This application must be run under Python 3.7 or later.') import builtins root = os.path.dirname(os.path.realpath(__file__)) if sys.path[0] != root: sys.path.insert(0, root) # Ensure the global server mode is set. builtins.SERVER_MODE = True import config # When running it as a WSGI application, directory for the configuration file # must present. if not os.path.exists(os.path.dirname(config.SQLITE_PATH)): raise Exception( """ Required configuration file is not present! Please run setup.py first!""" ) from pgAdmin4 import app as application
+cat /etc/httpd/conf.d/pgadmin4.conf
+LoadModule wsgi_module modules/mod_wsgi.so
+WSGIDaemonProcess pgadmin processes=1 threads=25 python-home=/usr/pgadmin4/venv
+WSGIScriptAlias /pgadmin4 /usr/pgadmin4/web/pgAdmin4.wsgi
+
+<Directory /usr/pgadmin4/web/>
+    WSGIProcessGroup pgadmin
+    WSGIApplicationGroup %{GLOBAL}
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Deny,Allow
+        Deny from All
+        Allow from 127.0.0.1
+        Allow from ::1
+    </IfModule>
+</Directory>
+
+LimitRequestFieldSize 16380
+LimitRequestLine 16380
