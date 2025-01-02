@@ -1,1 +1,29 @@
-/usr/local/bin/aws s3 cp  /home/app/logs/ s3://djd-af107-prd-logs/djd-int/unibank-branch-onboarding/date  --endpoint-url=https://objs3parstd01.fr.world.socgen --region us-west-1 --no-verify-ssl --exclude "*" --include "*.gz"
+#!/bin/bash
+
+STRIGIL_DIR="/home/cloud-user/strigil"
+LOG_FILE="$STRIGIL_DIR/cron_logs/cron_log_$(date +'%Y-%m-%d').log"
+CRITICAL_USAGE=75
+FILESYSTEM="/dev/mapper/vg0-root"
+
+echo "#######################################################################">> "$LOG_FILE"
+echo "CRON JOB STARTED AT $(date)">> "$LOG_FILE"
+
+echo "#######################################################################">> "$LOG_FILE"
+echo "CHECK DISK USAGE">> "$LOG_FILE"
+usage=$(df -h | awk -v fs="$FILESYSTEM" '$1 == fs {print $5}' | sed 's/%//')
+echo "FILESYSTEM $FILESYSTEM USAGE : $usage%">> "$LOG_FILE"
+
+echo "#######################################################################">> "$LOG_FILE"
+if [ $usage -ge $CRITICAL_USAGE ]
+then
+    echo "USAGE IS GREATER OR EQUAL TO $CRITICAL_USAGE% ==> RUN STRIGIL SCRIPT">> "$LOG_FILE"
+    cd "$STRIGIL_DIR"
+    /bin/python strigil.py
+
+    echo -e "Subject: STRIGIL ON ACTION 006\n\n Body : Disk usage are more than 75%" | curl -v --url smtp://smtpapp.hermes.si.socgen:25 --mail-from '@email.com' --mail-rcpt 'example@email.com' --upload-file - 
+else
+    echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING">> "$LOG_FILE"
+fi
+
+echo "#######################################################################">> "$LOG_FILE"
+echo "CRON JOB ENDED AT $(date)">> "$LOG_FILE"[0]
