@@ -1,2 +1,51 @@
-NICKNAME=$(echo "$PS1" | grep -oP '(.*?)' | tr -d '()')
-echo "$NICKNAME"
+#!/bin/bash
+
+STRIGIL_DIR="/home/cloud-user/strigil"
+LOG_FILE="$STRIGIL_DIR/cron_logs/cron_log_$(date +'%Y-%m-%d').log"
+CRITICAL_USAGE=75
+FILESYSTEM="/dev/mapper/vg0-root"
+SMTP_HOST="smtphost"
+SMTP_PORT=25
+
+# Extract hostname and nickname
+FULL_PROMPT=$(whoami)@$(hostname)
+NICKNAME=$(echo "$FULL_PROMPT" | grep -oP '(.*?)' | tr -d '()')
+HOSTNAME=$(hostname)
+
+# Construct email address
+MAIL_FROM="${HOSTNAME}_${NICKNAME}@email.com"
+MAIL_TO="example@email.com"
+
+# Create log file if it doesn't exist
+mkdir -p "$(dirname "$LOG_FILE")"
+touch "$LOG_FILE"
+
+echo "#######################################################################" >> "$LOG_FILE"
+echo "CRON JOB STARTED AT $(date)" >> "$LOG_FILE"
+
+echo "#######################################################################" >> "$LOG_FILE"
+echo "CHECK DISK USAGE" >> "$LOG_FILE"
+usage=$(df -h | awk -v fs="$FILESYSTEM" '$1 == fs {print $5}' | sed 's/%//')
+echo "FILESYSTEM $FILESYSTEM USAGE : $usage%" >> "$LOG_FILE"
+
+echo "#######################################################################" >> "$LOG_FILE"
+if [ "$usage" -ge "$CRITICAL_USAGE" ]; then
+    echo "USAGE IS GREATER OR EQUAL TO $CRITICAL_USAGE% ==> RUN STRIGIL SCRIPT" >> "$LOG_FILE"
+    cd "$STRIGIL_DIR" || { echo "Failed to change directory to $STRIGIL_DIR"; exit 1; }
+    /bin/python strigil.py
+
+    # Email notification
+    EMAIL_BODY=$(mktemp)
+    echo -e "Subject: STRIGIL ON ACTION 006\n\nDisk usage exceeded $CRITICAL_USAGE%. Current usage: $usage%." > "$EMAIL_BODY"
+
+    curl -v --url "smtp://$SMTP_HOST:$SMTP_PORT" \
+         --mail-from "$MAIL_FROM" \
+         --mail-rcpt "$MAIL_TO" \
+         --upload-file "$EMAIL_BODY"
+    rm -f "$EMAIL_BODY"
+else
+    echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING" >> "$LOG_FILE"
+fi
+
+echo "#######################################################################" >> "$LOG_FILE"
+echo "CRON JOB ENDED AT $(date)" >> "$LOG_FILE"
