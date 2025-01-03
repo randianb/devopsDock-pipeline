@@ -4,17 +4,16 @@ STRIGIL_DIR="/home/cloud-user/strigil"
 LOG_FILE="$STRIGIL_DIR/cron_logs/cron_log_$(date +'%Y-%m-%d').log"
 CRITICAL_USAGE=75
 FILESYSTEM="/dev/mapper/vg0-root"
-SMTP_HOST="smtphost"
+SMTP_HOST="smtp_server.domain.com"
 SMTP_PORT=25
 
 # Extract hostname and nickname
-FULL_PROMPT=$(whoami)@$(hostname)
-NICKNAME=$(echo "$FULL_PROMPT" | grep -oP '(.*?)' | tr -d '()')
-HOSTNAME=$(hostname)
+NICKNAME=$(echo "$PLT_VM_NICKNAME")
+HOSTNAME=$(echo "$HOSTNAME")
 
 # Construct email address
-MAIL_FROM="${HOSTNAME}_${NICKNAME}@email.com"
-MAIL_TO="example@email.com"
+MAIL_FROM="${HOSTNAME}_${NICKNAME}@domain.com"
+MAIL_TO="receiver@domain.com"
 
 # Create log file if it doesn't exist
 mkdir -p "$(dirname "$LOG_FILE")"
