@@ -1,102 +1,24 @@
-#!/bin/bash
-
-STRIGIL_DIR="/home/cloud-user/strigil"
-LOG_FILE="$STRIGIL_DIR/cron_logs/cron_log_$(date +'%Y-%m-%d').log"
-CRITICAL_USAGE=75
-FILESYSTEM="/dev/mapper/vg0-root"
-SMTP_HOST="smtp_server.domain.com"
-SMTP_PORT=25
-CONFIG_FILE="$STRIGIL_DIR/strigil_config.json"
-START_TIME=$(date)
-
-# Extract hostname and nickname
-NICKNAME=$(echo "$PLT_VM_NICKNAME")
-HOSTNAME=$(echo "$HOSTNAME")
-
-# Construct email address
-MAIL_FROM="${HOSTNAME}_${NICKNAME}@domain.com"
-MAIL_TO="receiver@domain.com"
-
-# Helper function to send email notifications
-send_email() {
-    local subject=$1
-    local message=$2
-    local temp_file=$(mktemp)
-
-    echo -e "Subject: $subject\n\n$message" > "$temp_file"
-
-    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" \
-         --mail-from "$MAIL_FROM" \
-         --mail-rcpt "$MAIL_TO" \
-         --upload-file "$temp_file"
-
-    rm -f "$temp_file"
-}
-
-# Create log directory and file if they don't exist
-mkdir -p "$(dirname "$LOG_FILE")" || {
-    send_email "Script Failure: Log Directory Creation Failed" "Failed to create log directory."
-    exit 1
-}
-touch "$LOG_FILE" || {
-    send_email "Script Failure: Log File Creation Failed" "Failed to create log file."
-    exit 1
-}
 
 {
-    echo "#######################################################################"
-    echo "CRON JOB STARTED AT $START_TIME"
-    echo "#######################################################################"
-    echo "CHECK DISK USAGE"
-
-    usage=$(df -h | awk -v fs="$FILESYSTEM" '$1 == fs {print $5}' | sed 's/%//')
-    echo "FILESYSTEM $FILESYSTEM USAGE : $usage%"
-
-    if [ "$usage" -ge "$CRITICAL_USAGE" ]; then
-        echo "USAGE IS GREATER OR EQUAL TO $CRITICAL_USAGE% ==> RUN STRIGIL SCRIPT"
-
-        cd "$STRIGIL_DIR" || {
-            send_email "Script Failure: Directory Change Failed" "Failed to change directory to $STRIGIL_DIR."
-            exit 1
-        }
-
-        # Log strigil.py execution start
-        echo "#######################################################################"
-        echo "STARTING STRIGIL SCRIPT EXECUTION AT $(date)"
-        echo "#######################################################################"
-
-        if ! /bin/python strigil.py; then
-            echo "#######################################################################"
-            echo "STRIGIL SCRIPT FAILED AT $(date)"
-            echo "#######################################################################"
-            send_email "Script Failure: Strigil Execution Failed" "The strigil.py script failed to execute. Please check the logs in $LOG_FILE for more details."
-            exit 1
-        fi
-
-        # Log strigil.py execution end
-        echo "#######################################################################"
-        echo "STRIGIL SCRIPT COMPLETED SUCCESSFULLY AT $(date)"
-        echo "#######################################################################"
-
-        # Retrieve bucket name after strigil.py execution
-        if bucket_name=$(jq -r '.bucket_name' "$CONFIG_FILE"); then
-            echo "Bucket name retrieved successfully: $bucket_name"
-        else
-            send_email "Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE after running strigil.py."
-            exit 1
-        fi
-
-        END_TIME=$(date)
-        send_email "Script Success" "Script ran successfully.\nStart Time: $START_TIME\nEnd Time: $END_TIME\nBucket: $bucket_name."
-    else
-        echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING"
-    fi
-
-    echo "#######################################################################"
-    echo "CRON JOB ENDED AT $(date)"
-    echo "#######################################################################"
-
-} >> "$LOG_FILE" 2>&1 || {
-    send_email "Script Failure: Unknown Error" "An unknown error occurred while running the script. Check the logs in $LOG_FILE for details."
-    exit 1
+  "config": {
+      "bucket": "{{ bucket }}",
+      "key": "{{ aws_id }}",
+      "secret": "{{ aws_key }}",
+      "server": "{{ server }}",
+      "project": "{{ project }}",
+      "sgcloud_base_uri": "{{ sgcloud_base_uri }}",
+      "sgcloud_version": "{{ sgcloud_version }}"
+  },
+  "autoexplore": "true",
+  "default_logs_paths": [],
+  "services": [
+      {
+          "service": "{{ service_name }}",
+          "log_path": "{{ logs_dir }}",
+          "pattern": "^service.log-.+",
+          "compress": "true",
+          "RemoveOnTransfer": "true"
+      }
+  ]
 }
+
