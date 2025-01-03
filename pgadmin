@@ -60,20 +60,34 @@ touch "$LOG_FILE" || {
             exit 1
         }
 
+        # Log strigil.py execution start
+        echo "#######################################################################"
+        echo "STARTING STRIGIL SCRIPT EXECUTION AT $(date)"
+        echo "#######################################################################"
+
         if ! /bin/python strigil.py; then
-            send_email "Script Failure: Strigil Execution Failed" "The strigil.py script failed to execute."
+            echo "#######################################################################"
+            echo "STRIGIL SCRIPT FAILED AT $(date)"
+            echo "#######################################################################"
+            send_email "Script Failure: Strigil Execution Failed" "The strigil.py script failed to execute. Please check the logs in $LOG_FILE for more details."
             exit 1
         fi
 
-        # Retrieve bucket name from JSON
+        # Log strigil.py execution end
+        echo "#######################################################################"
+        echo "STRIGIL SCRIPT COMPLETED SUCCESSFULLY AT $(date)"
+        echo "#######################################################################"
+
+        # Retrieve bucket name after strigil.py execution
         if bucket_name=$(jq -r '.bucket_name' "$CONFIG_FILE"); then
-            echo "Script completed successfully. Bucket name: $bucket_name."
-            END_TIME=$(date)
-            send_email "Script Success" "Script ran successfully.\nStart Time: $START_TIME\nEnd Time: $END_TIME\nBucket: $bucket_name."
+            echo "Bucket name retrieved successfully: $bucket_name"
         else
-            send_email "Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE."
+            send_email "Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE after running strigil.py."
             exit 1
         fi
+
+        END_TIME=$(date)
+        send_email "Script Success" "Script ran successfully.\nStart Time: $START_TIME\nEnd Time: $END_TIME\nBucket: $bucket_name."
     else
         echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING"
     fi
@@ -83,6 +97,6 @@ touch "$LOG_FILE" || {
     echo "#######################################################################"
 
 } >> "$LOG_FILE" 2>&1 || {
-    send_email "Script Failure: Unknown Error" "An unknown error occurred while running the script."
+    send_email "Script Failure: Unknown Error" "An unknown error occurred while running the script. Check the logs in $LOG_FILE for details."
     exit 1
 }
