@@ -23,8 +23,8 @@ send_email() {
     local message=$2
     local temp_file=$(mktemp)
 
-    # Format email content with better structure
-    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n<html><body><h2>$subject</h2><p>$message</p></body></html>" > "$temp_file"
+    # Format email content with better structure and emojis
+    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n<html><body><h2 style='color:#2E8B57;'>$subject</h2><p>$message</p><footer><p>Sent from <strong>DevOps Monitoring</strong> 🛠️</p></footer></body></html>" > "$temp_file"
 
     curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" \
          --mail-from "$MAIL_FROM" \
@@ -36,11 +36,11 @@ send_email() {
 
 # Create log directory and file if they don't exist
 mkdir -p "$(dirname "$LOG_FILE")" || {
-    send_email "Script Failure: Log Directory Creation Failed" "Failed to create log directory."
+    send_email "🚨 Script Failure: Log Directory Creation Failed" "Failed to create log directory. Please investigate the issue."
     exit 1
 }
 touch "$LOG_FILE" || {
-    send_email "Script Failure: Log File Creation Failed" "Failed to create log file."
+    send_email "🚨 Script Failure: Log File Creation Failed" "Failed to create log file. Please check the permissions and try again."
     exit 1
 }
 
@@ -57,7 +57,7 @@ touch "$LOG_FILE" || {
         echo "USAGE IS GREATER OR EQUAL TO $CRITICAL_USAGE% ==> RUN STRIGIL SCRIPT"
 
         cd "$STRIGIL_DIR" || {
-            send_email "Script Failure: Directory Change Failed" "Failed to change directory to $STRIGIL_DIR."
+            send_email "🚨 Script Failure: Directory Change Failed" "Failed to change directory to $STRIGIL_DIR. Please check the directory."
             exit 1
         }
 
@@ -70,7 +70,7 @@ touch "$LOG_FILE" || {
             echo "#######################################################################"
             echo "STRIGIL SCRIPT FAILED AT $(date)"
             echo "#######################################################################"
-            send_email "Script Failure: Strigil Execution Failed" "The strigil.py script failed to execute. Please check the logs in $LOG_FILE for more details."
+            send_email "❌ Script Failure: Strigil Execution Failed" "The strigil.py script failed to execute. Please check the logs in $LOG_FILE for more details."
             exit 1
         fi
 
@@ -83,7 +83,7 @@ touch "$LOG_FILE" || {
         if bucket_name=$(jq -r '.config.bucket' "$CONFIG_FILE"); then
             echo "Bucket name retrieved successfully: $bucket_name"
         else
-            send_email "Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE after running strigil.py."
+            send_email "❌ Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE after running strigil.py."
             exit 1
         fi
 
@@ -91,29 +91,32 @@ touch "$LOG_FILE" || {
         if path=$(jq -r '.config.project' "$CONFIG_FILE"); then
             echo "Path name retrieved successfully: $path"
         else
-            send_email "Script Failure: Path Name Retrieval Failed" "Failed to retrieve path name from $CONFIG_FILE after running strigil.py."
+            send_email "❌ Script Failure: Path Name Retrieval Failed" "Failed to retrieve path name from $CONFIG_FILE after running strigil.py."
             exit 1
         fi
+        
         # Retrieve Service name 
         if service=$(jq -r '.config.service_name' "$CONFIG_FILE"); then
             echo "Service name retrieved successfully: $service"
         else
-            send_email "Script Failure: Service Name Retrieval Failed" "Failed to retrieve Service name from $CONFIG_FILE after running strigil.py."
+            send_email "❌ Script Failure: Service Name Retrieval Failed" "Failed to retrieve Service name from $CONFIG_FILE after running strigil.py."
             exit 1
         fi
+        
         END_TIME=$(date)
         
-        # Send success email with a more structured message
-        send_email "Script Success: Execution Completed" "
+        # Send success email with a more structured message and emojis
+        send_email "✅ Script Success: Execution Completed" "
         <ul>
-            <li><strong>Start Time:</strong> $START_TIME</li>
-            <li><strong>End Time:</strong> $END_TIME</li>
-            <li><strong>Service Name:</strong> $service</li>
-            <li><strong>Bucket Name:</strong> $bucket_name</li>
-            <li><strong>Path:</strong> $path</li>
-            <li><strong>Hostname:</strong> $HOSTNAME</li>
-            <li><strong>Nickname:</strong> $NICKNAME</li>
-        </ul>"
+            <li><strong>Start Time:</strong> $START_TIME ⏳</li>
+            <li><strong>End Time:</strong> $END_TIME ⏰</li>
+            <li><strong>Service Name:</strong> $service 🔧</li>
+            <li><strong>Bucket Name:</strong> $bucket_name 🗂️</li>
+            <li><strong>Path:</strong> $path 📁</li>
+            <li><strong>Hostname:</strong> $HOSTNAME 🖥️</li>
+            <li><strong>Nickname:</strong> $NICKNAME 👤</li>
+        </ul>
+        <p>Everything went smoothly! 🎉</p>"
     else
         echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING"
     fi
@@ -123,6 +126,6 @@ touch "$LOG_FILE" || {
     echo "#######################################################################"
 
 } >> "$LOG_FILE" 2>&1 || {
-    send_email "Script Failure: Unknown Error" "An unknown error occurred while running the script. Check the logs in $LOG_FILE for details."
+    send_email "❌ Script Failure: Unknown Error" "An unknown error occurred while running the script. Check the logs in $LOG_FILE for details."
     exit 1
 }
