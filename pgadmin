@@ -14,7 +14,7 @@ NICKNAME=$(echo "$PLT_VM_NICKNAME")
 HOSTNAME=$(echo "$HOSTNAME")
 
 # Construct email address
-MAIL_FROM="${HOSTNAME}_${NICKNAME}@socgen.com"
+MAIL_FROM="devops.monitoring@socgen.com"
 MAIL_TO="anouar.harrou@socgen.com"
 
 # Helper function to send email notifications
@@ -94,6 +94,13 @@ touch "$LOG_FILE" || {
             send_email "Script Failure: Path Name Retrieval Failed" "Failed to retrieve path name from $CONFIG_FILE after running strigil.py."
             exit 1
         fi
+        # Retrieve Service name 
+        if service=$(jq -r '.config.service_name' "$CONFIG_FILE"); then
+            echo "Service name retrieved successfully: $service"
+        else
+            send_email "Script Failure: Service Name Retrieval Failed" "Failed to retrieve Service name from $CONFIG_FILE after running strigil.py."
+            exit 1
+        fi
         END_TIME=$(date)
         
         # Send success email with a more structured message
@@ -101,9 +108,11 @@ touch "$LOG_FILE" || {
         <ul>
             <li><strong>Start Time:</strong> $START_TIME</li>
             <li><strong>End Time:</strong> $END_TIME</li>
+            <li><strong>Service Name:</strong> $service</li>
             <li><strong>Bucket Name:</strong> $bucket_name</li>
             <li><strong>Path:</strong> $path</li>
-            <li><strong>Hostname:</strong> $HOSTNAME ($NICKNAME)</li>
+            <li><strong>Hostname:</strong> $HOSTNAME</li>
+            <li><strong>Nickname:</strong> $NICKNAME</li>
         </ul>"
     else
         echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING"
