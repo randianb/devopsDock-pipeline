@@ -1,1 +1,2 @@
-
+wget -qO- "http://<nexus-url>/service/rest/v1/search/assets?repository=<repository-name>&maven.groupId=<group-id>&maven.artifactId=<artifact-id>&maven.baseVersion=<base-version>" | jq -r '.items[0].downloadUrl'
+wget "<download-url>"
