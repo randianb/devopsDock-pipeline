@@ -1,11 +1,4 @@
-curl -s "http://your-nexus-server/repository/snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/maven-metadata.xml" \
-| grep -A 1 "<extension>jar</extension>" \
-| grep "<value>" \
-| sed -E 's/.*<value>(.*)<\/value>.*/\1/'
 
-ARTIFACT_VERSION=$(curl -s "http://your-nexus-server/repository/snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/maven-metadata.xml" \
-| grep -A 1 "<extension>jar</extension>" \
-| grep "<value>" \
-| sed -E 's/.*<value>(.*)<\/value>.*/\1/')
+ARTIFACT_VERSION=$(curl -s https://itbox-nexus-arc.fr.world.socgen/nexus-arc/repository/sgcib-sgabs-maven2-hosted-snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/{{ version }}/maven-metadata.xml | grep -A 1 "<extension>jar</extension>" | grep "<value>" | sed -E 's/.*<value>(.*)<\/value>.*/\1/')
 
-ARTIFACT_URL="http://your-nexus-server/repository/snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/1.9.0-SNAPSHOT/unibank-service-branch-onboarding-${ARTIFACT_VERSION}.jar"
+ARTIFACT_URL="http://your-nexus-server/repository/snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/{{ version }}/unibank-service-branch-onboarding-${ARTIFACT_VERSION}.jar"
