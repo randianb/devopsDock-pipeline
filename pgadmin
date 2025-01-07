@@ -1,33 +1,4 @@
-wget -qO- "http://<nexus-url>/service/rest/v1/search/assets?repository=<repository-name>&maven.groupId=<group-id>&maven.artifactId=<artifact-id>&maven.baseVersion=<base-version>" | jq -r '.items[0].downloadUrl'
-wget "<download-url>"
-
-<?xml version="1.0" encoding="UTF-8"?>
-<metadata modelVersion="1.1.0">
-  <groupId>com.socgen.unibank.services</groupId>
-  <artifactId>unibank-service-branch-onboarding</artifactId>
-  <version>1.9.0-SNAPSHOT</version>
-  <versioning>
-    <snapshot>
-      <timestamp>20250106.162838</timestamp>
-      <buildNumber>1</buildNumber>
-    </snapshot>
-    <lastUpdated>20250106162838</lastUpdated>
-    <snapshotVersions>
-      <snapshotVersion>
-        <extension>pom</extension>
-        <value>1.9.0-20250106.162838-1</value>
-        <updated>20250106162838</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>module</extension>
-        <value>1.9.0-20250106.162838-1</value>
-        <updated>20250106162838</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>jar</extension>
-        <value>1.9.0-20250106.162838-1</value>
-        <updated>20250106162838</updated>
-      </snapshotVersion>
-    </snapshotVersions>
-  </versioning>
-</metadata>
+curl -s "http://your-nexus-server/repository/snapshots/com/socgen/unibank/services/unibank-service-branch-onboarding/maven-metadata.xml" \
+| grep -A 1 "<extension>jar</extension>" \
+| grep "<value>" \
+| sed -E 's/.*<value>(.*)<\/value>.*/\1/'
