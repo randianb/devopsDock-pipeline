@@ -13,8 +13,12 @@ START_TIME=$(date)
 NICKNAME=$(echo "$PLT_VM_NICKNAME")
 HOSTNAME=$(echo "$HOSTNAME")
 
-# Construct email address
-MAIL_FROM="devops.monitoring@gmail.com"
+# Gmail credentials
+GMAIL_USER="devops.monitoring@gmail.com"
+GMAIL_PASS=""  # Replace with your Gmail App Password
+
+# Email details
+MAIL_FROM="$GMAIL_USER"
 MAIL_TO="anouar.harrou@gmail.com"
 
 # Helper function to send email notifications
@@ -26,7 +30,7 @@ send_email() {
     # Format email content with better structure and emojis
     echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n<html><body><h2 style='color:#2E8B57;'>$subject</h2><p>$message</p><footer><p>Sent from <strong>DevOps Monitoring</strong> 🛠️</p></footer></body></html>" > "$temp_file"
 
-    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file"
+    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file" --user "$GMAIL_USER:$GMAIL_PASS"
 
     rm -f "$temp_file"
 }
