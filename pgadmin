@@ -1,154 +1,69 @@
-#!/bin/bash
+Voici les étapes pour renouveler le mot de passe de l'utilisateur "user_admin" pour un composant WSO2, en collaboration avec l'équipe concernée :
 
-PURGE_DIR="/home/harry/purger"
-LOG_FILE="$PURGE_DIR/cron_logs/cron_log_$(date +'%Y-%m-%d').log"
-CRITICAL_USAGE=2
-FILESYSTEM="/dev/sdc"
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-CONFIG_FILE="$PURGE_DIR/purge_config.json"
-START_TIME=$(date)
+1. Planification et coordination
 
-# Extract hostname and nickname
-NICKNAME=$(hostname -I | awk '{print $1}')
-HOSTNAME=$(echo "$HOSTNAME")
+Identifier les impacts : Vérifie les dépendances associées à user_admin (applications, scripts, etc.).
 
-# Gmail credentials
-GMAIL_USER=""
-GMAIL_PASS=""  # Replace with your Gmail App Password
+Coordination : Organise une réunion avec l'équipe WSO2 pour valider le processus et planifier une fenêtre de maintenance.
 
-# Email details
-MAIL_FROM="$GMAIL_USER"
-MAIL_TO=""
+Communication : Informe les parties prenantes de l'intervention et de l'éventuel impact.
 
-# Function to send email notifications
-send_email() {
-    local subject=$1
-    local message=$2
-    local temp_file=$(mktemp)
 
-    # Add headers to improve inbox delivery
-    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\nFrom: $MAIL_FROM\nTo: $MAIL_TO\nReply-To: $MAIL_FROM\nMIME-Version: 1.0\nX-Priority: 1\nX-Mailer: Bash Script" > "$temp_file"
-    echo -e "\n<html><body><h2 style='color:#2E8B57;'>$subject</h2><p>$message</p><footer><p>Sent from <strong>DevOps Monitoring</strong> 🛠️</p></footer></body></html>" >> "$temp_file"
+2. Préparation
 
-    # Send email using curl with STARTTLS
-    local curl_output
-    curl_output=$(curl -v --url "smtp://$SMTP_HOST:$SMTP_PORT" \
-        --ssl-reqd \
-        --mail-from "$MAIL_FROM" \
-        --mail-rcpt "$MAIL_TO" \
-        --upload-file "$temp_file" \
-        --user "$GMAIL_USER:$GMAIL_PASS" 2>&1)
+Accès requis : Assure-toi d'avoir les accès nécessaires au système WSO2 et au fichier de configuration si applicable.
 
-    local curl_status=$?
+Sauvegarde :
 
-    # Debugging information
-    if [ $curl_status -ne 0 ]; then
-        echo "Email sending failed. Debug information:" >> "$LOG_FILE"
-        echo "$curl_output" >> "$LOG_FILE"
-        echo "Curl exit status: $curl_status" >> "$LOG_FILE"
-    else
-        echo "Email sent successfully. Debug information:" >> "$LOG_FILE"
-        echo "$curl_output" >> "$LOG_FILE"
-    fi
+Sauvegarde la configuration existante du WSO2 (<WSO2_HOME>/repository/conf/ ou équivalent).
 
-    # Clean up the temporary file
-    rm -f "$temp_file"
-}
+Sauvegarde la base de données si l’authentification est liée à une BD externe.
 
-# Create log directory and file if they don't exist
-mkdir -p "$(dirname "$LOG_FILE")" || {
-    send_email "🚨 Script Failure: Log Directory Creation Failed" "Failed to create log directory. Please investigate the issue."
-    exit 1
-}
-touch "$LOG_FILE" || {
-    send_email "🚨 Script Failure: Log File Creation Failed" "Failed to create log file. Please check the permissions and try again."
-    exit 1
-}
 
-{
-    echo "#######################################################################"
-    echo "CRON JOB STARTED AT $START_TIME"
-    echo "#######################################################################"
-    echo "CHECK DISK USAGE"
+Documentation : Identifie les procédures spécifiques au WSO2 (ex. : changement de mot de passe via l’interface d’administration ou via des commandes).
 
-    # Get disk usage
-    usage=$(df -h | awk -v fs="$FILESYSTEM" '$1 == fs {print $5}' | sed 's/%//')
-    echo "FILESYSTEM $FILESYSTEM USAGE : $usage%"
 
-    # Handle missing usage value
-    if [ -z "$usage" ]; then
-        echo "Error: Disk usage could not be determined for $FILESYSTEM." >> "$LOG_FILE"
-        send_email "🚨 Script Failure: Disk Usage Not Found" "The filesystem $FILESYSTEM is not present or the disk usage could not be determined. Please investigate the issue."
-        exit 1
-    fi
+3. Renouvellement du mot de passe
 
-    if [ "$usage" -ge "$CRITICAL_USAGE" ]; then
-        echo "USAGE IS GREATER OR EQUAL TO $CRITICAL_USAGE% ==> RUN PURGE SCRIPT"
+Interface d’administration WSO2 :
 
-        cd "$PURGE_DIR" || {
-            send_email "🚨 Script Failure: Directory Change Failed" "Failed to change directory to $PURGE_DIR. Please check the directory."
-            exit 1
-        }
+Connecte-toi à l’interface d’administration WSO2 avec les identifiants actuels.
 
-        echo "#######################################################################"
-        echo "STARTING PURGE SCRIPT EXECUTION AT $(date)"
-        echo "#######################################################################"
+Navigue vers la gestion des utilisateurs (User Management).
 
-        if ! python3 $PURGE_DIR/purge.py; then
-            echo "#######################################################################"
-            echo "PURGE SCRIPT FAILED AT $(date)"
-            echo "#######################################################################"
-            send_email "❌ Script Failure: PURGE Execution Failed" "The purge.py script failed to execute. Please check the logs in $LOG_FILE for more details."
-            exit 1
-        fi
+Sélectionne user_admin et modifie le mot de passe.
 
-        echo "#######################################################################"
-        echo "PURGE SCRIPT COMPLETED SUCCESSFULLY AT $(date)"
-        echo "#######################################################################"
 
-        if bucket_name=$(jq -r '.config.bucket' "$CONFIG_FILE"); then
-            echo "Bucket name retrieved successfully: $bucket_name"
-        else
-            send_email "❌ Script Failure: Bucket Name Retrieval Failed" "Failed to retrieve bucket name from $CONFIG_FILE after running purge.py."
-            exit 1
-        fi
+Fichiers de configuration (si nécessaire) :
 
-        if path=$(jq -r '.config.project' "$CONFIG_FILE"); then
-            echo "Path name retrieved successfully: $path"
-        else
-            send_email "❌ Script Failure: Path Name Retrieval Failed" "Failed to retrieve path name from $CONFIG_FILE after running purge.py."
-            exit 1
-        fi
+Si le mot de passe est enregistré dans un fichier de configuration (par exemple user-mgt.xml), modifie-le manuellement ou via un script.
 
-        if service=$(jq -r '.services[0].service' "$CONFIG_FILE"); then
-            echo "Service name retrieved successfully: $service"
-        else
-            send_email "❌ Script Failure: Service Name Retrieval Failed" "Failed to retrieve Service name from $CONFIG_FILE after running purge.py."
-            exit 1
-        fi
+Regénère les hachages ou clés si nécessaire.
 
-        END_TIME=$(date)
-        send_email "✅ Script Success: Execution Completed" "
-        <ul>
-            <li><strong>Start Time:</strong> $START_TIME ⏳</li>
-            <li><strong>End Time:</strong> $END_TIME ⏰</li>
-            <li><strong>Service Name:</strong> $service 🔧</li>
-            <li><strong>Bucket Name:</strong> $bucket_name 🗂️</li>
-            <li><strong>Path:</strong> $path 📁</li>
-            <li><strong>Hostname:</strong> $HOSTNAME 👤</li>
-            <li><strong>SERVER:</strong> $NICKNAME 🖥️</li>
-        </ul>
-        <p>Everything went smoothly! 🎉</p>"
-    else
-        echo "USAGE IS LESS THAN $CRITICAL_USAGE% ==> DO NOTHING"
-    fi
 
-    echo "#######################################################################"
-    echo "CRON JOB ENDED AT $(date)"
-    echo "#######################################################################"
+Authentification via une base de données :
 
-} >> "$LOG_FILE" 2>&1 || {
-    send_email "❌ Script Failure: Unknown Error" "An unknown error occurred while running the script. Check the logs in $LOG_FILE for details."
-    exit 1
-}
+Si WSO2 utilise une BD externe pour l’authentification, mets à jour le mot de passe dans la table correspondante.
+
+
+
+4. Validation
+
+Tests fonctionnels : Vérifie que les services WSO2 fonctionnent correctement après le changement.
+
+Connexion utilisateur : Teste la connexion avec le nouveau mot de passe.
+
+Log monitoring : Consulte les logs pour détecter d’éventuelles erreurs (<WSO2_HOME>/repository/logs).
+
+
+5. Post-implémentation
+
+Documentation : Mets à jour la documentation interne avec le nouveau mot de passe et les étapes effectuées.
+
+Archivage : Conserve les sauvegardes pendant une durée définie en cas de problème.
+
+Communication : Informe l’équipe de la réussite de l’opération.
+
+
+Si tu as des contraintes spécifiques (par exemple, pas d’accès à Internet), ou besoin de scripts ou commandes pour WSO2, précise-les, et je peux t'aider davantage.
+
