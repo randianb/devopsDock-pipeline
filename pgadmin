@@ -1,69 +1,134 @@
-Voici les étapes pour renouveler le mot de passe de l'utilisateur "user_admin" pour un composant WSO2, en collaboration avec l'équipe concernée :
+Create 2 python functions that will perofmr the following : 
+the first one will send a request like this : 
+curl -X 'GET' \
+  'https://cloud.com/v0/servers/detail?status=ACTIVE&name=grafana' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
+the result is this: 
+  {
+    "servers": [
+        {
+            "accessIPv4": "182.0.28.32",
+            "availability_zone": "eu-fr-paris-1",
+            "created": "2024-12-21T20:39:00Z",
+            "description": "grafana-xsf-main-blue",
+            "flavor": {
+                "disk": 0,
+                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
+                        "rel": "self"
+                    }
+                ],
+                "original_name": "Large 4vCPU-8GB",
+                "ram": 8192,
+                "swap": 0,
+                "vcpus": 4
+            },
+            "id": "04dcdd01-cf81-4061-8df9-a180a3cfea48",
+            "image": {
+                "id": "9922255f-e697-4301-8dcb-af384300f924",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
+                        "rel": "self"
+                    }
+                ]
+            },
+            "key_name": "automation",
+            "metadata": {},
+            "name": "grafana-xsf-main-blue[1]",
+            "security_groups": [
+                {
+                    "name": "xsf-prd"
+                },
+                {
+                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
+                }
+            ],
+            "status": "ACTIVE",
+            "tags": [
+                "env=prd",
+                "group=grafana-xsf-main",
+                "gts:PUPPET_ENROLLED",
+                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
+            ],
+            "vifmacaddress": "fa:16:3e:94:5c:6b"
+        }
+    ]
+}
+the function must retrive the image id : "image": {
+                "id": "9922255f-e697-4301-8dcb-af384300f924",
 
-1. Planification et coordination
+and then geiv eit to another a function that will used to perofmr the following : 
+curl -X 'GET' \
+  'https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
 
-Identifier les impacts : Vérifie les dépendances associées à user_admin (applications, scripts, etc.).
+  {
+    "image": {
+      "CCS:marley_os_release": "RHEL_9",
+      "CCS:marley_ownership_id": "256_new",
+      "CCS:marley_payer_dep_code": "3000328275",
+      "CCS:marley_team_in_charge": "IAS-SYS-UNX",
+      "CCS:marley_team_responsible": "FT OSS",
+      "container_format": "bare",
+      "created_at": "2025-01-26T11:59:42Z",
+      "disk_format": "raw",
+      "file": "/v2/images/dafab7f7-2098-4afe-a708-628b1dbbf99c/file",
+      "id": "9922255f-e697-4301-8dcb-af384300f924",
+      "min_disk": 64,
+      "min_ram": 1,
+      "name": "OS_v1_RHEL_9_2025_w04",
+      "os_type": "Linux",
+      "owner": "3226f964ebcb422c88d6a7b31d8054e9",
+      "self": "",
+      "size": 68719476736,
+      "status": "active",
+      "updated_at": "2025-01-26T12:28:08Z",
+      "visibility": "community"
+    }
+  }
 
-Coordination : Organise une réunion avec l'équipe WSO2 pour valider le processus et planifier une fenêtre de maintenance.
+the structure of those 2 functions must be similar to this : 
 
-Communication : Informe les parties prenantes de l'intervention et de l'éventuel impact.
+    def get_images(self, retry=3, region="paris"):
+        access_token = self.get_iam_token(["osf:read"])
+        res = http_client.get(
+            OCS_IMAGES_ENDPOINT.replace("#region#",region),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+        )
 
+        images = []
+        data = res.json()
 
-2. Préparation
+        if 'images' not in data and retry > 0:
+            time.sleep(2)
+            return self.get_images(retry=retry - 1)
 
-Accès requis : Assure-toi d'avoir les accès nécessaires au système WSO2 et au fichier de configuration si applicable.
+        if 'images' not in data:
+            logger.error(res.text)
+            raise Exception("Failed to retrieve images")
 
-Sauvegarde :
+        data = data['images']
 
-Sauvegarde la configuration existante du WSO2 (<WSO2_HOME>/repository/conf/ ou équivalent).
+        for image in data:
+            # select only RHEL 9
+            if image['status'].lower() == 'created' and "rhel_9" in image['name'].lower():
+                images.append(image['name'])
+            else:
+                logger.debug("Skipping image %s" % image['status'])
+        return images
 
-Sauvegarde la base de données si l’authentification est liée à une BD externe.
+    def get_latest_image(self,region):
+        logger.debug(f"get_latest_image for {region}")
+        images = self.get_images(region=region)
+        logger.debug(f"Fetched image for {region} is : {images}")
+        return images[0]
 
-
-Documentation : Identifie les procédures spécifiques au WSO2 (ex. : changement de mot de passe via l’interface d’administration ou via des commandes).
-
-
-3. Renouvellement du mot de passe
-
-Interface d’administration WSO2 :
-
-Connecte-toi à l’interface d’administration WSO2 avec les identifiants actuels.
-
-Navigue vers la gestion des utilisateurs (User Management).
-
-Sélectionne user_admin et modifie le mot de passe.
-
-
-Fichiers de configuration (si nécessaire) :
-
-Si le mot de passe est enregistré dans un fichier de configuration (par exemple user-mgt.xml), modifie-le manuellement ou via un script.
-
-Regénère les hachages ou clés si nécessaire.
-
-
-Authentification via une base de données :
-
-Si WSO2 utilise une BD externe pour l’authentification, mets à jour le mot de passe dans la table correspondante.
-
-
-
-4. Validation
-
-Tests fonctionnels : Vérifie que les services WSO2 fonctionnent correctement après le changement.
-
-Connexion utilisateur : Teste la connexion avec le nouveau mot de passe.
-
-Log monitoring : Consulte les logs pour détecter d’éventuelles erreurs (<WSO2_HOME>/repository/logs).
-
-
-5. Post-implémentation
-
-Documentation : Mets à jour la documentation interne avec le nouveau mot de passe et les étapes effectuées.
-
-Archivage : Conserve les sauvegardes pendant une durée définie en cas de problème.
-
-Communication : Informe l’équipe de la réussite de l’opération.
-
-
-Si tu as des contraintes spécifiques (par exemple, pas d’accès à Internet), ou besoin de scripts ou commandes pour WSO2, précise-les, et je peux t'aider davantage.
-
+ the OCS_IMAGES_ENDPOINT is 'https://cloud.comn/v0/images'       
