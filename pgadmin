@@ -132,3 +132,24 @@ the structure of those 2 functions must be similar to this :
         return images[0]
 
  the OCS_IMAGES_ENDPOINT is 'https://cloud.comn/v0/images'       
+
+the caller of the this function is like this : 
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+def get_ocs_image_id():
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    # redirect stdout to /dev/null
+    with open(os.devnull,'w') as devnull:
+        with redirect_stdout(devnull):        
+            latest_image = sg_cloud_client.get_image_id(server_name=server_name)
+    # send the image name via stdout
+    print(latest_image)
+    
+def main():
+    server_name = sys.argv[1]
+    get_ocs_image_id(server_name)
+    
+if __name__ == "__main__":
+    main()
