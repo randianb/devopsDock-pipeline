@@ -153,3 +153,134 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+
+
+###solution
+import sys
+import os
+import logging
+import requests
+import time
+from contextlib import redirect_stdout
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Constants
+OCS_IMAGES_ENDPOINT = 'https://cloud.com/v0/images'
+SERVERS_ENDPOINT = 'https://cloud.com/v0/servers/detail'
+
+class ImageManager:
+    def __init__(self, access_token):
+        self.access_token = access_token
+
+    def get_server_image_id(self, server_name, retry=3):
+        """
+        Retrieve the image ID from the server details.
+        """
+        try:
+            res = requests.get(
+                SERVERS_ENDPOINT,
+                params={"status": "ACTIVE", "name": server_name},
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {self.access_token}"
+                }
+            )
+
+            if res.status_code != 200 and retry > 0:
+                time.sleep(2)
+                return self.get_server_image_id(server_name, retry=retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve server details: {res.text}")
+                raise Exception("Failed to retrieve server details")
+
+            data = res.json()
+            if "servers" not in data or len(data["servers"]) == 0:
+                logger.error("No servers found")
+                raise Exception("No servers found")
+
+            # Extract the image ID from the first server
+            image_id = data["servers"][0]["image"]["id"]
+            logger.debug(f"Retrieved image ID: {image_id}")
+            return image_id
+
+        except Exception as e:
+            logger.error(f"Error in get_server_image_id: {e}")
+            raise
+
+    def get_image_details(self, image_id, retry=3):
+        """
+        Retrieve the details of an image using its ID.
+        """
+        try:
+            res = requests.get(
+                f"{OCS_IMAGES_ENDPOINT}/{image_id}",
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {self.access_token}"
+                }
+            )
+
+            if res.status_code != 200 and retry > 0:
+                time.sleep(2)
+                return self.get_image_details(image_id, retry=retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve image details: {res.text}")
+                raise Exception("Failed to retrieve image details")
+
+            data = res.json()
+            if "image" not in data:
+                logger.error("No image details found")
+                raise Exception("No image details found")
+
+            logger.debug(f"Retrieved image details: {data['image']}")
+            return data["image"]
+
+        except Exception as e:
+            logger.error(f"Error in get_image_details: {e}")
+            raise
+
+def get_ocs_image_id(server_name):
+    """
+    Retrieve the image ID for the given server name.
+    """
+    # Initialize the sgcloud client (replace with your actual client initialization)
+    sg_cloud_client = sgcloud.Client(
+        os.environ['ACCOUNT_ID'],
+        os.environ['CLIENT_ID'],
+        os.environ['CLIENT_SECRET']
+    )
+
+    # Redirect stdout to /dev/null to suppress output
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            # Retrieve the access token using the client
+            access_token = sg_cloud_client.get_iam_token(["osf:read"])
+
+            # Initialize the ImageManager with the access token
+            image_manager = ImageManager(access_token)
+
+            # Retrieve the image ID for the server
+            image_id = image_manager.get_server_image_id(server_name)
+
+    # Send the image ID via stdout
+    print(image_id)
+
+def main():
+    """
+    Main function to handle command-line arguments and call the get_ocs_image_id function.
+    """
+    if len(sys.argv) != 2:
+        print("Usage: script.py <server_name>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]  # Retrieve the server name from the command line
+    get_ocs_image_id(server_name)
+
+if __name__ == "__main__":
+    main()
