@@ -1,0 +1,89 @@
+Compte Rendu du Projet : Automatisation du Déploiement de la Dernière Image OCS
+
+Objectif : Automatiser le processus de déploiement des dernières images OCS depuis le fournisseur d'images Cloud GTS sur les deux régions (Paris et North).
+
+Étapes Nécessaires :
+
+Analyse des Besoins :
+
+Identifier les besoins et les spécifications du projet (Déploiment de dernier image d'une mannier automatiser afin de éviter les vulnarbilite détecter par Qualyis).
+
+Définir les critères de réussite du déploiement automatisé ( Création de derneir images identique sur les deux regions paris/north, assurer que le dernier image RHEL 9 est déployé sur toutes les serveur sur les different trigramme
+).
+
+Conception et Planification :
+
+Définir l'architecture du scripts Python (utilise les bons pratiques, définer les diffenrts fonctionanlités sur le main class et utiliser ce fonctionanlités sur les scripts).
+
+Planifier les étapes de développement et de déploiement (Déterminer la derniere Image OCS, comparer avec ce qui existante et déployé si l'image existante n'sst pas le derniere).
+
+
+Développement des Scripts :
+
+Créer des scripts Python pour automatiser le processus et ensuite fait un déclancheur sur jenkins pour déclancher les jobs de déploiement.
+
+Action (Réalisation) :
+
+Création des Scripts Python :
+
+Script 1 :
+
+Objectif : Retourner la dernière image OCS existante dans le fournisseur des images (Cloud GTS) sur les deux régions (Paris et North).
+
+Fonctionnalités :
+
+Rechercher les images disponibles dans les deux régions.
+
+Déterminer la dernière image OCS dans chaque région.
+
+Script 2 :
+
+Objectif : Comparer les images des deux régions et déployer la dernière image si nécessaire.
+
+Fonctionnalités :
+
+Comparer les images retournées par le Script 1 pour vérifier si elles sont identiques paris et north.
+
+Si les images sont identiques, comparer l'image avec celle existante sur les serveurs. ==> Si la dernier image existe sur le fourniseur est différente de celle sur les serveurs, déployer la dernière version de l'image.
+
+Si l'image est la même que celle sur les serveurs, conserver l'image actuelle existante sur le serveur.
+Si la dernier image existante sur les 2 regions sont diffenrts le script prendra la dernière image des deux régions qui est identique et aprés Notifier l'équipe si la région Paris ne contient pas la dernière image OCS.
+
+lorsque le notication est envoyé. le script va prendra va aussi Comparer l'image avec celle existante sur les serveurs. ==> Si la dernier image existe sur le fourniseur est différente de celle sur les serveurs, déployer la dernière version de l'image.
+
+Exemple :
+
+Dans la région Paris, les images disponibles sont : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03 (dernière image : OS_V1_RHEL_9_2025_W03).
+
+Dans la région North, les images disponibles sont : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04 (dernière image : OS_V1_RHEL_9_2025_W04).
+
+Si les images ne sont pas identiques, le script prendra la dernière image des deux régions qui est identique (OS_V1_RHEL_9_2025_W03) et la comparera avec l'image installée sur le serveur.
+
+Si l'image installée sur le serveur est différente, le script déploiera la dernière version de l'image (OS_V1_RHEL_9_2025_W03).
+
+Si l'image installée est la même, il conservera l'image actuelle.
+
+autre scénario: 
+
+si les 2 regions sont la méme dernier image par example : 
+liste des images dispo sur paris => OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04 (dernière image : OS_V1_RHEL_9_2025_W04).
+liste des images dispo sur north => OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04 (dernière image : OS_V1_RHEL_9_2025_W04).
+
+donc le script va prendre dernière image : OS_V1_RHEL_9_2025_W04 et fait la comparaison avec image existe sur le serveur et puis c'est sont diffenrtsil va install cette image : OS_V1_RHEL_9_2025_W04 dans le serveur si non il va garder l'image actualle. (do nothing)
+
+
+Test et Validation :
+
+Effectuer des tests pour vérifier le bon fonctionnement des scripts.
+
+Valider les résultats et assurer la conformité avec les critères de réussite.
+
+Déploiement et Suivi :
+
+utiliser les scripts en DEV/HF/HT.
+
+Suivre et surveiller le processus pour détecter toute anomalie.
+
+Mettre à jour les scripts si nécessaire.
+
+Conclusion : Ce projet permettra d'assurer que les serveurs dispocsent toujours de la dernière version de l'image OCS disponible, tout en réduisant le temps et les efforts nécessaires pour effectuer le déploiement manuellement.
