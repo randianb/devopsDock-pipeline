@@ -1,434 +1,88 @@
-Create 2 python functions and add this theme to the script i will provider the 2 fucntions that will perform the following : 
-the first one will send a request like this : 
-curl -X 'GET' \
-  'https://cloud.com/v0/servers/detail?status=ACTIVE&name=grafana' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
-the result is this: 
-  {
-    "servers": [
-        {
-            "accessIPv4": "182.0.28.32",
-            "availability_zone": "eu-fr-paris-1",
-            "created": "2024-12-21T20:39:00Z",
-            "description": "grafana-xsf-main-blue",
-            "flavor": {
-                "disk": 0,
-                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
-                        "rel": "self"
-                    }
-                ],
-                "original_name": "Large 4vCPU-8GB",
-                "ram": 8192,
-                "swap": 0,
-                "vcpus": 4
-            },
-            "id": "04dcdd01-cf81-4061-8df9-a180a3cfea48",
-            "image": {
-                "id": "9922255f-e697-4301-8dcb-af384300f924",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
-                        "rel": "self"
-                    }
-                ]
-            },
-            "key_name": "automation",
-            "metadata": {},
-            "name": "grafana-xsf-main-blue[1]",
-            "security_groups": [
-                {
-                    "name": "xsf-prd"
-                },
-                {
-                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
-                }
-            ],
-            "status": "ACTIVE",
-            "tags": [
-                "env=prd",
-                "group=grafana-xsf-main",
-                "gts:PUPPET_ENROLLED",
-                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
-            ],
-            "vifmacaddress": "fa:16:3e:94:5c:6b"
-        }
-    ]
-}
-the function must retrive the image id :
+=========================================================================
+                         server_image_lookup.py
+=========================================================================
 
-"image": {
-                "id": "9922255f-e697-4301-8dcb-af384300f924",
-
-and then geiv eit to another a function that will used to perofmr the following : 
-curl -X 'GET' \
-  'https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
-
-  {
-    "image": {
-      "CCS:marley_os_release": "RHEL_9",
-      "CCS:marley_ownership_id": "256_new",
-      "CCS:marley_payer_dep_code": "3000328275",
-      "CCS:marley_team_in_charge": "IAS-SYS-UNX",
-      "CCS:marley_team_responsible": "FT OSS",
-      "container_format": "bare",
-      "created_at": "2025-01-26T11:59:42Z",
-      "disk_format": "raw",
-      "file": "/v2/images/dafab7f7-2098-4afe-a708-628b1dbbf99c/file",
-      "id": "9922255f-e697-4301-8dcb-af384300f924",
-      "min_disk": 64,
-      "min_ram": 1,
-      "name": "OS_v1_RHEL_9_2025_w04",
-      "os_type": "Linux",
-      "owner": "3226f964ebcb422c88d6a7b31d8054e9",
-      "self": "",
-      "size": 68719476736,
-      "status": "active",
-      "updated_at": "2025-01-26T12:28:08Z",
-      "visibility": "community"
-    }
-  }
-
-add those functions to this script en the end : 
-"import os
-import re
 import sys
-import tempfile
-import time
-from typing import Dict, List
+import os
+from contextlib import redirect_stdout
+from common import logger, sgcloud
 
-# noinspection PyUnresolvedReferences
-from sg_iamaas import create_token, IAMAASException
+def get_ocs_image_name(server_name):
+    # Initialize the SG Cloud client with environment variables
+    sg_cloud_client = sgcloud.Client(
+        os.environ['ACCOUNT_ID'],
+        os.environ['CLIENT_ID'],
+        os.environ['CLIENT_SECRET']
+    )
 
-from common import logger, io, util, http_client
+    # Redirect stdout to /dev/null to suppress unwanted output
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            # Get the image ID of the server
+            image_id = sg_cloud_client.get_image_id_from_server(server_name)
 
-OCS_CERTIFICATES_ENDPOINT = 'https://certificate.domain.com/v2/certificates'
-OCS_IMAGE_SOURCES_ENDPOINT = 'https://osfapi.eu-fr-paris.domain.com/v0/image_sources'
-OCS_IMAGES_ENDPOINT = 'https://osfapi.eu-fr-paris.domain.com/v0/images'
-OCS_VOLUMES_ENDPOINT = "https://osblk.eu-fr-paris.domain.com/v1/volumes"
-OCS_CSR_ENDPOINT = "https://certificate.domain.com/v2/orders/csr"
-OCS_CSR_CHECK_ENDPOINT = "https://certificate.domain.com/v2/csr/verification"
-OCS_SERVERS_ENDPOINT = "https://ocs.eu-fr-paris.domain.com/v0/servers"
-OCS_PORTS_ENDPOINT = "https://ocs.eu-fr-paris.domain.com/v0/ports"
-OCS_ORDER_REVOKE_ENDPOINT = "https://certificate.domain.com/v2/orders/revocation"
-DEFAULT_CERTIFICATES_EMAIL = "DEVOPS@domain.com"
-MAX_RETRIES = 3
-CA = io.root_ca()
+            # Get the image name using the image ID
+            image_name = sg_cloud_client.get_image_details(image_id)
+
+    # Output the image name via stdout
+    print(image_name)
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <server_name>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]
+    get_ocs_image_name(server_name)
+
+if __name__ == "__main__":
+    main()
 
 
-class Client:
+=========================================================================
+                                Functions
+=========================================================================
 
-    def __init__(self, account_id, client_id, client_secret):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.account_id = account_id
-
-    @staticmethod
-    def create(credentials: dict):
-        creds = credentials
-        if 'sgcloud' in creds:
-            creds = creds['sgcloud']
-        client = Client(creds['client_id'],
-                        creds['client_secret'], creds['account_id'])
-        client.set_env()
-        logger.info(f"Credentials loaded: account_id={client.account_id}")
-        return client
-
-    @staticmethod
-    def load_env(credentials: Dict):
-        creds = credentials
-        if 'sgcloud' in creds:
-            creds = creds['sgcloud']
-        os.environ['ACCOUNT_ID'] = creds['account_id']
-        os.environ['CLIENT_ID'] = creds['client_id']
-        os.environ['CLIENT_SECRET'] = creds['client_secret']
-
-    def set_env(self):
-        os.environ['ACCOUNT_ID'] = self.account_id
-        os.environ['CLIENT_ID'] = self.client_id
-        os.environ['CLIENT_SECRET'] = self.client_secret
-
-    def get_iam_token(self, scopes: List[str]) -> str:
-        try:
-            token_dict = create_token(
-                self.client_id,
-                self.client_secret,
-                self.account_id,
-                scopes
+    def get_image_id_from_server(self, server_name: str):
+            access_token = self.get_iam_token(["ccs:read:all"])
+            res = http_client.get(
+                f"{OCS_SERVERS_ENDPOINT}/detail",
+                params={"status": "ACTIVE", "name": server_name},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {access_token}"
+                }
             )
-        except IAMAASException:
-            raise Exception(
-                f"Could not retrieve the IAM token, please check your credentials and if your account has the right "
-                f"for the following scopes {self.account_id}/{scopes} "
-            )
-        return token_dict["access_token"]
 
-    @staticmethod
-    def revoke_certificates(cn, access_token: str, skip_id: str):
-        logger.debug(f"Invalidating certificates that are not {skip_id}")
+            if res.status_code == 200:
+                servers = res.json().get('servers', [])
+                if servers and 'image' in servers[0]: 
+                    return servers[0]['image']['id']
+                else:
+                    raise Exception(f"No active server found with name {server_name}")
+            else:
+                raise Exception(f"Failed to retrieve server details: {res.status_code} {res.text}")
 
+    def get_image_details(self, image_id: str) -> str:
+        """
+        Retrieves the name of an image using its ID.
+        """
+        access_token = self.get_iam_token(["osf:read"])
         res = http_client.get(
-            OCS_CERTIFICATES_ENDPOINT,
-            params={
-                "subjectDn": f"contains|{cn}",
-                "status": "GENERATED"
-            },
+            f"{OCS_IMAGES_ENDPOINT}/{image_id}",
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {access_token}"
             }
         )
+
         if res.status_code == 200:
-            for cert in res.json()['certificates']:
-                if cert['certificateId'] != skip_id:
-                    revok = http_client.post(
-                        OCS_ORDER_REVOKE_ENDPOINT,
-                        headers={
-                            "Content-Type": "application/json",
-                            "Authorization": f"Bearer {access_token}"
-                        },
-                        data=util.to_json({
-                            "certificateId": cert['certificateId'],
-                            "revocationReason": "cessationOfOperation"
-                        })
-                    )
-                    logger.debug(
-                        f"Revocation submitted for certificate {cert['certificateId']} ---> {revok.status_code}")
-
-    def get_certificate(self, cn, csr_content: str, pkey: str) -> str:
-
-        pkey_modulus = util.check_output(
-            f"openssl rsa -noout -modulus -in {pkey} | openssl md5")
-
-        logger.debug(f"getting cert for key: {pkey_modulus}")
-
-        csr_content = re.sub(r'\n', '\\n', csr_content.strip())
-        access_token = self.get_iam_token(
-            ["pkiaas:readwrite", "pkiaas:delete"])
-        res = http_client.post(
-            OCS_CSR_CHECK_ENDPOINT,
-            data=util.to_json({"csr": csr_content}),
-            headers={"Content-Type": "application/json"}
-        )
-
-        logger.debug(f"Checking if csr is valid --> {res.status_code}")
-
-        res = http_client.post(
-            OCS_CSR_ENDPOINT,
-            data=util.to_json({
-                "caShortName": "unipass-server",
-                "csr": csr_content,
-                # "tags": tags,
-                "notifications": {
-                    "email": DEFAULT_CERTIFICATES_EMAIL
-                }
-            }),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        logger.debug(f"CSR creation request {cn} --> {res.status_code} ")
-
-        if res.status_code == 409:
-            logger.debug(f"csr already exists {cn}")
-            logger.debug(res.text)
-            res = http_client.get(
-                OCS_CERTIFICATES_ENDPOINT,
-                params={
-                    "subjectDn": f"contains|{cn}",
-                    "status": "GENERATED",
-                    "orderBy": "+notBefore",
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {access_token}"
-                }
-            )
-
-            data = res.json()
-            logger.debug(util.to_json(data, 4))
-
-            for item in data["certificates"]:
-                cert = item["certificate"]["data"]
-                cert_file = os.path.join(tempfile.gettempdir(), "cert.pem")
-                io.write_to_file(cert_file, cert.strip())
-                cert_modulus = util.check_output(
-                    f"openssl x509 -noout -modulus -in {cert_file} | openssl md5")
-                logger.debug(f"compare with {cert_modulus}")
-                if cert_modulus == pkey_modulus:
-                    return cert
-
-            raise Exception(
-                "No matching certificate found for this private key")
-
-        logger.debug(f"CSR created for {cn}")
-
-        certificate_id = res.json()["certificateId"]
-        self.revoke_certificates(cn, access_token, certificate_id)
-
-        # Wait for certificate to be generated
-        for i in range(10):
-            time.sleep(2)
-
-            logger.debug(f"Getting certificate by id: {certificate_id}")
-            res = http_client.get(
-                f"{OCS_CERTIFICATES_ENDPOINT}/{certificate_id}",
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {access_token}"
-                }
-            )
-
-            if res.status_code < 400:
-                #
-                payload = res.json()
-                if payload["certificate"]["status"] == "GENERATED":
-                    return payload["certificate"]["data"]
+            # Extract the image name from the response
+            image_name = res.json().get("image", {}).get("name")
+            if image_name:
+                return image_name
             else:
-                logger.warn(res.text)
+                raise Exception("Image name not found in the response")
+        else:
+            raise Exception(f"Failed to retrieve image details: {res.status_code} {res.text}")
 
-        raise Exception("Failed to retrieve certificate")
-
-    def get_image_sources(self):
-        access_token = self.get_iam_token(["osf:read"])
-        res = http_client.get(
-            OCS_IMAGE_SOURCES_ENDPOINT,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        images = []
-        OCS_CENTOS_VERSION = os.getenv('TARGET_OS_VERSION')
-        data = res.json()['images']
-        # util.pretty_print(data)
-
-        if OCS_CENTOS_VERSION == None:
-            # if OS_CENTOS_VERSION is not provided ensure that the default version selected is 7
-            OCS_CENTOS_VERSION = "7"
-        for image in data:
-            if image["osVersion"] == "7" and OCS_CENTOS_VERSION == "7":
-                # Select only the images with the version 7
-                images.append(image['name'])
-            if image["osVersion"] == "9" and OCS_CENTOS_VERSION == "9":
-                # there is an issue not yet detected when the image with version 9 of centos is begin created
-                images.append(image['name'])
-
-        logger.info(f"get_image_sources {images}")
-        return sorted(images)
-
-    def get_latest_image_source(self):
-        images = self.get_image_sources()
-        logger.info(f"et_latest_image_source {images}")
-        return images[-1]
-
-    def get_images(self, retry=3):
-        access_token = self.get_iam_token(["osf:read"])
-        res = http_client.get(
-            OCS_IMAGES_ENDPOINT,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        images = []
-        data = res.json()
-
-        if 'images' not in data and retry > 0:
-            time.sleep(2)
-            return self.get_images(retry=retry - 1)
-
-        if 'images' not in data:
-            logger.error(res.text)
-            raise Exception("Failed to retrieve images")
-
-        data = data['images']
-
-        for image in data:
-            if image['status'].lower() == 'created':
-                images.append(image['name'])
-            else:
-                logger.debug("Skipping image %s" % image['status'])
-        return sorted(images)
-
-    def get_latest_image(self):
-        logger.debug("get_latest_image")
-        images = self.get_images()
-        logger.debug(f"Fetched image is : {images}")
-        return images[-1]
-
-    def stat_servers(self):
-        access_token = self.get_iam_token(["ccs:read:all"])
-        res = http_client.get(
-            OCS_SERVERS_ENDPOINT,
-            params={"limit": 1000},
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        data = res.json()['servers']
-        stats = {
-            'sgcloud.servers.total': len(data),
-        }
-        logger.debug("Debug server structure")
-        return stats
-
-    def stat_volumes(self):
-        access_token = self.get_iam_token(["osblk:read:all"])
-        res = http_client.get(
-            OCS_VOLUMES_ENDPOINT,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        volumes = res.json()['volumes']
-        volumes_in_use = list(
-            filter(lambda x: x['status'] == 'in-use', volumes))
-        volumes_not_in_use = list(
-            filter(lambda x: x['status'] != 'in-use', volumes))
-        volumes_sizes = 0
-        for v in volumes:
-            volumes_sizes += v['size']
-        stats = {
-            'sgcloud.volumes.total': len(volumes),
-            'sgcloud.volumes.in_use': len(volumes_in_use),
-            'sgcloud.volumes.not_in_use': len(volumes_not_in_use),
-            'sgcloud.volumes.size': volumes_sizes,
-        }
-        return stats
-
-    def stat_ports(self):
-        access_token = self.get_iam_token(["ccs:read:all"])
-        res = http_client.get(
-            OCS_PORTS_ENDPOINT,
-            params={"limit": 1000},
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        data = res.json()['ports']
-        active_ports = list(filter(lambda x: x['status'] == 'ACTIVE', data))
-        inactive_active_ports = list(
-            filter(lambda x: x['status'] == 'DOWN', data))
-        stats = {
-            'sgcloud.ports.total': len(data),
-            'sgcloud.ports.active': len(active_ports),
-            'sgcloud.ports.inactive': len(inactive_active_ports),
-        }
-        return stats
-"
