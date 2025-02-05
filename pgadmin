@@ -1,4 +1,138 @@
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py int-djd-af107-frontend paris
-ERROR: Unexpected data format for image_map: <class 'list'> - ['086d40e0-cbe9-4268-bfd4-5040953d1994', '086d40e0-cbe9-4268-bfd4-5040953d1994']
-ERROR: No valid image data found for int-djd-af107-frontend in paris
-[Pipeline] }
+def get_server_image_ids(self, server_name, region, retry=3):
+    access_token = self.get_iam_token(["ccs:read"])
+
+    endpoint = OCS_SERVERS_ENDPOINT_DETAILS.replace("#region#", region)
+    url = f"{endpoint}?status=ACTIVE&name={server_name}"
+
+    res = http_client.get(
+        url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    if res.status_code != 200 and retry > 0:
+        logger.warning(f"Retrying API request, attempts left: {retry}")
+        time.sleep(2)
+        return self.get_server_image_ids(server_name, region, retry - 1)
+
+    if res.status_code != 200:
+        logger.error(f"Failed to retrieve server details: {res.text}")
+        raise Exception("Failed to retrieve server details")
+
+    data = res.json()
+    logger.debug(f"API Response: {data}")
+
+    if "servers" not in data or not data["servers"]:
+        logger.error(f"No servers found for {server_name}")
+        raise Exception(f"No servers found for name: {server_name}")
+
+    image_data = []  # This will be a list of {server_name: image_id}
+    for server in data["servers"]:
+        if "image" in server:
+            image_data.append({server["name"]: server["image"]["id"]})
+            logger.debug(f"Server {server['name']} has image ID: {server['image']['id']}")
+        else:
+            logger.error(f"Image ID not found for server: {server['name']}")
+
+    return image_data
+
+
+def get_image_details(self, image_data, region, retry=3):
+    access_token = self.get_iam_token(["ccs:read"])
+    
+    servers_images = {}  # Mapping: server_name -> image_name
+
+    for entry in image_data:
+        for server_name, image_id in entry.items():
+            endpoint = OCS_SERVER_IMAGE_ENDPOINT.replace("#region#", region)
+            url = f"{endpoint}/{image_id}"
+
+            res = http_client.get(
+                url,
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {access_token}"
+                }
+            )
+
+            if res.status_code != 200 and retry > 0:
+                time.sleep(2)
+                return self.get_image_details([entry], region, retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve image details: {res.text}")
+                continue
+
+            data = res.json()
+            if "image" not in data:
+                logger.error("No image details found")
+                continue
+
+            image_name = data["image"]["name"]
+            servers_images[server_name] = image_name
+            logger.debug(f"Server {server_name} has image name: {image_name}")
+
+    return servers_images
+
+
+
+import sys
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_server_mismatch.sh")  
+
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
+
+    servers_images = {}  # Mapping: server_name -> image_name
+
+    # Fetch the server image IDs (server_name -> image_id)
+    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
+    
+    if not isinstance(image_data, list):
+        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
+        return {}
+
+    # Fetch the image names for each image ID
+    servers_images = sg_cloud_client.get_image_details(image_data, region)
+    
+    return servers_images
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python server_image_lookup.py <server_name> <region>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    # Get the image details for the provided server name and region
+    servers_images = get_ocs_images(server_name, region)
+
+    if not servers_images:
+        print(f"ERROR: No valid image data found for {server_name} in {region}")
+        sys.exit(1)
+
+    print("\nDeployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}")
+
+    # Check if there are mismatched images
+    unique_images = set(servers_images.values())
+
+    if len(unique_images) > 1:
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+        
+        # Trigger notification script if there is a mismatch
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+
+if __name__ == "__main__":
+    main()
