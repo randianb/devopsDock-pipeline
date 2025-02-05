@@ -1,4 +1,4 @@
-modify this "import sys
+import sys
 from common import logger, sgcloud
 import os
 from contextlib import redirect_stdout
@@ -9,14 +9,15 @@ def get_latest_os_image(region="paris"):
     # Redirect stdout to /dev/null to suppress unwanted output
     with open(os.devnull, 'w') as devnull:
         with redirect_stdout(devnull):
-            image_list = []
+            # Get the list of images
             list_of_images = sg_cloud_client.get_images(region=region)
             
+            # Get the latest image
             latest_image = sg_cloud_client.get_latest_image(region=region)
     
-    # Send the latest image name via stdout
-    print(f"List of images exsists on OS Factory on the region {region}: {list_of_images}")
-    print(f"Latest image on  {region} region : {latest_image}")
+    # Print the list of images and the latest image
+    print(f"List of images exists on OS Factory in the region {region}: {list_of_images}")
+    print(f"Latest image in the {region} region: {latest_image}")
 
 
 def main():
@@ -24,9 +25,8 @@ def main():
     regions = region.split(",") if "," in region else [region]
 
     for region in regions:
-        get_latest_os_image(region.strip())  # Get and print latest image
+        get_latest_os_image(region.strip())  # Get and print the list of images and the latest image
 
 
 if __name__ == "__main__":
     main()
-"
