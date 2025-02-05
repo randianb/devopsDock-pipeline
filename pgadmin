@@ -1,8 +1,19 @@
-modify this fucntiosn on order to output a list of the images and the latest one between them : 
+import time
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+
+
+class SGCloudClient:
+    def get_iam_token(self, scopes):
+        # Placeholder function to get IAM token. Replace with actual logic
+        return "dummy_token"
+
     def get_images(self, retry=3, region="paris"):
         access_token = self.get_iam_token(["osf:read"])
         res = http_client.get(
-            OCS_IMAGES_ENDPOINT.replace("#region#",region),
+            OCS_IMAGES_ENDPOINT.replace("#region#", region),
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {access_token}"
@@ -28,34 +39,35 @@ modify this fucntiosn on order to output a list of the images and the latest one
                 images.append(image['name'])
             else:
                 logger.debug("Skipping image %s" % image['status'])
+
+        print(f"Images in region {region}: {images}")  # Print the list of images
         return images
 
-    def get_latest_image(self,region):
+    def get_latest_image(self, region):
         logger.debug(f"get_latest_image for {region}")
         images = self.get_images(region=region)
-        logger.debug(f"Fetched image for {region} is : {images}")
-        return images[0]
+        latest_image = images[0] if images else None  # Ensure it handles empty lists
+        print(f"Latest image in {region}: {latest_image}")  # Print the latest image
+        return latest_image
 
-and this must also print the list of output and then the latest one : 
-import sys
-from common import logger, sgcloud
-import os
-from contextlib import redirect_stdout
+
 def get_latest_os_image(region="paris"):
-    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
     # redirect stdout to /dev/null
-    with open(os.devnull,'w') as devnull:
+    with open(os.devnull, 'w') as devnull:
         with redirect_stdout(devnull):        
             latest_image = sg_cloud_client.get_latest_image(region=region)
     # send the image name via stdout
     print(latest_image)
-    
+
+
 def main():
     region = sys.argv[1]
     regions = region.split(",") if "," in region else [region]
 
     for region in regions:
         get_latest_os_image(region.strip())
-    
+
+
 if __name__ == "__main__":
     main()
