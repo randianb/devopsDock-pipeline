@@ -1,19 +1,61 @@
-the output now presnste som much information : 
+import sys
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
- * The image deployed on the int-djd-af107-frontend located on paris is DEBUG: API Response: {'servers': [{'accessIPv4': '182.2.29.40', 'availability_zone': 'eu-fr-paris-1', 'created': '2025-01-28T14:56:14Z', 'description': 'Application web Open-R', 'flavor': {'disk': 0, 'id': '1ae033eb-0fe3-4091-b36e-0f6d09a0d059', 'links': [{'href': 'https://cloud.com/v0/flavors/1ae033eb-0fe3-4091-b36e-0f6d09a0d059', 'rel': 'self'}], 'original_name': 'Medium 2vCPU-4GB', 'ram': 4096, 'swap': 0, 'vcpus': 2}, 'id': '45dc8c59-8ae9-4f15-af83-5b107f87e16a', 'image': {'id': '086d40e0-cbe9-4268-bfd4-5040953d1994', 'links': [{'href': 'https://cloud.com/v0/images/086d40e0-cbe9-4268-bfd4-5040953d1994', 'rel': 'self'}]}, 'key_name': 'automation', 'metadata': {'env': 'int', 'irt': 'af107', 'project': 'openr', 'release': 'none', 'trigram': 'djd', 'variant': 'green'}, 'name': 'int-djd-af107-frontend-green--eu-fr-paris-1-0', 'security_groups': [{'name': 'default'}, {'name': 'SGCP_INFRA_SECURITY_GROUP_V3'}], 'status': 'ACTIVE', 'tags': ['gts:PUPPET_ENROLLED', 'int-djd-af107', 'int-djd-af107-frontend', 'int-djd-af107-frontend-green', 'int-djd-af107-frontend-green--eu-fr-paris-1', 'release:none', 'sgcp:beneficiary=****'], 'vifmacaddress': 'fa:16:3e:92:78:55'}, {'accessIPv4': '182.2.29.165', 'availability_zone': 'eu-fr-paris-1', 'created': '2025-01-28T14:56:09Z', 'description': 'Application web Open-R', 'flavor': {'disk': 0, 'id': '1ae033eb-0fe3-4091-b36e-0f6d09a0d059', 'links': [{'href': 'https://cloud.com/v0/flavors/1ae033eb-0fe3-4091-b36e-0f6d09a0d059', 'rel': 'self'}], 'original_name': 'Medium 2vCPU-4GB', 'ram': 4096, 'swap': 0, 'vcpus': 2}, 'id': '18993e4e-d04b-4141-8790-8d27033a070f', 'image': {'id': '086d40e0-cbe9-4268-bfd4-5040953d1994', 'links': [{'href': 'https://cloud.com/v0/images/086d40e0-cbe9-4268-bfd4-5040953d1994', 'rel': 'self'}]}, 'key_name': 'automation', 'metadata': {'env': 'int', 'irt': 'af107', 'project': 'openr', 'release': 'none', 'trigram': 'djd', 'variant': 'blue'}, 'name': 'int-djd-af107-frontend-blue--eu-fr-paris-1-0', 'security_groups': [{'name': 'default'}, {'name': 'SGCP_INFRA_SECURITY_GROUP_V3'}], 'status': 'ACTIVE', 'tags': ['gts:PUPPET_ENROLLED', 'int-djd-af107', 'int-djd-af107-frontend', 'int-djd-af107-frontend-blue', 'int-djd-af107-frontend-blue--eu-fr-paris-1', 'release:none', 'sgcp:beneficiary=****'], 'vifmacaddress': 'fa:16:3e:75:de:d2'}]}
-DEBUG: Server int-djd-af107-frontend-green--eu-fr-paris-1-0 has image ID: 086d40e0-cbe9-4268-bfd4-5040953d1994
-DEBUG: Server int-djd-af107-frontend-blue--eu-fr-paris-1-0 has image ID: 086d40e0-cbe9-4268-bfd4-5040953d1994
-DEBUG: Server int-djd-af107-frontend-green--eu-fr-paris-1-0 has image name: OS_dev_RHEL_9_2025_w05
-DEBUG: Server int-djd-af107-frontend-blue--eu-fr-paris-1-0 has image name: OS_dev_RHEL_9_2025_w05
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_server_mismatch.sh")  
 
-Deployed images on servers:
-int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-          *********************************************************************
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
 
-it must only print this : 
-The image deployed on the int-djd-af107-frontend located on paris is 
+    servers_images = {}  # Mapping: server_name -> image_name
 
-Deployed images on servers:
-int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
+    # Fetch the server image IDs (server_name -> image_id)
+    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
+    
+    if not isinstance(image_data, list):
+        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
+        return {}
+
+    # Fetch the image names for each image ID
+    servers_images = sg_cloud_client.get_image_details(image_data, region)
+    
+    return servers_images
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python server_image_lookup.py <server_name> <region>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    # Get the image details for the provided server name and region
+    servers_images = get_ocs_images(server_name, region)
+
+    if not servers_images:
+        print(f"ERROR: No valid image data found for {server_name} in {region}")
+        sys.exit(1)
+
+    # Prepare the output
+    print(f"\nThe image deployed on the {server_name} located on {region} is\n")
+
+    print("Deployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}")
+
+    # Check if there are mismatched images
+    unique_images = set(servers_images.values())
+
+    if len(unique_images) > 1:
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+        
+        # Trigger notification script if there is a mismatch
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+
+if __name__ == "__main__":
+    main()
