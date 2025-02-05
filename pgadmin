@@ -1,3 +1,13 @@
-File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 42, in get_ocs_images
-    for server, image_id in image_ids.items():  # Loop over servers
-AttributeError: 'list' object has no attribute 'items'
+servers_images = {}  # Store server name -> image mapping
+
+for entry in image_ids:  
+    # Ensure 'entry' has the expected structure
+    if isinstance(entry, dict) and "server" in entry and "image_id" in entry:
+        server = entry["server"]
+        image_id = entry["image_id"]
+        image_name = sg_cloud_client.get_image_details(image_id, region)  # Fetch image name
+        servers_images[server] = image_name
+    else:
+        logger.error(f"Unexpected data format: {entry}")  # Log unexpected cases
+
+return servers_images  # Returns a dictionary {server_name: image_name}
