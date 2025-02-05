@@ -1,13 +1,50 @@
-servers_images = {}  # Store server name -> image mapping
+import sys
+import os
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
-for entry in image_ids:  
-    # Ensure 'entry' has the expected structure
-    if isinstance(entry, dict) and "server" in entry and "image_id" in entry:
-        server = entry["server"]
-        image_id = entry["image_id"]
-        image_name = sg_cloud_client.get_image_details(image_id, region)  # Fetch image name
-        servers_images[server] = image_name
-    else:
-        logger.error(f"Unexpected data format: {entry}")  # Log unexpected cases
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_server_mismatch.sh")  # Resolve the shell script path
 
-return servers_images  # Returns a dictionary {server_name: image_name}
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
+    
+    servers_images = {}  # Store server name -> image mapping
+
+    with open(os.devnull, "w") as devnull:
+        with redirect_stdout(devnull):
+            image_ids = sg_cloud_client.get_server_image_ids(server_name, region)  # Get list of image IDs
+        
+        for server, image_id in image_ids.items():  # Loop over servers
+            with redirect_stdout(devnull):
+                image_name = sg_cloud_client.get_image_details(image_id, region)  # Get image name
+            servers_images[server] = image_name  # Store result
+
+    return servers_images
+
+def main():
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    servers_images = get_ocs_images(server_name, region)
+
+    # Print the list of servers with their deployed image names
+    print("\nDeployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}")
+
+    # Check if all images are the same
+    unique_images = set(servers_images.values())
+    
+    if len(unique_images) > 1:
+        
+        # Prepare mismatch message for email
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+        
+        # Call notify script with the mismatch details
+        os.system(f"sh {NOTIFY_SCRIPT} '{server_name}' '{mismatch_output}'")
+
+if __name__ == "__main__":
+    main()
