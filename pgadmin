@@ -1,11 +1,50 @@
-the ouput now is like this "The image deployed on the int-djd-af107-frontend located on paris is DEBUG: Retrieved image details: {'CCS:marley_os_release': 'RHEL_9', 'CCS:marley_ownership_id': '256_new', 'CCS:marley_payer_dep_code': '3000328275', 'CCS:marley_team_in_charge': 'IAS-SYS-UNX', 'CCS:marley_team_responsible': 'FT OSS', 'container_format': 'bare', 'created_at': '2025-01-27T09:18:19Z', 'disk_format': 'raw', 'file': '/v2/images/086d40e0-cbe9-4268-bfd4-5040953d1994/file', 'id': '086d40e0-cbe9-4268-bfd4-5040953d1994', 'min_disk': 32, 'min_ram': 1, 'name': 'OS_dev_RHEL_9_2025_w05', 'os_type': 'Linux', 'owner': '2bb95c8f560e425094a1a034fc401c58', 'self': '', 'size': 34359738368, 'status': 'active', 'updated_at': '2025-01-27T09:32:22Z', 'visibility': 'community'}
-OS_dev_RHEL_9_2025_w05"
-but instead it must be return the a list of the servers and there image names
+import sys
+import os
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
-something like this : 
+NOTIFY_SCRIPT = "/path/to/notify_mismatch.sh"  # Adjust the path accordingly
 
-the image deplyed on the server with match label int-djd-af107-frontend located on paris is : OS_dev_RHEL_9_2025_w05
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
+    
+    servers_images = {}  # Store server name -> image mapping
 
-if it find the images differnet it will send the email with ouput below that will get from the functions
-int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w04
+    with open(os.devnull, "w") as devnull:
+        with redirect_stdout(devnull):
+            image_ids = sg_cloud_client.get_server_image_id(server_name, region)  # Get list of image IDs
+        
+        for server, image_id in image_ids.items():  # Loop over servers
+            with redirect_stdout(devnull):
+                image_name = sg_cloud_client.get_image_details(image_id, region)  # Get image name
+            servers_images[server] = image_name  # Store result
+
+    return servers_images
+
+def main():
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    servers_images = get_ocs_images(server_name, region)
+
+    # Print the list of servers with their deployed image names
+    print("\nDeployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}")
+
+    # Check if all images are the same
+    unique_images = set(servers_images.values())
+    
+    if len(unique_images) > 1:
+        print("\n⚠️ Image mismatch detected! Sending notification...")
+        
+        # Prepare mismatch message for email
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+        
+        # Call notify script with the mismatch details
+        os.system(f"sh {NOTIFY_SCRIPT} '{server_name}' '{mismatch_output}'")
+
+if __name__ == "__main__":
+    main()
