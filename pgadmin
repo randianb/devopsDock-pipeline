@@ -1,100 +1,61 @@
-ython /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_image.py paris
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
+modify this fucntiosn on order to output a list of the images and the latest one between them : 
+    def get_images(self, retry=3, region="paris"):
+        access_token = self.get_iam_token(["osf:read"])
+        res = http_client.get(
+            OCS_IMAGES_ENDPOINT.replace("#region#",region),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+        )
 
-        *********************************************************************
-        * latest os image for paris is OS_dev_RHEL_9_2025_w05
-        *********************************************************************
-        
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
+        images = []
+        data = res.json()
 
-          +++++++++++++++++++++++ [frontend] +++++++++++++++++++++++
-          
-[Pipeline] sh
-Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
-		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
-		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
-+ export ACCOUNT_ID=****
-+ ACCOUNT_ID=****
-+ export CLIENT_ID=****
-+ CLIENT_ID=****
-+ export 'CLIENT_SECRET=****'
-+ CLIENT_SECRET=****
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py frontend paris
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
+        if 'images' not in data and retry > 0:
+            time.sleep(2)
+            return self.get_images(retry=retry - 1)
 
-          *********************************************************************
-          * The image deployed on the matching label frontend and located on paris region is
+        if 'images' not in data:
+            logger.error(res.text)
+            raise Exception("Failed to retrieve images")
 
-Deployed images on servers:
-int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
-oat-djd-af107-frontend-blue-new-eu-fr-paris-2 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-blue-new-eu-fr-paris-1 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-green-new-eu-fr-paris-2-0 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-green-new-eu-fr-paris-2-1 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-green-new-eu-fr-paris-1-1 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-green-new-eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
-uat-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
-uat-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
-          *********************************************************************
-          
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
+        data = data['images']
 
-          +++++++++++++++++++++++ [north] +++++++++++++++++++++++
-          
-[Pipeline] sh
-Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
-		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
-		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
-+ export ACCOUNT_ID=****
-+ ACCOUNT_ID=****
-+ export CLIENT_ID=****
-+ CLIENT_ID=****
-+ export 'CLIENT_SECRET=****'
-+ CLIENT_SECRET=****
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_image.py north
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
+        for image in data:
+            # select only RHEL 9
+            if image['status'].lower() == 'created' and "rhel_9" in image['name'].lower():
+                images.append(image['name'])
+            else:
+                logger.debug("Skipping image %s" % image['status'])
+        return images
 
-        *********************************************************************
-        * latest os image for north is OS_dev_RHEL_9_2025_w05
-        *********************************************************************
-        
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
+    def get_latest_image(self,region):
+        logger.debug(f"get_latest_image for {region}")
+        images = self.get_images(region=region)
+        logger.debug(f"Fetched image for {region} is : {images}")
+        return images[0]
 
-          +++++++++++++++++++++++ [frontend] +++++++++++++++++++++++
-          
-[Pipeline] sh
-Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
-		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
-		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
-+ export ACCOUNT_ID=****
-+ ACCOUNT_ID=****
-+ export CLIENT_ID=****
-+ CLIENT_ID=****
-+ export 'CLIENT_SECRET=****'
-+ CLIENT_SECRET=****
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py frontend north
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
+and this must also print the list of output and then the latest one : 
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+def get_latest_os_image(region="paris"):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    # redirect stdout to /dev/null
+    with open(os.devnull,'w') as devnull:
+        with redirect_stdout(devnull):        
+            latest_image = sg_cloud_client.get_latest_image(region=region)
+    # send the image name via stdout
+    print(latest_image)
+    
+def main():
+    region = sys.argv[1]
+    regions = region.split(",") if "," in region else [region]
 
-          *********************************************************************
-          * The image deployed on the matching label frontend and located on north region is
-
-Deployed images on servers:
-oat-djd-af107-frontend-green-new-eu-fr-north-1-0 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-blue-new-eu-fr-north-1 = OS_dev_RHEL_9_2024_w51
-oat-djd-af107-frontend-green-new-eu-fr-north-1-1 = OS_dev_RHEL_9_2024_w51
-          *********************************************************************
+    for region in regions:
+        get_latest_os_image(region.strip())
+    
+if __name__ == "__main__":
+    main()
