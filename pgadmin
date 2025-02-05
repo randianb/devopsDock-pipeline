@@ -1,85 +1,10 @@
-def get_server_image_ids(self, server_name, region, retry=3):
-    """Retrieve image IDs for all active servers matching the given name."""
-    access_token = self.get_iam_token(["ccs:read"])
-
-    endpoint = OCS_SERVERS_ENDPOINT_DETAILS.replace("#region#", region)
-    url = f"{endpoint}?status=ACTIVE&name={server_name}"
-
-    res = http_client.get(
-        url,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-
-    if res.status_code != 200 and retry > 0:
-        logger.warning(f"Retrying API request, attempts left: {retry}")
-        time.sleep(2)
-        return self.get_server_image_ids(server_name, region, retry - 1)
-
-    if res.status_code != 200:
-        logger.error(f"Failed to retrieve server details: {res.text}")
-        raise Exception("Failed to retrieve server details")
-
-    data = res.json()
-    logger.debug(f"API Response: {data}")
-
-    if "servers" not in data or not data["servers"]:
-        logger.error(f"No servers found for {server_name}")
-        raise Exception(f"No servers found for name: {server_name}")
-
-    image_ids = []
-    for server in data["servers"]:
-        if "image" in server:
-            image_id = server["image"]["id"]
-            image_ids.append(image_id)
-            logger.debug(f"Server {server['name']} has image ID: {image_id}")
-        else:
-            logger.error(f"Image ID not found for server: {server['name']}")
-
-    return image_ids
-
-
-def get_image_details(self, image_id, region, retry=3):
-    """Retrieve the image name given an image ID."""
-    access_token = self.get_iam_token(["ccs:read"])
-    endpoint = OCS_SERVER_IMAGE_ENDPOINT.replace("#region#", region)
-    url = f"{endpoint}/{image_id}"
-
-    res = http_client.get(
-        url,
-        headers={
-            "accept": "application/json",
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-
-    if res.status_code != 200 and retry > 0:
-        time.sleep(2)
-        return self.get_image_details(image_id, region, retry - 1)
-
-    if res.status_code != 200:
-        logger.error(f"Failed to retrieve image details: {res.text}")
-        raise Exception("Failed to retrieve image details")
-
-    data = res.json()
-    if "image" not in data:
-        logger.error("No image details found")
-        raise Exception("No image details found")
-
-    logger.debug(f"Retrieved image details: {data['image']}")
-    return data["image"]["name"]
-
-
-
-
-≈============
-
 import sys
 import os
 from common import logger, sgcloud
 from contextlib import redirect_stdout
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_mismatch.sh")  # Resolve the shell script path
 
 def get_ocs_image_ids(server_name, region):
     sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
@@ -96,8 +21,8 @@ def get_ocs_image_ids(server_name, region):
 
     # If servers have different images, trigger a notification
     if len(unique_images) > 1:
-        logger.warning("Mismatch in server images detected! Sending notification...")
-        os.system("sh notify_mismatch.sh")  # Call the shell script for notifications
+        logger.warning(f"Mismatch in server images detected for {server_name}! Sending notification...")
+        os.system(f"sh {NOTIFY_SCRIPT} {server_name}")  # Pass server_name as an argument
 
     # Proceed with the process using the first image ID
     first_image_id = image_ids[0]
