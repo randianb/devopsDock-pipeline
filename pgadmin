@@ -14,24 +14,25 @@ def get_ocs_images(server_name, region):
 
     servers_images = {}  # Mapping: server_name -> image_name
 
-    with open(os.devnull, "w") as devnull:
-        with redirect_stdout(devnull):
-            image_map = sg_cloud_client.get_server_image_ids(server_name, region)  
-            # Expected format: {'server1': 'image_id1', 'server2': 'image_id2'}
+    # Fetch the server image IDs
+    image_map = sg_cloud_client.get_server_image_ids(server_name, region)  
+    if not isinstance(image_map, dict):
+        logger.error(f"Unexpected data format for image_map: {type(image_map)} - {image_map}")
+        return {}
 
-        if not isinstance(image_map, dict):
-            logger.error(f"Unexpected data format for image_map: {type(image_map)} - {image_map}")
-            return {}
+    # Loop through each server and its corresponding image ID
+    for server, image_id in image_map.items():  
+        if not isinstance(image_id, str):
+            logger.error(f"Invalid image ID format for {server}: {image_id}")
+            continue  # Skip invalid entries
 
-        for server, image_id in image_map.items():  
-            if not isinstance(image_id, str):
-                logger.error(f"Invalid image ID format for {server}: {image_id}")
-                continue  # Skip invalid entries
-
-            with redirect_stdout(devnull):
-                image_name = sg_cloud_client.get_image_details(image_id, region)  
-
+        # Fetch the image name for each image ID
+        image_name = sg_cloud_client.get_image_details(image_id, region)  
+        
+        if image_name:  # Only add if the image name is valid
             servers_images[server] = image_name  
+        else:
+            logger.error(f"Failed to retrieve image name for {server} with image ID {image_id}")
 
     return servers_images
 
@@ -43,6 +44,7 @@ def main():
     server_name = sys.argv[1]
     region = sys.argv[2]
     
+    # Get the image details for the provided server name and region
     servers_images = get_ocs_images(server_name, region)
 
     if not servers_images:
@@ -53,11 +55,13 @@ def main():
     for server, image in servers_images.items():
         print(f"{server} = {image}")
 
+    # Check if there are mismatched images
     unique_images = set(servers_images.values())
 
     if len(unique_images) > 1:
         mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
         
+        # Trigger notification script if there is a mismatch
         subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
 
 if __name__ == "__main__":
