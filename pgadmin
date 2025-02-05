@@ -1,23 +1,3 @@
-#!/bin/bash
-
-SMTP_HOST="your.smtp.server"
-SMTP_PORT=25
-MAIL_FROM="devops.monitoring@domain.com"
-MAIL_TO="example@domain.com"
-
-SERVER_NAME=$1
-MISMATCH_DETAILS=$2
-
-send_email() {
-    local subject="⚠️ Image Mismatch Alert for $SERVER_NAME"
-    local message="<html><body><h3 style='color:red;'>$subject</h3><pre>$MISMATCH_DETAILS</pre></body></html>"
-    local temp_file=$(mktemp)
-
-    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n$message" > "$temp_file"
-    
-    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file"
-    
-    rm -f "$temp_file"
-}
-
-send_email
+File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 42, in get_ocs_images
+    for server, image_id in image_ids.items():  # Loop over servers
+AttributeError: 'list' object has no attribute 'items'
