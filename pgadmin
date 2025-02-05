@@ -1,28 +1,11 @@
-#!/bin/bash
+the ouput now is like this "The image deployed on the int-djd-af107-frontend located on paris is DEBUG: Retrieved image details: {'CCS:marley_os_release': 'RHEL_9', 'CCS:marley_ownership_id': '256_new', 'CCS:marley_payer_dep_code': '3000328275', 'CCS:marley_team_in_charge': 'IAS-SYS-UNX', 'CCS:marley_team_responsible': 'FT OSS', 'container_format': 'bare', 'created_at': '2025-01-27T09:18:19Z', 'disk_format': 'raw', 'file': '/v2/images/086d40e0-cbe9-4268-bfd4-5040953d1994/file', 'id': '086d40e0-cbe9-4268-bfd4-5040953d1994', 'min_disk': 32, 'min_ram': 1, 'name': 'OS_dev_RHEL_9_2025_w05', 'os_type': 'Linux', 'owner': '2bb95c8f560e425094a1a034fc401c58', 'self': '', 'size': 34359738368, 'status': 'active', 'updated_at': '2025-01-27T09:32:22Z', 'visibility': 'community'}
+OS_dev_RHEL_9_2025_w05"
+but instead it must be return the a list of the servers and there image names
 
-# Set SMTP details
-SMTP_HOST="your.smtp.server"
-SMTP_PORT=25
-MAIL_FROM="devops.monitoring@domain.com"
-MAIL_TO="example@domain.com"
+something like this : 
 
-# Read server name from the first argument
-SERVER_NAME=$1
+the image deplyed on the server with match label int-djd-af107-frontend located on paris is : OS_dev_RHEL_9_2025_w05
 
-# Function to send an email
-send_email() {
-    local subject=$1
-    local message=$2
-    local temp_file=$(mktemp)
-
-    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n<html><body><h3 style='color:red;'>$subject</h3><p>$message</p></body></html>" > "$temp_file"
-
-    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file"
-
-    rm -f "$temp_file"
-}
-
-# Send notification email
-send_email "⚠️ Image Mismatch Alert for $SERVER_NAME" "The server <strong>$SERVER_NAME</strong> has different images across instances. Please investigate."
-
-exit 0
+if it find the images differnet it will send the email with ouput below that will get from the functions
+int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
+int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w04
