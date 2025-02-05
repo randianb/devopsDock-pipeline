@@ -1,29 +1,14 @@
-import sys
-import os
-from common import logger, sgcloud
-from contextlib import redirect_stdout
+i go this output latest_os_image.py p is not good: 
 
-def get_latest_os_image(region):
-    """Fetch and print the latest OS image for a given region."""
-    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
-    
-    # Suppress unwanted output
-    with open(os.devnull, 'w') as devnull:
-        with redirect_stdout(devnull):        
-            latest_image = sg_cloud_client.get_latest_image(region=region)
-    
-    # Print the latest image for the region
-    print(f"Latest image for {region}: {latest_image}")
 
-def main():
-    """Parse input regions and fetch the latest OS images for each."""
-    input_region = sys.argv[1]
+knowing that 
+def REGIONS = "paris,north" 
+"regions=$REGIONS",
 
-    # Convert input to a list if it contains multiple regions (comma-separated)
-    regions = input_region.split(",") if "," in input_region else [input_region]
-
-    for region in regions:
-        get_latest_os_image(region.strip())
-
-if __name__ == "__main__":
-    main()
+for (def region in regions) {
+        container("python"){
+          echo """
+          +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
+          """
+          LATEST_OS_IMAGE = sh(script: """
+            python latest_os_image.py $region"""
