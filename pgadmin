@@ -1,50 +1,23 @@
-import sys
-import os
-from common import logger, sgcloud
-from contextlib import redirect_stdout
+#!/bin/bash
 
-NOTIFY_SCRIPT = "/path/to/notify_mismatch.sh"  # Adjust the path accordingly
+SMTP_HOST="your.smtp.server"
+SMTP_PORT=25
+MAIL_FROM="devops.monitoring@domain.com"
+MAIL_TO="example@domain.com"
 
-def get_ocs_images(server_name, region):
-    sg_cloud_client = sgcloud.Client(
-        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
-    )
+SERVER_NAME=$1
+MISMATCH_DETAILS=$2
+
+send_email() {
+    local subject="⚠️ Image Mismatch Alert for $SERVER_NAME"
+    local message="<html><body><h3 style='color:red;'>$subject</h3><pre>$MISMATCH_DETAILS</pre></body></html>"
+    local temp_file=$(mktemp)
+
+    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n$message" > "$temp_file"
     
-    servers_images = {}  # Store server name -> image mapping
-
-    with open(os.devnull, "w") as devnull:
-        with redirect_stdout(devnull):
-            image_ids = sg_cloud_client.get_server_image_id(server_name, region)  # Get list of image IDs
-        
-        for server, image_id in image_ids.items():  # Loop over servers
-            with redirect_stdout(devnull):
-                image_name = sg_cloud_client.get_image_details(image_id, region)  # Get image name
-            servers_images[server] = image_name  # Store result
-
-    return servers_images
-
-def main():
-    server_name = sys.argv[1]
-    region = sys.argv[2]
+    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file"
     
-    servers_images = get_ocs_images(server_name, region)
+    rm -f "$temp_file"
+}
 
-    # Print the list of servers with their deployed image names
-    print("\nDeployed images on servers:")
-    for server, image in servers_images.items():
-        print(f"{server} = {image}")
-
-    # Check if all images are the same
-    unique_images = set(servers_images.values())
-    
-    if len(unique_images) > 1:
-        print("\n⚠️ Image mismatch detected! Sending notification...")
-        
-        # Prepare mismatch message for email
-        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
-        
-        # Call notify script with the mismatch details
-        os.system(f"sh {NOTIFY_SCRIPT} '{server_name}' '{mismatch_output}'")
-
-if __name__ == "__main__":
-    main()
+send_email
