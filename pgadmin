@@ -1,5 +1,5 @@
 the 2 functions that we created before retun only the first server on the json list and then get the image id of it and processus.. what i want to achive now is to loop for all the servers on the that json reposnse and get the image id for each servers and do a comparaison to see if there all have the same image if not it will send a notificaftion ( for example it will call for another sh script that will send notification emails and then continue the process as before ) 
-
+keep it simple as much as possible and only change the necessary. 
 def get_server_image_id(self, server_name, region, retry=3):
         access_token = self.get_iam_token(["ccs:read"])
 
@@ -86,3 +86,30 @@ def get_server_image_id(self, server_name, region, retry=3):
         except Exception as e:
             logger.error(f"Error in get_image_details: {e}")
             raise
+
+
+and this is the script that will call the fucntions : 
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+def get_ocs_image_id(server_name, region):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    # redirect stdout to /dev/null
+    with open(os.devnull,'w') as devnull:
+        with redirect_stdout(devnull):        
+            image_id = sg_cloud_client.get_server_image_id(server_name, region)
+            # Get the image name using the image ID
+            image_name = sg_cloud_client.get_image_details(image_id, region)
+    # Output the image name via stdout
+    print(image_name)
+    
+def main():
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    get_ocs_image_id(server_name, region)
+    
+if __name__ == "__main__":
+    main()
+
+    
