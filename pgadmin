@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 from common import logger, sgcloud
 from contextlib import redirect_stdout
 
@@ -10,21 +11,30 @@ def get_ocs_images(server_name, region):
     sg_cloud_client = sgcloud.Client(
         os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
     )
-    
+
     servers_images = {}  # Store server name -> image mapping
 
     with open(os.devnull, "w") as devnull:
         with redirect_stdout(devnull):
             image_ids = sg_cloud_client.get_server_image_ids(server_name, region)  # Get list of image IDs
         
-        for server, image_id in image_ids.items():  # Loop over servers
-            with redirect_stdout(devnull):
-                image_name = sg_cloud_client.get_image_details(image_id, region)  # Get image name
-            servers_images[server] = image_name  # Store result
+        for entry in image_ids:  
+            if isinstance(entry, dict) and "server" in entry and "image_id" in entry:
+                server = entry["server"]
+                image_id = entry["image_id"]
+                with redirect_stdout(devnull):
+                    image_name = sg_cloud_client.get_image_details(image_id, region)  # Get image name
+                servers_images[server] = image_name  # Store result
+            else:
+                logger.error(f"Unexpected data format: {entry}")  # Log unexpected cases
 
     return servers_images
 
 def main():
+    if len(sys.argv) < 3:
+        print("Usage: python server_image_lookup.py <server_name> <region>")
+        sys.exit(1)
+
     server_name = sys.argv[1]
     region = sys.argv[2]
     
@@ -37,14 +47,13 @@ def main():
 
     # Check if all images are the same
     unique_images = set(servers_images.values())
-    
+
     if len(unique_images) > 1:
-        
         # Prepare mismatch message for email
         mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
         
-        # Call notify script with the mismatch details
-        os.system(f"sh {NOTIFY_SCRIPT} '{server_name}' '{mismatch_output}'")
+        # Call notify script securely using subprocess
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
 
 if __name__ == "__main__":
     main()
