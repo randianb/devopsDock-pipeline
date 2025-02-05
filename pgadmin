@@ -1,13 +1,60 @@
-why is still can't get the print the raw response for debugging print("Raw API Response:") and print(res.text)  #on the output even thoughtu it exist on the fcuntion
+import sys
 
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py backend
-Traceback (most recent call last):
-  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 22, in <module>
-    main()
-  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 19, in main
-    get_ocs_image_id(server_name)
-  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 10, in get_ocs_image_id
-    image_id = sg_cloud_client.get_server_image_id(server_name)
-  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/common/sgcloud.py", line 375, in get_server_image_id
-    raise Exception(f"No servers found for name: {server_name}")
-Exception: No servers found for name: backend
+def get_server_image_id(self, server_name, retry=3):
+    access_token = self.get_iam_token(["ccs:read:all"])
+    try:
+        url = f"{OCS_SERVERS_ENDPOINT}?status=ACTIVE&name={server_name}"
+        logger.debug(f"Request URL: {url}")
+
+        res = http_client.get(
+            url,
+            headers={
+                "accept": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+        )
+
+        # Force print and flush to ensure output appears in Jenkins logs
+        print("\nRaw API Response:", file=sys.stdout, flush=True)
+        print(res.text, file=sys.stdout, flush=True)  
+
+        if res.status_code != 200 and retry > 0:
+            logger.warning(f"Retrying API request, attempts left: {retry}")
+            time.sleep(2)
+            return self.get_server_image_id(server_name, retry=retry - 1)
+
+        if res.status_code != 200:
+            logger.error(f"Failed to retrieve server details: {res.text}")
+            raise Exception("Failed to retrieve server details")
+
+        data = res.json()
+        logger.debug(f"API Response: {data}")
+
+        if "servers" not in data or not data["servers"]:
+            print(f"DEBUG: No servers found in API response for {server_name}", file=sys.stdout, flush=True)
+            raise Exception(f"No servers found for name: {server_name}")
+
+        print("\nParsed API Response:", file=sys.stdout, flush=True)
+        for i, server in enumerate(data["servers"]):
+            print(f"Server {i}: {server}", file=sys.stdout, flush=True)
+
+        matching_servers = [server for server in data["servers"] if server_name.lower() in server["name"].lower()]
+
+        if not matching_servers:
+            print(f"DEBUG: No matching server found for {server_name}", file=sys.stdout, flush=True)
+            raise Exception(f"No matching server found for name: {server_name}")
+
+        server_data = matching_servers[0]
+        logger.debug(f"Selected server data: {server_data}")
+
+        if "image" in server_data:
+            image_id = server_data["image"]["id"]
+            logger.debug(f"Retrieved image ID: {image_id}")
+            return image_id
+        else:
+            logger.error(f"Image ID not found in server data: {server_data}")
+            raise KeyError("image")
+
+    except Exception as e:
+        logger.error(f"Error in get_server_image_id: {e}")
+        raise
