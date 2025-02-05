@@ -1,1 +1,100 @@
-Jusqu'à présent, j'ai réussi à mettre à jour le script qui récupère la dernière image existante sur le cloud GTS, permettant ainsi de gérer une liste de régions d'entrée (par exemple, ["paris", "nord"]) et de renvoyer plusieurs résultats. Cette mise à jour améliore la flexibilité et garantit que nous pouvons gérer plusieurs régions simultanément. De plus, j'ai créé un script Python pour récupérer les serveurs en fonction d'une étiquette correspondante, extraire leurs ID d'image, puis interroger le nom de l'image en utilisant les ID. Si les serveurs n'ont pas la même image, un e-mail de notification est envoyé à l'équipe pour les avertir.
+ython /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_image.py paris
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+        *********************************************************************
+        * latest os image for paris is OS_dev_RHEL_9_2025_w05
+        *********************************************************************
+        
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [frontend] +++++++++++++++++++++++
+          
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ export ACCOUNT_ID=****
++ ACCOUNT_ID=****
++ export CLIENT_ID=****
++ CLIENT_ID=****
++ export 'CLIENT_SECRET=****'
++ CLIENT_SECRET=****
++ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py frontend paris
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+          *********************************************************************
+          * The image deployed on the matching label frontend and located on paris region is
+
+Deployed images on servers:
+int-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
+int-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2025_w05
+oat-djd-af107-frontend-blue-new-eu-fr-paris-2 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-blue-new-eu-fr-paris-1 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-green-new-eu-fr-paris-2-0 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-green-new-eu-fr-paris-2-1 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-green-new-eu-fr-paris-1-1 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-green-new-eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
+uat-djd-af107-frontend-green--eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
+uat-djd-af107-frontend-blue--eu-fr-paris-1-0 = OS_dev_RHEL_9_2024_w51
+          *********************************************************************
+          
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [north] +++++++++++++++++++++++
+          
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ export ACCOUNT_ID=****
++ ACCOUNT_ID=****
++ export CLIENT_ID=****
++ CLIENT_ID=****
++ export 'CLIENT_SECRET=****'
++ CLIENT_SECRET=****
++ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_image.py north
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+        *********************************************************************
+        * latest os image for north is OS_dev_RHEL_9_2025_w05
+        *********************************************************************
+        
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [frontend] +++++++++++++++++++++++
+          
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [DJD_CLIENT_SECRET, DJD_CLIENT_ID, DJD_ACCOUNT_ID]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ export ACCOUNT_ID=****
++ ACCOUNT_ID=****
++ export CLIENT_ID=****
++ CLIENT_ID=****
++ export 'CLIENT_SECRET=****'
++ CLIENT_SECRET=****
++ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py frontend north
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+          *********************************************************************
+          * The image deployed on the matching label frontend and located on north region is
+
+Deployed images on servers:
+oat-djd-af107-frontend-green-new-eu-fr-north-1-0 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-blue-new-eu-fr-north-1 = OS_dev_RHEL_9_2024_w51
+oat-djd-af107-frontend-green-new-eu-fr-north-1-1 = OS_dev_RHEL_9_2024_w51
+          *********************************************************************
