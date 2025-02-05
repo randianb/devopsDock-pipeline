@@ -135,3 +135,110 @@ here's the fucntion :
             logger.error(f"Error in get_server_image_id: {e}")
             raise
 
+the json ouput is similar to this when we use curl to similate the fucntion : 
+curl -X 'GET' \
+  'https://cloud.com/v0/servers/detail?status=ACTIVE&name=grafana' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
+  {
+    "servers": [
+        {
+            "accessIPv4": "182.0.28.32",
+            "availability_zone": "eu-fr-paris-1",
+            "created": "2024-12-21T20:39:00Z",
+            "description": "grafana-xsf-main-blue",
+            "flavor": {
+                "disk": 0,
+                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
+                        "rel": "self"
+                    }
+                ],
+                "original_name": "Large 4vCPU-8GB",
+                "ram": 8192,
+                "swap": 0,
+                "vcpus": 4
+            },
+            "id": "04dcdd01-cf81-4061-8df9-a180a3cfea48",
+            "image": {
+                "id": "9922255f-e697-4301-8dcb-af384300f924",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
+                        "rel": "self"
+                    }
+                ]
+            },
+            "key_name": "automation",
+            "metadata": {},
+            "name": "grafana-xsf-main-blue[1]",
+            "security_groups": [
+                {
+                    "name": "xsf-prd"
+                },
+                {
+                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
+                }
+            ],
+            "status": "ACTIVE",
+            "tags": [
+                "env=prd",
+                "group=grafana-xsf-main",
+                "gts:PUPPET_ENROLLED",
+                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
+            ],
+            "vifmacaddress": "fa:16:3e:94:5c:6b"
+        },
+        {
+            "accessIPv4": "182.1.32.149",
+            "availability_zone": "eu-fr-paris-2",
+            "created": "2024-12-21T20:39:00Z",
+            "description": "grafana-xsf-main-blue",
+            "flavor": {
+                "disk": 0,
+                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
+                        "rel": "self"
+                    }
+                ],
+                "original_name": "Large 4vCPU-8GB",
+                "ram": 8192,
+                "swap": 0,
+                "vcpus": 4
+            },
+            "id": "d11ccf0a-ac0e-4d09-b66b-6bac859ce476",
+            "image": {
+                "id": "9922255f-e697-4301-8dcb-af384300f924",
+                "links": [
+                    {
+                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
+                        "rel": "self"
+                    }
+                ]
+            },
+            "key_name": "automation",
+            "metadata": {},
+            "name": "grafana-xsf-main-blue[1]",
+            "security_groups": [
+                {
+                    "name": "xsf-prd"
+                },
+                {
+                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
+                }
+            ],
+            "status": "ACTIVE",
+            "tags": [
+                "env=prd",
+                "group=grafana-xsf-main",
+                "gts:PUPPET_ENROLLED",
+                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
+            ],
+            "vifmacaddress": "fa:16:3e:bb:b3:37"
+        }
+    ]
+}
