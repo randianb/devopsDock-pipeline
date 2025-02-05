@@ -1,14 +1,22 @@
-this must also print the list of the images the the latest one : 
+modify this "import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+
 def get_latest_os_image(region="paris"):
     sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
     
     # Redirect stdout to /dev/null to suppress unwanted output
     with open(os.devnull, 'w') as devnull:
         with redirect_stdout(devnull):
+            image_list = []
+            list_of_images = sg_cloud_client.get_images(region=region)
+            
             latest_image = sg_cloud_client.get_latest_image(region=region)
     
     # Send the latest image name via stdout
-    print(f"Latest image for region {region}: {latest_image}")
+    print(f"List of images exsists on OS Factory on the region {region}: {list_of_images}")
+    print(f"Latest image on  {region} region : {latest_image}")
 
 
 def main():
@@ -16,9 +24,9 @@ def main():
     regions = region.split(",") if "," in region else [region]
 
     for region in regions:
-        print(f"+++++++++++++++++++++++ [{region}] +++++++++++++++++++++++")
         get_latest_os_image(region.strip())  # Get and print latest image
 
 
 if __name__ == "__main__":
     main()
+"
