@@ -1,5 +1,5 @@
 i got this error: 
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py backend
++ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py int
 Traceback (most recent call last):
   File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 22, in <module>
     main()
@@ -7,114 +7,88 @@ Traceback (most recent call last):
     get_ocs_image_id(server_name)
   File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py", line 10, in get_ocs_image_id
     image_id = sg_cloud_client.get_server_image_id(server_name)
-  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/common/sgcloud.py", line 377, in get_server_image_id
+  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/common/sgcloud.py", line 378, in get_server_image_id
     raise Exception(f"No matching server found for name: {server_name}")
-Exception: No matching server found for name: backend
+Exception: No matching server found for name: int
 
-but when i try to verify with the curl it work:
-curl -X 'GET' \
-  'https://cloud.com/v0/servers/detail?status=ACTIVE&name=backend' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Bearer 4phweBONUexGeQoDg6_eTV4YP9Y'
-  {
-    "servers": [
-        {
-            "accessIPv4": "182.0.28.32",
-            "availability_zone": "eu-fr-paris-1",
-            "created": "2024-12-21T20:39:00Z",
-            "description": "backend-xsf-main-blue",
-            "flavor": {
-                "disk": 0,
-                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
-                        "rel": "self"
-                    }
-                ],
-                "original_name": "Large 4vCPU-8GB",
-                "ram": 8192,
-                "swap": 0,
-                "vcpus": 4
-            },
-            "id": "04dcdd01-cf81-4061-8df9-a180a3cfea48",
-            "image": {
-                "id": "9922255f-e697-4301-8dcb-af384300f924",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
-                        "rel": "self"
-                    }
-                ]
-            },
-            "key_name": "automation",
-            "metadata": {},
-            "name": "backend-xsf-main-blue[1]",
-            "security_groups": [
-                {
-                    "name": "xsf-prd"
-                },
-                {
-                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
+here the server_image_lookup.py: 
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
+def get_ocs_image_id(server_name):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    # redirect stdout to /dev/null
+    with open(os.devnull,'w') as devnull:
+        with redirect_stdout(devnull):        
+            image_id = sg_cloud_client.get_server_image_id(server_name)
+            # Get the image name using the image ID
+            image_name = sg_cloud_client.get_image_details(image_id)
+
+    # Output the image name via stdout
+    print(image_name)
+    
+def main():
+    server_name = sys.argv[1]
+    get_ocs_image_id(server_name)
+    
+if __name__ == "__main__":
+    main()
+
+and the get_server_image_id fucntion  : 
+def get_server_image_id(self, server_name, retry=3):
+        access_token = self.get_iam_token(["ccs:read:all"])
+        try:
+            params = {"status": "ACTIVE", "name": server_name}
+            logger.debug(f"Request URL: {OCS_SERVERS_ENDPOINT}, Params: {params}")
+            
+            url = f"{OCS_SERVERS_ENDPOINT}?status=ACTIVE&name={server_name}"
+            res = http_client.get(
+                url,
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {access_token}"
                 }
-            ],
-            "status": "ACTIVE",
-            "tags": [
-                "env=prd",
-                "group=backend-xsf-main",
-                "gts:PUPPET_ENROLLED",
-                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
-            ],
-            "vifmacaddress": "fa:16:3e:94:5c:6b"
-        },
-        {
-            "accessIPv4": "182.1.32.149",
-            "availability_zone": "eu-fr-paris-2",
-            "created": "2024-12-21T20:39:00Z",
-            "description": "backend-xsf-main-blue",
-            "flavor": {
-                "disk": 0,
-                "id": "ab91679b-99fc-412e-8626-cc6920f1833c",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/flavors/ab91679b-99fc-412e-8626-cc6920f1833c",
-                        "rel": "self"
-                    }
-                ],
-                "original_name": "Large 4vCPU-8GB",
-                "ram": 8192,
-                "swap": 0,
-                "vcpus": 4
-            },
-            "id": "d11ccf0a-ac0e-4d09-b66b-6bac859ce476",
-            "image": {
-                "id": "9922255f-e697-4301-8dcb-af384300f924",
-                "links": [
-                    {
-                        "href": "https://cloud.com/v0/images/9922255f-e697-4301-8dcb-af384300f924",
-                        "rel": "self"
-                    }
-                ]
-            },
-            "key_name": "automation",
-            "metadata": {},
-            "name": "backend-xsf-main-blue[1]",
-            "security_groups": [
-                {
-                    "name": "xsf-prd"
-                },
-                {
-                    "name": "SGCP_INFRA_SECURITY_GROUP_V3"
-                }
-            ],
-            "status": "ACTIVE",
-            "tags": [
-                "env=prd",
-                "group=backend-xsf-main",
-                "gts:PUPPET_ENROLLED",
-                "sgcp:beneficiary=3226f964-ebcb-422c-88d6-a7b31d8054e9"
-            ],
-            "vifmacaddress": "fa:16:3e:bb:b3:37"
-        }
-    ]
-}
+            )
+
+            if res.status_code != 200 and retry > 0:
+                logger.warning(f"Retrying API request, attempts left: {retry}")
+                time.sleep(2)
+                return self.get_server_image_id(server_name, retry=retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve server details: {res.text}")
+                raise Exception("Failed to retrieve server details")
+
+            data = res.json()
+            logger.debug(f"API Response: {data}")
+
+            if "servers" not in data or len(data["servers"]) == 0:
+                logger.error("No servers found in the response")
+                raise Exception("No servers found")
+
+            # Log all servers for debugging
+            for i, server in enumerate(data["servers"]):
+                logger.debug(f"Server {i}: {server}")
+
+            # Filter servers by name (exact match)
+            matching_servers = [server for server in data["servers"] if server["name"] == server_name]
+            if not matching_servers:
+                logger.error(f"No matching server found for name: {server_name}")
+                raise Exception(f"No matching server found for name: {server_name}")
+
+            server_data = matching_servers[0]
+            logger.debug(f"Selected server data: {server_data}")
+
+            # Check if the 'image' key exists in the selected server
+            if "image" in server_data:
+                image_id = server_data["image"]["id"]
+                logger.debug(f"Retrieved image ID: {image_id}")
+                return image_id
+            else:
+                logger.error(f"Image ID not found in server data: {server_data}")
+                raise KeyError("image")
+
+        except Exception as e:
+            logger.error(f"Error in get_server_image_id: {e}")
+            raise
