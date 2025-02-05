@@ -86,3 +86,52 @@ if __name__ == "__main__":
         else:
             raise Exception(f"Failed to retrieve image details: {res.status_code} {res.text}")
 
+
+======================================================
+ Probleme
+======================================================
+  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/common/sgcloud.py", line 373, in get_server_image_id
+    raise KeyError("image")
+KeyError: 'image'
+
+here's the fucntion : 
+ def get_server_image_id(self, server_name, retry=3):
+        access_token = self.get_iam_token(["ccs:read:all"])
+        try:
+            res = http_client.get(
+                OCS_SERVERS_ENDPOINT,
+                params={"status": "ACTIVE", "name": server_name},
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {access_token}"
+                }
+            )
+
+            if res.status_code != 200 and retry > 0:
+                time.sleep(2)
+                return self.get_server_image_id(server_name, retry=retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve server details: {res.text}")
+                raise Exception("Failed to retrieve server details")
+
+            data = res.json()
+            logger.debug(f"Server response data: {data}")
+
+            if "servers" not in data or len(data["servers"]) == 0:
+                logger.error("No servers found")
+                raise Exception("No servers found")
+
+            # Check if the 'image' key exists in the first server
+            if "image" in data["servers"][0]:
+                image_id = data["servers"][0]["image"]["id"]
+                logger.debug(f"Retrieved image ID: {image_id}")
+                return image_id
+            else:
+                logger.error(f"Image ID not found in server data: {data['servers'][0]}")
+                raise KeyError("image")
+
+        except Exception as e:
+            logger.error(f"Error in get_server_image_id: {e}")
+            raise
+
