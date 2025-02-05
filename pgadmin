@@ -1,146 +1,40 @@
-there the functions : 
 def get_server_image_ids(self, server_name, region, retry=3):
-        access_token = self.get_iam_token(["ccs:read"])
+    access_token = self.get_iam_token(["ccs:read"])
 
-        endpoint = OCS_SERVERS_ENDPOINT_DETAILS.replace("#region#", region)
-        url = f"{endpoint}?status=ACTIVE&name={server_name}"
+    endpoint = OCS_SERVERS_ENDPOINT_DETAILS.replace("#region#", region)
+    url = f"{endpoint}?status=ACTIVE&name={server_name}"
 
-        res = http_client.get(
-            url,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        if res.status_code != 200 and retry > 0:
-            logger.warning(f"Retrying API request, attempts left: {retry}")
-            time.sleep(2)
-            return self.get_server_image_ids(server_name, region, retry - 1)
-
-        if res.status_code != 200:
-            logger.error(f"Failed to retrieve server details: {res.text}")
-            raise Exception("Failed to retrieve server details")
-
-        data = res.json()
-        logger.debug(f"API Response: {data}")
-
-        if "servers" not in data or not data["servers"]:
-            logger.error(f"No servers found for {server_name}")
-            raise Exception(f"No servers found for name: {server_name}")
-
-        image_ids = []
-        for server in data["servers"]:
-            if "image" in server:
-                image_id = server["image"]["id"]
-                image_ids.append(image_id)
-                logger.debug(f"Server {server['name']} has image ID: {image_id}")
-            else:
-                logger.error(f"Image ID not found for server: {server['name']}")
-
-        return image_ids
-
-
-    def get_image_details(self, image_id, region, retry=3):
-        access_token = self.get_iam_token(["ccs:read"])
-        endpoint = OCS_SERVER_IMAGE_ENDPOINT.replace("#region#", region)
-        url = f"{endpoint}/{image_id}"
-
-        res = http_client.get(
-            url,
-            headers={
-                "accept": "application/json",
-                "Authorization": f"Bearer {access_token}"
-            }
-        )
-
-        if res.status_code != 200 and retry > 0:
-            time.sleep(2)
-            return self.get_image_details(image_id, region, retry - 1)
-
-        if res.status_code != 200:
-            logger.error(f"Failed to retrieve image details: {res.text}")
-            raise Exception("Failed to retrieve image details")
-
-        data = res.json()
-        if "image" not in data:
-            logger.error("No image details found")
-            raise Exception("No image details found")
-
-        logger.debug(f"Retrieved image details: {data['image']}")
-        return data["image"]["name"]
-
-the first fucntion must retrun a list of key name server and there image id and then the second one will get the image name based on the image id..
-
-so when this script call them: 
-import sys
-import os
-import subprocess
-from common import logger, sgcloud
-from contextlib import redirect_stdout
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
-NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_server_mismatch.sh")  
-
-def get_ocs_images(server_name, region):
-    sg_cloud_client = sgcloud.Client(
-        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    res = http_client.get(
+        url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}"
+        }
     )
 
-    servers_images = {}  # Mapping: server_name -> image_name
+    if res.status_code != 200 and retry > 0:
+        logger.warning(f"Retrying API request, attempts left: {retry}")
+        time.sleep(2)
+        return self.get_server_image_ids(server_name, region, retry - 1)
 
-    with open(os.devnull, "w") as devnull:
-        with redirect_stdout(devnull):
-            image_map = sg_cloud_client.get_server_image_ids(server_name, region)  
-            # Expected format: {'server1': 'image_id1', 'server2': 'image_id2'}
+    if res.status_code != 200:
+        logger.error(f"Failed to retrieve server details: {res.text}")
+        raise Exception("Failed to retrieve server details")
 
-        if not isinstance(image_map, dict):
-            logger.error(f"Unexpected data format for image_map: {type(image_map)} - {image_map}")
-            return {}
+    data = res.json()
+    logger.debug(f"API Response: {data}")
 
-        for server, image_id in image_map.items():  
-            if not isinstance(image_id, str):
-                logger.error(f"Invalid image ID format for {server}: {image_id}")
-                continue  # Skip invalid entries
+    if "servers" not in data or not data["servers"]:
+        logger.error(f"No servers found for {server_name}")
+        raise Exception(f"No servers found for name: {server_name}")
 
-            with redirect_stdout(devnull):
-                image_name = sg_cloud_client.get_image_details(image_id, region)  
+    image_map = {}  # Dictionary to map server names to image IDs
+    for server in data["servers"]:
+        if "image" in server:
+            image_id = server["image"]["id"]
+            image_map[server["name"]] = image_id  # Store server name and image ID
+            logger.debug(f"Server {server['name']} has image ID: {image_id}")
+        else:
+            logger.error(f"Image ID not found for server: {server['name']}")
 
-            servers_images[server] = image_name  
-
-    return servers_images
-
-def main():
-    if len(sys.argv) < 3:
-        print("Usage: python server_image_lookup.py <server_name> <region>")
-        sys.exit(1)
-
-    server_name = sys.argv[1]
-    region = sys.argv[2]
-    
-    servers_images = get_ocs_images(server_name, region)
-
-    if not servers_images:
-        print(f"ERROR: No valid image data found for {server_name} in {region}")
-        sys.exit(1)
-
-    print("\nDeployed images on servers:")
-    for server, image in servers_images.items():
-        print(f"{server} = {image}")
-
-    unique_images = set(servers_images.values())
-
-    if len(unique_images) > 1:
-        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
-        
-        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
-
-if __name__ == "__main__":
-    main()
-
-it must rutern a key value : 
-
-server name = image name 
-server name = image name 
-
-make only the necessary changes
+    return image_map  # Return dictionary of server_name -> image_id
