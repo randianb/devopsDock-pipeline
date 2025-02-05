@@ -1,22 +1,29 @@
-update ethis script based on the region input : 
-if region=paris then it will send paris to the get_latest_image function if the input region = ["paris","north"]
-then it will first send paris first then it will send northand must print the 2 latest image for the 2 regions
 import sys
-from common import logger, sgcloud
 import os
+from common import logger, sgcloud
 from contextlib import redirect_stdout
-def get_latest_os_image(region="paris"):
-    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
-    # redirect stdout to /dev/null
-    with open(os.devnull,'w') as devnull:
+
+def get_latest_os_image(region):
+    """Fetch and print the latest OS image for a given region."""
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
+    
+    # Suppress unwanted output
+    with open(os.devnull, 'w') as devnull:
         with redirect_stdout(devnull):        
             latest_image = sg_cloud_client.get_latest_image(region=region)
-    # send the image name via stdout
-    print(latest_image)
     
+    # Print the latest image for the region
+    print(f"Latest image for {region}: {latest_image}")
+
 def main():
-    region = sys.argv[1]
-    get_latest_os_image(region)
-    
+    """Parse input regions and fetch the latest OS images for each."""
+    input_region = sys.argv[1]
+
+    # Convert input to a list if it contains multiple regions (comma-separated)
+    regions = input_region.split(",") if "," in input_region else [input_region]
+
+    for region in regions:
+        get_latest_os_image(region.strip())
+
 if __name__ == "__main__":
     main()
