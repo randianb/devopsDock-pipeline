@@ -1,14 +1,88 @@
-i go this output latest_os_image.py p is not good: 
+the 2 functions that we created before retun only the first server on the json list and then get the image id of it and processus.. what i want to achive now is to loop for all the servers on the that json reposnse and get the image id for each servers and do a comparaison to see if there all have the same image if not it will send a notificaftion ( for example it will call for another sh script that will send notification emails and then continue the process as before ) 
+
+def get_server_image_id(self, server_name, region, retry=3):
+        access_token = self.get_iam_token(["ccs:read"])
+
+        endpoint = OCS_SERVERS_ENDPOINT_DETAILS.replace("#region#", region)
+        url = f"{endpoint}?status=ACTIVE&name={server_name}"
 
 
-knowing that 
-def REGIONS = "paris,north" 
-"regions=$REGIONS",
+        res = http_client.get(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+        )
 
-for (def region in regions) {
-        container("python"){
-          echo """
-          +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
-          """
-          LATEST_OS_IMAGE = sh(script: """
-            python latest_os_image.py $region"""
+        if res.status_code != 200 and retry > 0:
+            logger.warning(f"Retrying API request, attempts left: {retry}")
+            time.sleep(2)
+            return self.get_server_image_id(server_name, retry=retry - 1)
+
+        if res.status_code != 200:
+            logger.error(f"Failed to retrieve server details: {res.text}")
+            raise Exception("Failed to retrieve server details")
+
+        data = res.json()
+        logger.debug(f"API Response: {data}")
+
+        if "servers" not in data or not data["servers"]:
+            print(f"DEBUG: No servers found in API response for {server_name}", file=sys.stdout, flush=True)
+            raise Exception(f"No servers found for name: {server_name}")
+
+        for i, server in enumerate(data["servers"]):
+            print(f"Server {i}: {server}", file=sys.stdout, flush=True)
+
+        matching_servers = [server for server in data["servers"] if server_name.lower() in server["name"].lower()]
+
+        if not matching_servers:
+            print(f"DEBUG: No matching server found for {server_name}", file=sys.stdout, flush=True)
+            raise Exception(f"No matching server found for name: {server_name}")
+
+        server_data = matching_servers[0]
+        logger.debug(f"Selected server data: {server_data}")
+
+        if "image" in server_data:
+            image_id = server_data["image"]["id"]
+            logger.debug(f"Retrieved image ID: {image_id}")
+            return image_id
+        else:
+            logger.error(f"Image ID not found in server data: {server_data}")
+            raise KeyError("image")
+
+
+    def get_image_details(self, image_id, region, retry=3):
+        access_token = self.get_iam_token(["ccs:read"])
+        try:
+
+            endpoint = OCS_SERVER_IMAGE_ENDPOINT.replace("#region#", region)
+            url = f"{endpoint}/{image_id}"
+
+            res = http_client.get(
+                url,
+                headers={
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {access_token}"
+                }
+            )
+
+            if res.status_code != 200 and retry > 0:
+                time.sleep(2)
+                return self.get_image_details(image_id, retry=retry - 1)
+
+            if res.status_code != 200:
+                logger.error(f"Failed to retrieve image details: {res.text}")
+                raise Exception("Failed to retrieve image details")
+
+            data = res.json()
+            if "image" not in data:
+                logger.error("No image details found")
+                raise Exception("No image details found")
+
+            logger.debug(f"Retrieved image details: {data['image']}")
+            return data["image"]["name"]
+
+        except Exception as e:
+            logger.error(f"Error in get_image_details: {e}")
+            raise
