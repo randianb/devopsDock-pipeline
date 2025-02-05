@@ -1,31 +1,64 @@
-thsi the error i got : 
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/server_image_lookup.py int-djd-af107-frontend paris
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
+import sys
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
-          *********************************************************************
-          * The image deployed on the int-djd-af107-frontend located on paris is ERROR: Unexpected data format: 086d40e0-cbe9-4268-bfd4-5040953d1994
-ERROR: Unexpected data format: 086d40e0-cbe9-4268-bfd4-5040953d1994
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify_server_mismatch.sh")  
 
-Deployed images on servers:
-          *********************************************************************
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
 
-for a complementt this my fucntion that call the script on jenkins file : 
-        container("python"){
-          echo """
-          +++++++++++++++++++++++ [${server_name}] +++++++++++++++++++++++
-          """
-          RETRIEVE_OS_IMAGE = sh(script: """
-            export ACCOUNT_ID=${DJD_ACCOUNT_ID}
-            export CLIENT_ID=${DJD_CLIENT_ID}
-            export CLIENT_SECRET=${DJD_CLIENT_SECRET}
-            python ${WORKSPACE}/pipeline/lib/scripts/server_image_lookup.py $server_name $region """, returnStdout: true).trim()
+    servers_images = {}  # Mapping: server_name -> image_name
+
+    with open(os.devnull, "w") as devnull:
+        with redirect_stdout(devnull):
+            image_map = sg_cloud_client.get_server_image_ids(server_name, region)  
+            # Expected format: {'server1': 'image_id1', 'server2': 'image_id2'}
+
+        if not isinstance(image_map, dict):
+            logger.error(f"Unexpected data format for image_map: {type(image_map)} - {image_map}")
+            return {}
+
+        for server, image_id in image_map.items():  
+            if not isinstance(image_id, str):
+                logger.error(f"Invalid image ID format for {server}: {image_id}")
+                continue  # Skip invalid entries
+
+            with redirect_stdout(devnull):
+                image_name = sg_cloud_client.get_image_details(image_id, region)  
+
+            servers_images[server] = image_name  
+
+    return servers_images
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python server_image_lookup.py <server_name> <region>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    servers_images = get_ocs_images(server_name, region)
+
+    if not servers_images:
+        print(f"ERROR: No valid image data found for {server_name} in {region}")
+        sys.exit(1)
+
+    print("\nDeployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}")
+
+    unique_images = set(servers_images.values())
+
+    if len(unique_images) > 1:
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
         
-        }
-          echo """
-          *********************************************************************
-          * The image deployed on the $server_name located on $region is $RETRIEVE_OS_IMAGE
-          *********************************************************************
-          """
-        }
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+
+if __name__ == "__main__":
+    main()
