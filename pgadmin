@@ -1,1 +1,101 @@
+the result of this : 
+    for (def region in regions) {
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
+          """
+          LATEST_OS_IMAGE = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/latest_os_image.py $region""", returnStdout: true).trim()
+        }
+        echo"""
+          ********************************************************************************************************************************
+          * $LATEST_OS_IMAGE
+          ********************************************************************************************************************************
+        """
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [${server_name}] +++++++++++++++++++++++
+          """
+          RETRIEVE_OS_IMAGE = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/server_image_lookup.py $server_name $region """, returnStdout: true).trim()
+        
+        }
+          echo """
+            ********************************************************************************************************************************
+            * $RETRIEVE_OS_IMAGE
+            ********************************************************************************************************************************
+          """
+      }    
+is as follow: 
+          +++++++++++++++++++++++ [paris] +++++++++++++++++++++++
+          
+[Pipeline] sh
++ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/latest_os_image.py paris
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
 
+          ********************************************************************************************************************************
+          * List of images exists on OS Factory in the region paris: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51', 'ocs_dev_rhel_9_2024_w51', 'ocs_dev_rhel_9_2024_w47']
+Latest image in the paris region: OS_v1_RHEL_9_2025_w04
+          ********************************************************************************************************************************
+        
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [pgadmin4_oat] +++++++++++++++++++++++
+          
+[Pipeline] sh
++ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/server_image_lookup.py pgadmin4_oat paris
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+            ********************************************************************************************************************************
+            * The image deployed on the matching label pgadmin4_oat and located in the paris region is
+
+Deployed images on servers:
+pgadmin4_oat_blue_1 = ocs_dev_rhel_9_2024_w51
+            ********************************************************************************************************************************
+          
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [north] +++++++++++++++++++++++
+          
+[Pipeline] sh
++ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/latest_os_image.py north
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+          ********************************************************************************************************************************
+          * List of images exists on OS Factory in the region north: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51']
+Latest image in the north region: OS_v1_RHEL_9_2025_w04
+          ********************************************************************************************************************************
+        
+[Pipeline] container
+[Pipeline] {
+[Pipeline] echo
+
+          +++++++++++++++++++++++ [pgadmin4_oat] +++++++++++++++++++++++
+          [Pipeline] sh
++ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/server_image_lookup.py pgadmin4_oat north
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] echo
+
+            ********************************************************************************************************************************
+            * The image deployed on the matching label pgadmin4_oat and located in the north region is
+
+Deployed images on servers:
+pgadmin4_oat_blue_1 = ocs_dev_rhel_9_2024_w51
+
+
+what i want to do is to create a python function that will compare the Latest image on the 2 region : Latest image in the paris region: OS_v1_RHEL_9_2025_w04 and Latest image in the north region: OS_v1_RHEL_9_2025_w04 if are equale then it sau that it esual if not it will compare the list if images listen on each region for example : 
+List of images exists on OS Factory in the region paris: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51', 'ocs_dev_rhel_9_2024_w51', 'ocs_dev_rhel_9_2024_w47']
+List of images exists on OS Factory in the region north: ['OS_v1_RHEL_9_2024_w51'] and will take the latest common between them in this example : OS_v1_RHEL_9_2024_w51
+
+so it will the script will take 2 input $LATEST_OS_IMAGE from the first region and 2 second regions and do the compraison.
