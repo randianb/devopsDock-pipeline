@@ -1,4 +1,4 @@
-modify this python script on order to comprae the 2 first input given if equal will ouput that are equal and print the value . if not equal it will compare the list given on the 3 and 4 input :
+modify this python script on order to comprae the 2 first input given if equal will ouput that are equal and print the value . if not equal it will compare the list given on the 3 and 4 input and get the latest shared betwen the 2 lists:
 
 import sys
 from common import logger, sgcloud
@@ -36,4 +36,5 @@ if __name__ == "__main__":
 
 python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north $LIST_OS_IMAGE_paris $LIST_OS_IMAGE_north """, returnStdout: true).trim()
 example: 
-python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py OS_dev_RHEL_9_2025_w05 OS_dev_RHEL_9_2025_w05 ['OS_dev_RHEL_9_2025_w05', 'OS_dev_RHEL_9_2024_w51', 'OS_dev_RHEL_9_2024_w48', 'OS_dev_RHEL_9_2024_w45'] ['OS_dev_RHEL_9_2025_w05', 'OS_dev_RHEL_9_2024_w51'] """, returnStdout: true).trim()
+python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py OS_dev_RHEL_9_2025_w04 OS_dev_RHEL_9_2025_w05 ['OS_dev_RHEL_9_2025_w05', 'OS_dev_RHEL_9_2024_w51', 'OS_dev_RHEL_9_2024_w48', 'OS_dev_RHEL_9_2024_w45'] ['OS_dev_RHEL_9_2024_w51'] """, returnStdout: true).trim()
+OS_dev_RHEL_9_2025_w04 is not OS_dev_RHEL_9_2025_w05 so it will comprae the lists and retrive the get the latest shared betwen the 2 lists OS_dev_RHEL_9_2024_w51
