@@ -35,3 +35,5 @@ if __name__ == "__main__":
     main()
 
 python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north $LIST_OS_IMAGE_paris $LIST_OS_IMAGE_north """, returnStdout: true).trim()
+example: 
+python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py OS_dev_RHEL_9_2025_w05 OS_dev_RHEL_9_2025_w05 ['OS_dev_RHEL_9_2025_w05', 'OS_dev_RHEL_9_2024_w51', 'OS_dev_RHEL_9_2024_w48', 'OS_dev_RHEL_9_2024_w45'] ['OS_dev_RHEL_9_2025_w05', 'OS_dev_RHEL_9_2024_w51'] """, returnStdout: true).trim()
