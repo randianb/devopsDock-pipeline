@@ -99,3 +99,43 @@ List of images exists on OS Factory in the region paris: ['OS_v1_RHEL_9_2025_w04
 List of images exists on OS Factory in the region north: ['OS_v1_RHEL_9_2024_w51'] and will take the latest common between them in this example : OS_v1_RHEL_9_2024_w51
 
 so it will the script will take 2 input $LATEST_OS_IMAGE from the first region and 2 second regions and do the compraison.
+
+
+the pipeline must be somehting lik ethis : 
+  stage('Latest OCS Image') {
+    for (def region in regions) {
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
+          """
+          LATEST_OS_IMAGE = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/latest_os_image.py $region""", returnStdout: true).trim()
+        }
+        echo"""
+          ********************************************************************************************************************************
+          * $LATEST_OS_IMAGE
+          ********************************************************************************************************************************
+        """
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [${server_name}] +++++++++++++++++++++++
+          """
+          RETRIEVE_OS_IMAGE = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/server_image_lookup.py $server_name $region """, returnStdout: true).trim()
+        
+        }
+          echo """
+            ********************************************************************************************************************************
+            * $RETRIEVE_OS_IMAGE
+            ********************************************************************************************************************************
+          """
+      }  
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [Comprator] +++++++++++++++++++++++
+          """
+          RESULT = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_PARIS $LATEST_OS_IMAGE_NORTH """, returnStdout: true).trim()
+        }  
+    }
+    
