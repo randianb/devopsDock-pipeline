@@ -1,141 +1,111 @@
-the result of this : 
-    for (def region in regions) {
-      container("python"){
+[Pipeline] End of Pipeline
+Also:   org.jenkinsci.plugins.workflow.actions.ErrorAction$ErrorId: 15e3657b-6102-4b46-8d6b-074934c3fb82
+groovy.lang.MissingPropertyException: No such property: LATEST_OS_IMAGE_paris for class: groovy.lang.Binding
+	at groovy.lang.Binding.getVariable(Binding.java:63)
+	at org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxInterceptor.onGetProperty(SandboxInterceptor.java:285)
+	at org.kohsuke.groovy.sandbox.impl.Checker$7.call(Checker.java:375)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:379)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at org.kohsuke.groovy.sandbox.impl.Checker.checkedGetProperty(Checker.java:355)
+	at com.cloudbees.groovy.cps.sandbox.SandboxInvoker.getProperty(SandboxInvoker.java:29)
+	at org.jenkinsci.plugins.workflow.cps.LoggingInvoker.getProperty(LoggingInvoker.java:133)
+	at com.cloudbees.groovy.cps.impl.PropertyAccessBlock.rawGet(PropertyAccessBlock.java:20)
+	at WorkflowScript.run(WorkflowScript:99)
+	at ___cps.transform___(Native Method)
+	at com.cloudbees.groovy.cps.impl.PropertyishBlock$ContinuationImpl.get(PropertyishBlock.java:73)
+	at com.cloudbees.groovy.cps.LValueBlock$GetAdapter.receive(LValueBlock.java:30)
+	at com.cloudbees.groovy.cps.impl.PropertyishBlock$ContinuationImpl.fixName(PropertyishBlock.java:65)
+	at jdk.internal.reflect.GeneratedMethodAccessor94.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at com.cloudbees.groovy.cps.impl.ContinuationPtr$ContinuationImpl.receive(ContinuationPtr.java:72)
+	at com.cloudbees.groovy.cps.impl.ConstantBlock.eval(ConstantBlock.java:21)
+	at com.cloudbees.groovy.cps.Next.step(Next.java:83)
+	at com.cloudbees.groovy.cps.Continuable.run0(Continuable.java:147)
+	at org.jenkinsci.plugins.workflow.cps.SandboxContinuable.access$001(SandboxContinuable.java:17)
+	at org.jenkinsci.plugins.workflow.cps.SandboxContinuable.run0(SandboxContinuable.java:49)
+	at org.jenkinsci.plugins.workflow.cps.CpsThread.runNextChunk(CpsThread.java:180)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.run(CpsThreadGroup.java:423)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:331)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:295)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$wrap$4(CpsVmExecutorService.java:140)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at hudson.remoting.SingleLaneExecutorService$1.run(SingleLaneExecutorService.java:139)
+	at jenkins.util.ContextResettingExecutorService$1.run(ContextResettingExecutorService.java:28)
+	at jenkins.security.ImpersonatingExecutorService$1.run(ImpersonatingExecutorService.java:68)
+	at jenkins.util.ErrorLoggingExecutorService.lambda$wrap$0(ErrorLoggingExecutorService.java:51)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:53)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:50)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport$ThreadCategoryInfo.use(GroovyCategorySupport.java:136)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport.use(GroovyCategorySupport.java:275)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$categoryThreadFactory$0(CpsVmExecutorService.java:50)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Finished: FAILURE
+
+
+       for (def region in regionList) {
+        container("python"){
           echo """
           +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
           """
+          LIST_OS_IMAGE = sh(script: """
+            export ACCOUNT_ID=${DJD_ACCOUNT_ID}
+            export CLIENT_ID=${DJD_CLIENT_ID}
+            export CLIENT_SECRET=${DJD_CLIENT_SECRET}
+            python ${WORKSPACE}/pipeline/lib/scripts/list_os_image.py $region""", returnStdout: true).trim()
+            
+            imageMap["LIST_OS_IMAGE_${region}"] = LIST_OS_IMAGE
+
           LATEST_OS_IMAGE = sh(script: """
+            export ACCOUNT_ID=${DJD_ACCOUNT_ID}
+            export CLIENT_ID=${DJD_CLIENT_ID}
+            export CLIENT_SECRET=${DJD_CLIENT_SECRET}
             python ${WORKSPACE}/pipeline/lib/scripts/latest_os_image.py $region""", returnStdout: true).trim()
+            
+            imageMap["LATEST_OS_IMAGE_${region}"] = LATEST_OS_IMAGE
         }
         echo"""
           ********************************************************************************************************************************
-          * $LATEST_OS_IMAGE
+          * Latest image in the ${region} region: ${imageMap["LIST_OS_IMAGE_${region}"]}
+          ********************************************************************************************************************************
+          ********************************************************************************************************************************
+          * List of images exists on OS Factory in the region ${region}: ${imageMap["LATEST_OS_IMAGE_${region}"]}
           ********************************************************************************************************************************
         """
-      container("python"){
+        container("python"){
           echo """
           +++++++++++++++++++++++ [${server_name}] +++++++++++++++++++++++
           """
           RETRIEVE_OS_IMAGE = sh(script: """
+            export ACCOUNT_ID=${DJD_ACCOUNT_ID}
+            export CLIENT_ID=${DJD_CLIENT_ID}
+            export CLIENT_SECRET=${DJD_CLIENT_SECRET}
             python ${WORKSPACE}/pipeline/lib/scripts/server_image_lookup.py $server_name $region """, returnStdout: true).trim()
         
         }
           echo """
-            ********************************************************************************************************************************
-            * $RETRIEVE_OS_IMAGE
-            ********************************************************************************************************************************
+          ********************************************************************************************************************************
+          * $RETRIEVE_OS_IMAGE
+          ********************************************************************************************************************************
           """
-      }    
-is as follow: 
-          +++++++++++++++++++++++ [paris] +++++++++++++++++++++++
-          
-[Pipeline] sh
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/latest_os_image.py paris
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
-
-          ********************************************************************************************************************************
-          * List of images exists on OS Factory in the region paris: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51', 'ocs_dev_rhel_9_2024_w51', 'ocs_dev_rhel_9_2024_w47']
-Latest image in the paris region: OS_v1_RHEL_9_2025_w04
-          ********************************************************************************************************************************
-        
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
-
-          +++++++++++++++++++++++ [pgadmin4_oat] +++++++++++++++++++++++
-          
-[Pipeline] sh
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/server_image_lookup.py pgadmin4_oat paris
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
-
-            ********************************************************************************************************************************
-            * The image deployed on the matching label pgadmin4_oat and located in the paris region is
-
-Deployed images on servers:
-pgadmin4_oat_blue_1 = ocs_dev_rhel_9_2024_w51
-            ********************************************************************************************************************************
-          
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
-
-          +++++++++++++++++++++++ [north] +++++++++++++++++++++++
-          
-[Pipeline] sh
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/latest_os_image.py north
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
-
-          ********************************************************************************************************************************
-          * List of images exists on OS Factory in the region north: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51']
-Latest image in the north region: OS_v1_RHEL_9_2025_w04
-          ********************************************************************************************************************************
-        
-[Pipeline] container
-[Pipeline] {
-[Pipeline] echo
-
-          +++++++++++++++++++++++ [pgadmin4_oat] +++++++++++++++++++++++
-          [Pipeline] sh
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/server_image_lookup.py pgadmin4_oat north
-[Pipeline] }
-[Pipeline] // container
-[Pipeline] echo
-
-            ********************************************************************************************************************************
-            * The image deployed on the matching label pgadmin4_oat and located in the north region is
-
-Deployed images on servers:
-pgadmin4_oat_blue_1 = ocs_dev_rhel_9_2024_w51
-
-
-what i want to do is to create a python function that will compare the Latest image on the 2 region : Latest image in the paris region: OS_v1_RHEL_9_2025_w04 and Latest image in the north region: OS_v1_RHEL_9_2025_w04 if are equale then it sau that it esual if not it will compare the list if images listen on each region for example : 
-List of images exists on OS Factory in the region paris: ['OS_v1_RHEL_9_2025_w04', 'OS_v1_RHEL_9_2024_w51', 'ocs_dev_rhel_9_2024_w51', 'ocs_dev_rhel_9_2024_w47']
-List of images exists on OS Factory in the region north: ['OS_v1_RHEL_9_2024_w51'] and will take the latest common between them in this example : OS_v1_RHEL_9_2024_w51
-
-so it will the script will take 2 input $LATEST_OS_IMAGE from the first region and 2 second regions and do the compraison.
-
-
-the pipeline must be somehting lik ethis : 
-  stage('Latest OCS Image') {
-    for (def region in regions) {
-      container("python"){
-          echo """
-          +++++++++++++++++++++++ [${region}] +++++++++++++++++++++++
-          """
-          LATEST_OS_IMAGE = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/latest_os_image.py $region""", returnStdout: true).trim()
         }
-        echo"""
-          ********************************************************************************************************************************
-          * $LATEST_OS_IMAGE
-          ********************************************************************************************************************************
-        """
-      container("python"){
-          echo """
-          +++++++++++++++++++++++ [${server_name}] +++++++++++++++++++++++
-          """
-          RETRIEVE_OS_IMAGE = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/server_image_lookup.py $server_name $region """, returnStdout: true).trim()
-        
-        }
-          echo """
-            ********************************************************************************************************************************
-            * $RETRIEVE_OS_IMAGE
-            ********************************************************************************************************************************
-          """
-      }  
-      container("python"){
+        container("python"){
           echo """
           +++++++++++++++++++++++ [Comprator] +++++++++++++++++++++++
           """
           RESULT = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_PARIS $LATEST_OS_IMAGE_NORTH """, returnStdout: true).trim()
-        }  
-    }
-    
+            export ACCOUNT_ID=${DJD_ACCOUNT_ID}
+            export CLIENT_ID=${DJD_CLIENT_ID}
+            export CLIENT_SECRET=${DJD_CLIENT_SECRET}
+            export LATEST_OS_IMAGE_paris=${imageMap["LATEST_OS_IMAGE_paris"]}
+            export LATEST_OS_IMAGE_north=${imageMap["LATEST_OS_IMAGE_north"]}
+            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north """, returnStdout: true).trim()
+        } 
