@@ -1,115 +1,37 @@
-### Compte Rendu du Projet : Automatisation du Déploiement de la Dernière Image OCS
+modify this python script on order to comprae the 2 first input given if equal will ouput that are equal and print the value . if not equal it will compare the list given on the 3 and 4 input :
 
-**Objectif :**  
-Automatiser le processus de déploiement des dernières images OCS depuis le fournisseur d'images Cloud GTS sur les deux régions (Paris et North) afin de garantir que les serveurs disposent toujours de la dernière version sécurisée et optimisée de l'image OCS.
+import sys
+from common import logger, sgcloud
+import os
+from contextlib import redirect_stdout
 
----
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_region_mismatch.sh") 
 
-### Étapes Nécessaires :
 
-#### 1. **Analyse des Besoins :**
-   - **Identifier les besoins :**  
-     Automatiser le déploiement des dernières images OCS pour éviter les vulnérabilités détectées par Qualys et garantir une conformité continue.
-   - **Définir les critères de réussite :**
-     - Créer des images identiques sur les deux régions (Paris et North).
-     - Assurer que la dernière image RHEL 9 est déployée sur tous les serveurs des différents trigrammes.
-     - Notifier l'équipe en cas de divergence entre les images des deux régions.
+def compare_os_image(region):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'],os.environ['CLIENT_ID'],os.environ['CLIENT_SECRET'])
+    # redirect stdout to /dev/null
+    with open(os.devnull,'w') as devnull:
+        with redirect_stdout(devnull):        
+            compare_images = sg_cloud_client.compare_image()
+    # send the image name via stdout
+    print(compare_images)
+    
+def main():
+    region = sys.argv[1]
+    regions_images = compare_os_image(region)
 
-#### 2. **Conception et Planification :**
-   - **Architecture des scripts Python :**
-     - Utiliser les bonnes pratiques de développement (modularité, gestion des erreurs, logging).
-     - Définir les fonctionnalités principales dans une classe principale (`ImageManager`) et les utiliser dans les scripts.
-   - **Planification des étapes :**
-     - Déterminer la dernière image OCS disponible.
-     - Comparer les images entre les régions et avec celles déployées sur les serveurs.
-     - Déployer la dernière image si nécessaire.
+        # Check if there are mismatched images
+    unique_images = set(regions_images.values())
 
-#### 3. **Développement des Scripts :**
-   - **Créer des scripts Python pour automatiser le processus :**
-     - Script 1 : Récupérer la dernière image OCS disponible dans chaque région.
-     - Script 2 : Comparer les images entre les régions et avec celles des serveurs, puis déployer la dernière image si nécessaire.
-   - **Intégrer un déclencheur Jenkins pour automatiser l'exécution des scripts.**
+    if len(unique_images) > 1:
+        mismatch_output = "\n".join(f"{region} = {image}" for region, image in regions_images.items())
+        
+        # Trigger notification script if there is a mismatch
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+    
+if __name__ == "__main__":
+    main()
 
----
-
-### Action (Réalisation) :
-
-#### **Création des Scripts Python :**
-
-##### **Script 1 : Récupérer la dernière image OCS**
-   - **Objectif :**  
-     Retourner la dernière image OCS disponible dans le fournisseur d'images Cloud GTS pour les deux régions (Paris et North).
-   - **Fonctionnalités :**
-     - Rechercher les images disponibles dans chaque région.
-     - Identifier la dernière image OCS pour chaque région.
-     - Retourner les informations de la dernière image.
-
-##### **Script 2 : Comparer et déployer les images**
-   - **Objectif :**  
-     Comparer les images des deux régions et déployer la dernière image si nécessaire.
-   - **Fonctionnalités :**
-     - Comparer les images des deux régions pour vérifier si elles sont identiques.
-     - Si les images sont identiques :
-       - Comparer l'image avec celle déployée sur les serveurs.
-       - Si l'image déployée est différente, déployer la dernière version.
-       - Si l'image déployée est la même, ne rien faire.
-     - Si les images des deux régions sont différentes :
-       - Prendre la dernière image commune aux deux régions.
-       - Notifier l'équipe si la région Paris ne contient pas la dernière image.
-       - Comparer cette image avec celle déployée sur les serveurs et déployer si nécessaire.
-
----
-
-### Exemples de Scénarios :
-
-#### **Scénario 1 : Images différentes entre les régions**
-   - **Région Paris :**  
-     Images disponibles : `OS_V1_RHEL_9_2025_W01`, `OS_V1_RHEL_9_2025_W02`, `OS_V1_RHEL_9_2025_W03`  
-     Dernière image : `OS_V1_RHEL_9_2025_W03`
-   - **Région North :**  
-     Images disponibles : `OS_V1_RHEL_9_2025_W01`, `OS_V1_RHEL_9_2025_W02`, `OS_V1_RHEL_9_2025_W03`, `OS_V1_RHEL_9_2025_W04`  
-     Dernière image : `OS_V1_RHEL_9_2025_W04`
-   - **Action du script :**
-     - Prendre la dernière image commune : `OS_V1_RHEL_9_2025_W03`.
-     - Comparer avec l'image déployée sur les serveurs.
-     - Si l'image déployée est différente, déployer `OS_V1_RHEL_9_2025_W03`.
-     - Si l'image déployée est la même, ne rien faire.
-     - Notifier l'équipe que la région Paris ne contient pas la dernière image (`OS_V1_RHEL_9_2025_W04`).
-
-#### **Scénario 2 : Images identiques entre les régions**
-   - **Région Paris :**  
-     Images disponibles : `OS_V1_RHEL_9_2025_W01`, `OS_V1_RHEL_9_2025_W02`, `OS_V1_RHEL_9_2025_W03`, `OS_V1_RHEL_9_2025_W04`  
-     Dernière image : `OS_V1_RHEL_9_2025_W04`
-   - **Région North :**  
-     Images disponibles : `OS_V1_RHEL_9_2025_W01`, `OS_V1_RHEL_9_2025_W02`, `OS_V1_RHEL_9_2025_W03`, `OS_V1_RHEL_9_2025_W04`  
-     Dernière image : `OS_V1_RHEL_9_2025_W04`
-   - **Action du script :**
-     - Prendre la dernière image : `OS_V1_RHEL_9_2025_W04`.
-     - Comparer avec l'image déployée sur les serveurs.
-     - Si l'image déployée est différente, déployer `OS_V1_RHEL_9_2025_W04`.
-     - Si l'image déployée est la même, ne rien faire.
-
----
-
-### Test et Validation :
-   - **Tests unitaires :**  
-     Vérifier que chaque fonctionnalité des scripts fonctionne correctement (récupération des images, comparaison, déploiement).
-   - **Tests d'intégration :**  
-     Valider le bon fonctionnement des scripts dans un environnement de test (DEV/HF/HT).
-   - **Validation des résultats :**  
-     Assurer que les critères de réussite sont respectés (images identiques, dernière version déployée).
-
----
-
-### Déploiement et Suivi :
-   - **Utilisation des scripts :**  
-     Déployer les scripts en environnement DEV/HF/HT pour validation.
-   - **Surveillance :**  
-     Suivre le processus pour détecter toute anomalie ou échec.
-   - **Mises à jour :**  
-     Mettre à jour les scripts en fonction des retours d'expérience ou des évolutions des besoins.
-
----
-
-### Conclusion :
-Ce projet permettra d'automatiser le déploiement des dernières images OCS, garantissant que les serveurs disposent toujours de la version la plus récente et sécurisée. Cela réduira les efforts manuels, minimisera les risques de vulnérabilités et assurera une conformité continue avec les standards de sécurité.
+python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north $LIST_OS_IMAGE_paris $LIST_OS_IMAGE_north """, returnStdout: true).trim()
