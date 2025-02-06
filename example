@@ -42,6 +42,39 @@ OS_dev_RHEL_9_2025_w04 is not OS_dev_RHEL_9_2025_w05 so it will comprae the list
 
 
 ≈======÷÷÷÷====÷÷
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/compare_latest_ocs_images.py OS_v1_RHEL_9_2025_w04 OS_v1_RHEL_9_2025_w04 '[OS_v1_RHEL_9_2025_w04,' OS_v1_RHEL_9_2024_w51, ocs_dev_rhel_9_2024_w51, 'ocs_dev_rhel_9_2024_w47]' '[OS_v1_RHEL_9_2025_w04,' 'OS_v1_RHEL_9_2024_w51]'
-  File "/home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/compare_latest_ocs_images.py", line 15
+import sys
+import os
+import ast
+
+def parse_list(list_str):
+    """ Safely parse the list from string format """
+    try:
+        return ast.literal_eval(list_str)
+    except (SyntaxError, ValueError):
+        print(f"Error parsing list: {list_str}")
+        sys.exit(1)
+
+def main():
+    if len(sys.argv) < 5:
+        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> <LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north>")
+        sys.exit(1)
+
     latest_os_paris = sys.argv[1]
+    latest_os_north = sys.argv[2]
+    list_os_paris = parse_list(sys.argv[3])
+    list_os_north = parse_list(sys.argv[4])
+
+    if latest_os_paris == latest_os_north:
+        print(f"Images are equal: {latest_os_paris}")
+        sys.exit(0)
+
+    common_images = sorted(set(list_os_paris) & set(list_os_north), reverse=True)
+
+    if common_images:
+        latest_common_image = common_images[0]
+        print(f"Mismatch detected. Latest shared image: {latest_common_image}")
+    else:
+        print("No shared image found between the two regions.")
+
+if __name__ == "__main__":
+    main()
