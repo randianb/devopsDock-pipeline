@@ -1,7 +1,30 @@
-how i can convert this : 
-+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/compare_latest_ocs_images.py OS_dev_RHEL_9_2025_w05 OS_dev_RHEL_9_2025_w05 '[OS_dev_RHEL_9_2025_w05,' OS_dev_RHEL_9_2024_w51, OS_dev_RHEL_9_2024_w48, 'OS_dev_RHEL_9_2024_w45]' '[OS_dev_RHEL_9_2025_w05,' 'OS_dev_RHEL_9_2024_w51]'
+import groovy.json.JsonOutput
 
-the command is like this  python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py ${imageMap["LATEST_OS_IMAGE_paris"]} ${imageMap["LATEST_OS_IMAGE_north"]} ${imageMap["LIST_OS_IMAGE_paris"]} ${imageMap["LIST_OS_IMAGE_north"]} 
+container("python") {
+    echo "+++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++"
 
+    if (regions.contains('paris') && regions.contains('north')) {
+        def listParis = JsonOutput.toJson(imageMap["LIST_OS_IMAGE_paris"])
+        def listNorth = JsonOutput.toJson(imageMap["LIST_OS_IMAGE_north"])
 
-to this  python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/compare_latest_ocs_images.py OS_v1_RHEL_9_2025_w04 ocs_dev_rhel_9_2025_w06 '['\''OS_v1_RHEL_9_2025_w04'\'', '\''OS_v1_RHEL_9_2024_w51'\'', '\''ocs_dev_rhel_9_2024_w51'\'', '\''ocs_dev_rhel_9_2024_w47'\'']' '['\''ocs_dev_rhel_9_2025_w06'\'', '\''OS_v1_RHEL_9_2025_w04'\'', '\''OS_v1_RHEL_9_2024_w51'\'']'
+        def result = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py \
+            ${imageMap["LATEST_OS_IMAGE_paris"]} \
+            ${imageMap["LATEST_OS_IMAGE_north"]} \
+            '${listParis}' \
+            '${listNorth}'
+        """, returnStdout: true).trim()
+
+        def lines = result.split("\n") // Extract the last line
+        OS_FACTORY_IMAGE = lines[-1]
+
+    } else {
+        OS_FACTORY_IMAGE = "Nothing to compare."
+    }
+
+    echo """
+    ********************************************************************************************************************************
+    * OS_FACTORY_IMAGE: $OS_FACTORY_IMAGE
+    ********************************************************************************************************************************
+    """      
+}
