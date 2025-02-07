@@ -1,19 +1,39 @@
-container("python") {
-    echo "+++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++"
 
-    def regions = config['regions']  // Get the regions list from the config
+import sys
+import json
+import os
 
-    if (regions.contains('paris') && regions.contains('north')) {
-        RESULT = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north "${LIST_OS_IMAGE_paris}" "${LIST_OS_IMAGE_north}" 
-        """, returnStdout: true).trim()
-    } else {
-        RESULT = "Nothing to compare."
-    }
+def parse_list(arg):
+    try:
+        return json.loads(arg.replace("'", '"'))
+    except json.JSONDecodeError:
+        print(f"Error: Invalid list format -> {arg}")
+        sys.exit(1)
 
-    echo """
-    ********************************************************************************************************************************
-    * $RESULT
-    ********************************************************************************************************************************
-    """      
-}
+def main():
+    if len(sys.argv) < 5:
+        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> <LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north>")
+        sys.exit(1)
+
+    latest_os_paris = sys.argv[1]
+    latest_os_north = sys.argv[2]
+    list_os_paris = parse_list(sys.argv[3])
+    list_os_north = parse_list(sys.argv[4])
+    os_factory = os.environ['OS_FACTORY_IMAGE']
+
+    if latest_os_paris == latest_os_north:
+        os_factory = latest_os_paris
+        print(f"Both regions have the same OS image: {os_factory}")
+    else:
+        common_images = sorted(set(list_os_paris) & set(list_os_north), reverse=True)
+        if common_images:
+            latest_common = common_images[0]
+            os_factory = latest_common 
+            print(f"The latest OS on Paris is not the same as North, {latest_os_paris} is not {latest_os_north}. Latest image common between them is: {os_factory}")
+        else:
+            print(f"The latest OS on Paris is not the same as North, {latest_os_paris} is not {latest_os_north}. No common OS image found between the two lists.")
+
+    os.environ["OS_FACTORY_IMAGE"] = os_factory
+
+if __name__ == "__main__":
+    main()
