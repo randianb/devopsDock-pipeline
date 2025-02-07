@@ -1,2 +1,5 @@
+python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north $LIST_OS_IMAGE_paris $LIST_OS_IMAGE_north """, returnStdout: true).trim()
+
 + python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/compare_latest_ocs_images.py OS_v1_RHEL_9_2025_w04 OS_v1_RHEL_9_2025_w04 '[OS_v1_RHEL_9_2025_w04,' OS_v1_RHEL_9_2024_w51, ocs_dev_rhel_9_2024_w51, 'ocs_dev_rhel_9_2024_w47]' '[OS_v1_RHEL_9_2025_w04,' 'OS_v1_RHEL_9_2024_w51]'
 Error: Invalid list format -> [OS_v1_RHEL_9_2025_w04,
+
