@@ -16,3 +16,5 @@ it must be somehting like this instead :
           ********************************************************************************************************************************
           """      
       } 
+
+the   def regions = config['regions'] so it must see if the regions variablke contain 2 variable or not if regions = regions: ['paris', 'north'] it will exccute the script if not it will print an image.
