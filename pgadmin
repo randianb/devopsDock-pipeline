@@ -1,17 +1,18 @@
-container("python") {
-    echo "+++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++"
-    
-    if ("$LATEST_OS_IMAGE_paris" && "$LATEST_OS_IMAGE_north") {
-        RESULT = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north "${LIST_OS_IMAGE_paris}" "${LIST_OS_IMAGE_north}" 
-        """, returnStdout: true).trim()
-    } else {
-        RESULT = "Nothing to compare."
-    }
+it must be somehting like this instead : 
+      container("python") {
+          echo "+++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++"
+          
+          if (region.contain .. ) {
+              RESULT = sh(script: """
+                  python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north "${LIST_OS_IMAGE_paris}" "${LIST_OS_IMAGE_north}" 
+              """, returnStdout: true).trim()
+          } else {
+              RESULT = "Nothing to compare."
+          }
 
-    echo """
-    ********************************************************************************************************************************
-    * $RESULT
-    ********************************************************************************************************************************
-    """      
-}
+          echo """
+          ********************************************************************************************************************************
+          * $RESULT
+          ********************************************************************************************************************************
+          """      
+      } 
