@@ -1,5 +1,7 @@
-     def lines = result.split("\n") // Get all lines of output
-        OS_FACTORY_IMAGE = lines[-1]   // Last line should be the value of OS_FACTORY_IMAGE
-    } else {
-        OS_FACTORY_IMAGE = "Nothing to compare."
-    }
+how i can convert this : 
++ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/compare_latest_ocs_images.py OS_dev_RHEL_9_2025_w05 OS_dev_RHEL_9_2025_w05 '[OS_dev_RHEL_9_2025_w05,' OS_dev_RHEL_9_2024_w51, OS_dev_RHEL_9_2024_w48, 'OS_dev_RHEL_9_2024_w45]' '[OS_dev_RHEL_9_2025_w05,' 'OS_dev_RHEL_9_2024_w51]'
+
+the command is like this  python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py ${imageMap["LATEST_OS_IMAGE_paris"]} ${imageMap["LATEST_OS_IMAGE_north"]} ${imageMap["LIST_OS_IMAGE_paris"]} ${imageMap["LIST_OS_IMAGE_north"]} 
+
+
+to this  python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/compare_latest_ocs_images.py OS_v1_RHEL_9_2025_w04 ocs_dev_rhel_9_2025_w06 '['\''OS_v1_RHEL_9_2025_w04'\'', '\''OS_v1_RHEL_9_2024_w51'\'', '\''ocs_dev_rhel_9_2024_w51'\'', '\''ocs_dev_rhel_9_2024_w47'\'']' '['\''ocs_dev_rhel_9_2025_w06'\'', '\''OS_v1_RHEL_9_2025_w04'\'', '\''OS_v1_RHEL_9_2024_w51'\'']'
