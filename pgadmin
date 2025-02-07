@@ -1,42 +1,14 @@
+add condition to excuse this if only the regions input is regions: ['paris', 'north'] if regions: ['paris'] or regions: ['north'] one input it return nothing to compare
 
-import sys
-import json
-
-def parse_list(arg):
-    """Convert string representation of a list to an actual list."""
-    try:
-        return json.loads(arg.replace("'", '"'))  # Convert single quotes to double for JSON parsing
-    except json.JSONDecodeError:
-        print(f"Error: Invalid list format -> {arg}")
-        sys.exit(1)
-
-def main():
-    if len(sys.argv) < 5:
-        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> <LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north>")
-        sys.exit(1)
-
-    latest_os_paris = sys.argv[1]
-    latest_os_north = sys.argv[2]
-    list_os_paris = parse_list(sys.argv[3])
-    list_os_north = parse_list(sys.argv[4])
-
-    if latest_os_paris == latest_os_north:
-        print(f"Both regions have the same OS image: {latest_os_paris}")
-    else:
-        common_images = sorted(set(list_os_paris) & set(list_os_north), reverse=True)
-        if common_images:
-            latest_common = common_images[0]
-            print(f"The latest OS on Paris is not the same as North, {latest_os_paris} is not {latest_os_north}. Latest image common between them is: {latest_common}")
-        else:
-            print(f"The latest OS on Paris is not the same as North, {latest_os_paris} is not {latest_os_north}. No common OS image found between the two lists.")
-
-if __name__ == "__main__":
-    main()
-
-
-
-sh """
-python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py \
-"${LATEST_OS_IMAGE_paris}" "${LATEST_OS_IMAGE_north}" \
-"${LIST_OS_IMAGE_paris}" "${LIST_OS_IMAGE_north}"
-"""
+      container("python"){
+          echo """
+          +++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++
+          """
+          RESULT = sh(script: """
+            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py $LATEST_OS_IMAGE_paris $LATEST_OS_IMAGE_north "${LIST_OS_IMAGE_paris}" "${LIST_OS_IMAGE_north}" """, returnStdout: true).trim()
+        }  
+        echo """
+            ********************************************************************************************************************************
+            * $RESULT
+            ********************************************************************************************************************************
+        """     
