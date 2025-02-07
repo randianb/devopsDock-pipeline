@@ -1,30 +1,60 @@
-import groovy.json.JsonOutput
+updae this scrit on order if the script found mismatch will fail : and also if not it will print the first image : 
+import sys
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
-container("python") {
-    echo "+++++++++++++++++++++++ [Compare latest images on the regions] +++++++++++++++++++++++"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
 
-    if (regions.contains('paris') && regions.contains('north')) {
-        def listParis = JsonOutput.toJson(imageMap["LIST_OS_IMAGE_paris"])
-        def listNorth = JsonOutput.toJson(imageMap["LIST_OS_IMAGE_north"])
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
 
-        def result = sh(script: """
-            python ${WORKSPACE}/pipeline/lib/scripts/compare_latest_ocs_images.py \
-            ${imageMap["LATEST_OS_IMAGE_paris"]} \
-            ${imageMap["LATEST_OS_IMAGE_north"]} \
-            '${listParis}' \
-            '${listNorth}'
-        """, returnStdout: true).trim()
+    servers_images = {}  # Mapping: server_name -> image_name
 
-        def lines = result.split("\n") // Extract the last line
-        OS_FACTORY_IMAGE = lines[-1]
+    # Fetch the server image IDs (server_name -> image_id)
+    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
+    
+    if not isinstance(image_data, list):
+        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
+        return {}
 
-    } else {
-        OS_FACTORY_IMAGE = "Nothing to compare."
-    }
+    # Fetch the image names for each image ID
+    servers_images = sg_cloud_client.get_image_details(image_data, region)
+    
+    return servers_images
 
-    echo """
-    ********************************************************************************************************************************
-    * OS_FACTORY_IMAGE: $OS_FACTORY_IMAGE
-    ********************************************************************************************************************************
-    """      
-}
+def main():
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    
+    # Get the image details for the provided server name and region
+    servers_images = get_ocs_images(server_name, region)
+
+    if not servers_images:
+        print(f"ERROR: No valid image data found for {server_name} in {region}")
+        sys.exit(1)
+
+    # Prepare the output
+    print(f"\nThe image deployed on the matching label {server_name} and located in the {region} region is\n")
+
+    print("Deployed images on servers:")
+    for server, image in servers_images.items():
+        print(f"{server} = {image}") 
+
+    # Check if there are mismatched images
+    unique_images = set(servers_images.values())
+
+    if len(unique_images) > 1:
+        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+        
+        # Trigger notification script if there is a mismatch
+        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+
+    else print(image [0])
+
+if __name__ == "__main__":
+    main()
