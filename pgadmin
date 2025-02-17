@@ -1,3 +1,4 @@
+based on this script just look at it, what i sthe best logic i can go for it and why the idea is deploy the latest image on the Both the 2 regions. descuess the diffrence scenarios.
 import sys
 import json
 
@@ -28,7 +29,7 @@ def main():
         common_images = sorted(set(list_os_paris) & set(list_os_north), reverse=True)
         if common_images:
             os_factory = common_images[0]
-            print(f"The latest OS in Paris ({latest_os_paris}) differs from North ({latest_os_north}). The latest common image is: {os_factory}")
+            print(f"The latest OS Image in Paris ({latest_os_paris}) differs from North ({latest_os_north}). The latest common OS image is: {os_factory}")
         else:
             print(f"No common OS image found between Paris and North.")
             sys.exit(1)  # Exit since there's no common image to proceed with
@@ -38,16 +39,24 @@ def main():
     final_os_factory = os_factory  # Default to the latest common OS
 
     if image_installed_paris == os_factory:
-        print(f"The latest common image is already installed in Paris: {image_installed_paris}")
+        print(f"The latest common OS image is already installed in Paris: {image_installed_paris}")
     else:
-        print(f"The latest common image ({os_factory}) is NOT installed in Paris (Installed: {image_installed_paris}). It must be updated.")
-        deployment_needed = True
+        if image_installed_paris >= os_factory:
+            print(f"The OS image {image_installed_paris} installed on the server is newer than the latest common OS image.")
+            deployment_needed = False
+        else:
+            print(f"The latest common OS image ({os_factory}) is NOT installed in Paris (Installed: {image_installed_paris}). It must be updated.")
+            deployment_needed = True
 
     if image_installed_north == os_factory:
-        print(f"The latest common image is already installed in North: {image_installed_north}")
+        print(f"The latest common OS image is already installed in North: {image_installed_north}")
     else:
-        print(f"The latest common image ({os_factory}) is NOT installed in North (Installed: {image_installed_north}). It must be updated.")
-        deployment_needed = True
+        if image_installed_north >= os_factory:
+            print(f"The OS image {image_installed_north} installed on the server is newer than the latest common OS image.")
+            deployment_needed = False
+        else:
+            print(f"The latest common OS image ({os_factory}) is NOT installed in North (Installed: {image_installed_north}). It must be updated.")
+            deployment_needed = True
 
     if deployment_needed:
         print(f"Deployment required. Use this OS image: {final_os_factory}")
