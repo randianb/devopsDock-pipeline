@@ -22,17 +22,17 @@ def determine_common_latest_image(latest_paris, latest_north, list_paris, list_n
     sys.exit(1)  # Exit if no common image exists
 
 def check_deployment_needed(region, installed_image, os_factory):
-    """Check if deployment is needed for a given region."""
+    """Check if deployment is needed for a given region. Returns (deployment_needed, image_to_return)"""
     if installed_image == os_factory:
         print(f"[{region}] Latest common OS image is already installed: {installed_image}")
-        return False  # No deployment needed
+        return False, installed_image  # No deployment needed, return current image
     
     if installed_image > os_factory:
         print(f"[{region}] Installed OS ({installed_image}) is newer than the common OS ({os_factory}). No downgrade needed.")
-        return False  # No deployment needed (prevent downgrade)
+        return False, installed_image  # No deployment needed, return current image
     
     print(f"[{region}] Installed OS ({installed_image}) is outdated. Upgrade to {os_factory} is required.")
-    return True  # Deployment needed
+    return True, os_factory  # Deployment needed, return target image
 
 def main():
     if len(sys.argv) < 7:
@@ -52,15 +52,15 @@ def main():
     print(f"Selected OS Image for deployment: {os_factory}")
 
     # Step 2: Check if deployment is needed
-    deploy_paris = check_deployment_needed("Paris", image_installed_paris, os_factory)
-    deploy_north = check_deployment_needed("North", image_installed_north, os_factory)
+    deploy_paris, final_image_paris = check_deployment_needed("Paris", image_installed_paris, os_factory)
+    deploy_north, final_image_north = check_deployment_needed("North", image_installed_north, os_factory)
 
     # Step 3: Execute Deployment Decision
     if deploy_paris or deploy_north:
         print(f"Deployment required in: {'Paris' if deploy_paris else ''} {'North' if deploy_north else ''}".strip())
         print(f"Use this OS image: {os_factory}")
     else:
-        print("No deployment needed.")
+        print(f"No deployment needed. Installed images: Paris -> {final_image_paris}, North -> {final_image_north}")
 
 if __name__ == "__main__":
     main()
