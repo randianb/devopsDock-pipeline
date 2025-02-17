@@ -1,17 +1,43 @@
-based on this script just look at it, what i sthe best logic i can go for it and why the idea is deploy the latest image on the Both the 2 regions. descuess the diffrence scenarios.
 import sys
 import json
 
 def parse_list(arg):
+    """Parse a string representation of a list into a Python list."""
     try:
         return json.loads(arg.replace("'", '"'))
     except json.JSONDecodeError:
         print(f"Error: Invalid list format -> {arg}")
         sys.exit(1)
 
+def determine_common_latest_image(latest_paris, latest_north, list_paris, list_north):
+    """Determine the latest common OS image between Paris and North."""
+    if latest_paris == latest_north:
+        return latest_paris  # Both regions already have the same latest OS image
+
+    common_images = sorted(set(list_paris) & set(list_north), reverse=True)
+    if common_images:
+        return common_images[0]  # Pick the latest common OS image
+
+    print("Error: No common OS image found between Paris and North.")
+    sys.exit(1)  # Exit if no common image exists
+
+def check_deployment_needed(region, installed_image, os_factory):
+    """Check if deployment is needed for a given region."""
+    if installed_image == os_factory:
+        print(f"[{region}] Latest common OS image is already installed: {installed_image}")
+        return False  # No deployment needed
+    
+    if installed_image > os_factory:
+        print(f"[{region}] Installed OS ({installed_image}) is newer than the common OS ({os_factory}). No downgrade needed.")
+        return False  # No deployment needed (prevent downgrade)
+    
+    print(f"[{region}] Installed OS ({installed_image}) is outdated. Upgrade to {os_factory} is required.")
+    return True  # Deployment needed
+
 def main():
     if len(sys.argv) < 7:
-        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> <LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north> <IMAGE_INSTALLED_paris> <IMAGE_INSTALLED_north>")
+        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> "
+              "<LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north> <IMAGE_INSTALLED_paris> <IMAGE_INSTALLED_north>")
         sys.exit(1)
 
     latest_os_paris = sys.argv[1]
@@ -21,45 +47,18 @@ def main():
     image_installed_paris = sys.argv[5]
     image_installed_north = sys.argv[6]
 
-    # Step 1: Determine the common latest OS image
-    if latest_os_paris == latest_os_north:
-        os_factory = latest_os_paris
-        print(f"Both regions have the same latest OS image: {os_factory}")
-    else:
-        common_images = sorted(set(list_os_paris) & set(list_os_north), reverse=True)
-        if common_images:
-            os_factory = common_images[0]
-            print(f"The latest OS Image in Paris ({latest_os_paris}) differs from North ({latest_os_north}). The latest common OS image is: {os_factory}")
-        else:
-            print(f"No common OS image found between Paris and North.")
-            sys.exit(1)  # Exit since there's no common image to proceed with
+    # Step 1: Determine the latest common OS image
+    os_factory = determine_common_latest_image(latest_os_paris, latest_os_north, list_os_paris, list_os_north)
+    print(f"Selected OS Image for deployment: {os_factory}")
 
-    # Step 2: Check if installed images match the latest common OS
-    deployment_needed = False
-    final_os_factory = os_factory  # Default to the latest common OS
+    # Step 2: Check if deployment is needed
+    deploy_paris = check_deployment_needed("Paris", image_installed_paris, os_factory)
+    deploy_north = check_deployment_needed("North", image_installed_north, os_factory)
 
-    if image_installed_paris == os_factory:
-        print(f"The latest common OS image is already installed in Paris: {image_installed_paris}")
-    else:
-        if image_installed_paris >= os_factory:
-            print(f"The OS image {image_installed_paris} installed on the server is newer than the latest common OS image.")
-            deployment_needed = False
-        else:
-            print(f"The latest common OS image ({os_factory}) is NOT installed in Paris (Installed: {image_installed_paris}). It must be updated.")
-            deployment_needed = True
-
-    if image_installed_north == os_factory:
-        print(f"The latest common OS image is already installed in North: {image_installed_north}")
-    else:
-        if image_installed_north >= os_factory:
-            print(f"The OS image {image_installed_north} installed on the server is newer than the latest common OS image.")
-            deployment_needed = False
-        else:
-            print(f"The latest common OS image ({os_factory}) is NOT installed in North (Installed: {image_installed_north}). It must be updated.")
-            deployment_needed = True
-
-    if deployment_needed:
-        print(f"Deployment required. Use this OS image: {final_os_factory}")
+    # Step 3: Execute Deployment Decision
+    if deploy_paris or deploy_north:
+        print(f"Deployment required in: {'Paris' if deploy_paris else ''} {'North' if deploy_north else ''}".strip())
+        print(f"Use this OS image: {os_factory}")
     else:
         print("No deployment needed.")
 
