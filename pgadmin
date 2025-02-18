@@ -1,3 +1,5 @@
+use also the NOTIFY_REGION_MISMATCH
+
 import sys
 import json
 import re
@@ -7,7 +9,8 @@ from common import logger, sgcloud
 from contextlib import redirect_stdout
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
-NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
+NOTIFY_SERVER_MISMATCH = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
+NOTIFY_REGION_MISMATCH = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_region_mismatch.sh") 
 
 def get_latest_os_image(region):
     """Fetch and return the latest OS image for a given region."""
@@ -111,7 +114,7 @@ def main():
 
         if len(unique_images) > 1:
             mismatch_output = "\n".join(f"{server} = {image}" for server, image in installed_images.items())
-            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            subprocess.run(["sh", NOTIFY_SERVER_MISMATCH, server_name, mismatch_output], check=True)
             print("\nThe servers have mismatched OS images. Notification triggered.")
             sys.exit(1)
 
@@ -144,7 +147,7 @@ def main():
 
         if len(unique_images) > 1:
             mismatch_output = "\n".join(f"{server} = {image}" for server, image in installed_images.items())
-            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            subprocess.run(["sh", NOTIFY_SERVER_MISMATCH, server_name, mismatch_output], check=True)
             print("\nThe servers have mismatched OS images. Notification triggered.")
             sys.exit(1)
 
@@ -164,4 +167,5 @@ def main():
 if __name__ == "__main__":
     final_result = main()
     if final_result:
-        print(f"Final OS Image to use: {final_result}")
+        print(f"Final OS Image to use:")
+        print(final_result)
