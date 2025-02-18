@@ -1,35 +1,167 @@
-stage('Latest OCS Image') {
-    container("python"){
-        echo """
-        +++++++++++++++++++++++ [Latest OCS Image] +++++++++++++++++++++++
-        """
-        LATEST_OS_IMAGE = sh(script: """
-        python ${WORKSPACE}/pipeline/lib/scripts/latest_os_factory.py $server_name '${regions.replace("'", "\"")}'""", 
-        returnStdout: true).trim()
-    }
-    echo """
-      ********************************************************************************************************************************
-      * $LATEST_OS_IMAGE
-      ********************************************************************************************************************************
-    """
-}
-
-
-
-region_input = sys.argv[2]
-regions = region_input.split(",") if "," in region_input else [region_input]
-
-
-
+import sys
 import json
+import re
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
 
-region_input = sys.argv[2]
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
 
-# Try to parse JSON list (['paris', 'north']) or handle a single region
-try:
-    regions = json.loads(region_input)  # Convert JSON string to Python list
-    if not isinstance(regions, list):
-        regions = [regions]  # Ensure it's always a list
-except json.JSONDecodeError:
-    print(f"ERROR: Invalid format for regions: {region_input}")
+def get_latest_os_image(region):
+    """Fetch and return the latest OS image for a given region."""
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            latest_image = sg_cloud_client.get_latest_image(region=region)
+    return latest_image
+
+def get_list_os_image(region):
+    """Fetch and return the list of available OS images for a given region."""
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            list_of_images = sg_cloud_client.get_images(region=region)
+    return list_of_images
+
+def get_ocs_images(server_name, region):
+    """Fetch and return the installed OS image for a given server in a region."""
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
+
+    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
+    
+    if not isinstance(image_data, list):
+        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
+        return {}
+
+    return sg_cloud_client.get_image_details(image_data, region)
+
+def extract_version(image_name):
+    """Extract numerical year and week number from an OS image name."""
+    match = re.search(r'(\d{4})_w(\d{2})', image_name)
+    if match:
+        return int(match.group(1)), int(match.group(2))  # Return (year, week)
+    print(f"Warning: Unable to extract version from {image_name}. Defaulting to (0,0).")
+    return (0, 0)  # Fallback if format isn't found
+
+def is_newer(image1, image2):
+    """Compare two OS images based on year and week."""
+    return extract_version(image1) > extract_version(image2)
+
+def determine_common_latest_image(latest_paris, latest_north, list_paris, list_north):
+    """Determine the latest common OS image between Paris and North."""
+    if latest_paris == latest_north:
+        return latest_paris  # Both regions have the same latest OS image
+
+    common_images = sorted(set(list_paris) & set(list_north), key=extract_version, reverse=True)
+    if common_images:
+        return common_images[0]  # Pick the latest common OS image
+
+    print("Error: No common OS image found between Paris and North.")
     sys.exit(1)
+
+def check_deployment_needed(region, installed_image, os_factory):
+    """Check if deployment is needed for a given region."""
+    if installed_image == os_factory:
+        print(f"[{region}] Latest common OS image is already installed: {installed_image}")
+        return False, installed_image  
+
+    if is_newer(installed_image, os_factory):
+        print(f"[{region}] Installed OS ({installed_image}) is newer than the common OS ({os_factory}). No downgrade needed.")
+        return False, installed_image  
+
+    print(f"[{region}] Installed OS ({installed_image}) is outdated. Upgrade to {os_factory} is required.")
+    return True, os_factory
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python3 latest_os_factory.py <server_name> <region>")
+        sys.exit(1)
+
+    server_name = sys.argv[1]
+    region_input = sys.argv[2]
+
+    # Ensure regions input is correctly parsed
+    try:
+        regions = json.loads(region_input)
+        if not isinstance(regions, list):
+            raise ValueError("Regions input should be a list")
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"ERROR: Invalid format for regions: {region_input} - {e}")
+        sys.exit(1)
+
+    final_image = None
+
+    if "paris" in regions and "north" in regions:
+        print("Both regions selected: Paris and North. Fetching latest images...")
+        latest_os_paris = get_latest_os_image("paris")
+        latest_os_north = get_latest_os_image("north")
+        list_os_paris = get_list_os_image("paris")
+        list_os_north = get_list_os_image("north")
+
+        # Fetch installed images for both regions
+        installed_images = {}
+        for region in regions:
+            installed_images.update(get_ocs_images(server_name, region))
+
+        unique_images = set(installed_images.values())
+
+        if len(unique_images) > 1:
+            mismatch_output = "\n".join(f"{server} = {image}" for server, image in installed_images.items())
+            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            print("\nThe servers have mismatched OS images. Notification triggered.")
+            sys.exit(1)
+
+        installed_image = next(iter(unique_images))
+        print(f"\nAll servers have the same OS image: {installed_image}")
+
+        # Determine common OS and check if an upgrade is needed
+        os_factory = determine_common_latest_image(latest_os_paris, latest_os_north, list_os_paris, list_os_north)
+        deploy_paris, final_image_paris = check_deployment_needed("Paris", installed_image, os_factory)
+        deploy_north, final_image_north = check_deployment_needed("North", installed_image, os_factory)
+
+        if deploy_paris or deploy_north:
+            print(f"Deployment required in: {'Paris' if deploy_paris else ''} {'North' if deploy_north else ''}".strip())
+            final_image = os_factory
+        else:
+            print("No deployment needed.")
+            final_image = installed_image
+
+    else:
+        region = regions[0]
+        print(f"Single region selected: {region}. Fetching latest image...")
+        latest_os = get_latest_os_image(region)
+        installed_images = get_ocs_images(server_name, region)
+
+        if not installed_images:
+            print(f"ERROR: No valid image data found for {server_name} in {region}")
+            sys.exit(1)
+
+        unique_images = set(installed_images.values())
+
+        if len(unique_images) > 1:
+            mismatch_output = "\n".join(f"{server} = {image}" for server, image in installed_images.items())
+            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            print("\nThe servers have mismatched OS images. Notification triggered.")
+            sys.exit(1)
+
+        installed_image = next(iter(unique_images))
+        print(f"\nAll servers have the same OS image: {installed_image}")
+
+        deploy, final_image = check_deployment_needed(region, installed_image, latest_os)
+
+        if deploy:
+            print(f"Deployment required in {region}.")
+        else:
+            print(f"No deployment needed in {region}.")
+
+    print(f"\nFinal decision: {final_image}")
+    return final_image
+
+if __name__ == "__main__":
+    final_result = main()
+    if final_result:
+        print(f"Final OS Image to use: {final_result}")
