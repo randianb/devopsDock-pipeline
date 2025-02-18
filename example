@@ -1,60 +1,44 @@
-updae this scrit on order if the script found mismatch will fail : and also if not it will print the first image : 
-import sys
-import os
-import subprocess
-from common import logger, sgcloud
-from contextlib import redirect_stdout
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
-NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
-
-def get_ocs_images(server_name, region):
-    sg_cloud_client = sgcloud.Client(
-        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
-    )
-
-    servers_images = {}  # Mapping: server_name -> image_name
-
-    # Fetch the server image IDs (server_name -> image_id)
-    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
-    
-    if not isinstance(image_data, list):
-        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
-        return {}
-
-    # Fetch the image names for each image ID
-    servers_images = sg_cloud_client.get_image_details(image_data, region)
-    
-    return servers_images
-
-def main():
-    server_name = sys.argv[1]
-    region = sys.argv[2]
-    
-    # Get the image details for the provided server name and region
-    servers_images = get_ocs_images(server_name, region)
-
-    if not servers_images:
-        print(f"ERROR: No valid image data found for {server_name} in {region}")
-        sys.exit(1)
-
-    # Prepare the output
-    print(f"\nThe image deployed on the matching label {server_name} and located in the {region} region is\n")
-
-    print("Deployed images on servers:")
-    for server, image in servers_images.items():
-        print(f"{server} = {image}") 
-
-    # Check if there are mismatched images
-    unique_images = set(servers_images.values())
-
-    if len(unique_images) > 1:
-        mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
-        
-        # Trigger notification script if there is a mismatch
-        subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
-
-    else print(image [0])
-
-if __name__ == "__main__":
-    main()
+Also:   hudson.remoting.ProxyException: org.jenkinsci.plugins.workflow.actions.ErrorAction$ErrorId: 4ae78135-fdf1-443d-a5bb-56435d995c19
+hudson.remoting.ProxyException: groovy.lang.MissingMethodException: No signature of method: java.util.ArrayList.replace() is applicable for argument types: (java.lang.String, java.lang.String) values: [', "]
+Possible solutions: reverse(), replaceAll(java.util.function.UnaryOperator)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.unwrap(ScriptBytecodeAdapter.java:71)
+	at org.codehaus.groovy.runtime.callsite.PojoMetaClassSite.call(PojoMetaClassSite.java:48)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:47)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:116)
+	at com.cloudbees.groovy.cps.sandbox.DefaultInvoker.methodCall(DefaultInvoker.java:20)
+	at org.jenkinsci.plugins.workflow.cps.LoggingInvoker.methodCall(LoggingInvoker.java:117)
+	at springboot.stage_infra(springboot.groovy:191)
+	at ___cps.transform___(Native Method)
+	at com.cloudbees.groovy.cps.impl.ContinuationGroup.methodCall(ContinuationGroup.java:90)
+	at com.cloudbees.groovy.cps.impl.FunctionCallBlock$ContinuationImpl.dispatchOrArg(FunctionCallBlock.java:116)
+	at com.cloudbees.groovy.cps.impl.FunctionCallBlock$ContinuationImpl.fixArg(FunctionCallBlock.java:85)
+	at jdk.internal.reflect.GeneratedMethodAccessor92.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at com.cloudbees.groovy.cps.impl.ContinuationPtr$ContinuationImpl.receive(ContinuationPtr.java:72)
+	at com.cloudbees.groovy.cps.impl.ConstantBlock.eval(ConstantBlock.java:21)
+	at com.cloudbees.groovy.cps.Next.step(Next.java:83)
+	at com.cloudbees.groovy.cps.Continuable.run0(Continuable.java:147)
+	at org.jenkinsci.plugins.workflow.cps.SandboxContinuable.access$001(SandboxContinuable.java:17)
+	at org.jenkinsci.plugins.workflow.cps.SandboxContinuable.run0(SandboxContinuable.java:49)
+	at org.jenkinsci.plugins.workflow.cps.CpsThread.runNextChunk(CpsThread.java:180)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.run(CpsThreadGroup.java:423)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:331)
+	at org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:295)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$wrap$4(CpsVmExecutorService.java:140)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at hudson.remoting.SingleLaneExecutorService$1.run(SingleLaneExecutorService.java:139)
+	at jenkins.util.ContextResettingExecutorService$1.run(ContextResettingExecutorService.java:28)
+	at jenkins.security.ImpersonatingExecutorService$1.run(ImpersonatingExecutorService.java:68)
+	at jenkins.util.ErrorLoggingExecutorService.lambda$wrap$0(ErrorLoggingExecutorService.java:51)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:53)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:50)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport$ThreadCategoryInfo.use(GroovyCategorySupport.java:136)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport.use(GroovyCategorySupport.java:275)
+	at org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$categoryThreadFactory$0(CpsVmExecutorService.java:50)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Finished: FAILURE
