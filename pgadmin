@@ -1,4 +1,7 @@
-use also the NOTIFY_REGION_MISMATCH
+use also the NOTIFY_REGION_MISMATCH and add this output somehow 
+    # Prepare the output
+    print(f"\nThe OS image deployed on the matching label {server_name} and located in the {region} region is\n")
+
 
 import sys
 import json
