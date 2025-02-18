@@ -1,6 +1,61 @@
+this script must do the follwing the input will be region and server_name, if region contain 2 region will do logic behnd the functions if region only cotnain one region it will get the latest image on that region and then comprae that with the image installed on the server.
+
 import sys
 import json
 import re
+import os
+import subprocess
+from common import logger, sgcloud
+from contextlib import redirect_stdout
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  
+NOTIFY_SCRIPT = os.path.join(SCRIPT_DIR, "../scripts/notify/notify_image_server_mismatch.sh")  
+
+
+def get_latest_os_image(region="paris"):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
+    
+    # Redirect stdout to /dev/null to suppress unwanted output
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+
+            latest_image = sg_cloud_client.get_latest_image(region=region)
+    
+    # Print the latest image
+    print(latest_image)
+
+def get_list_os_image(region="paris"):
+    sg_cloud_client = sgcloud.Client(os.environ['ACCOUNT_ID'], os.environ['CLIENT_ID'], os.environ['CLIENT_SECRET'])
+    
+    # Redirect stdout to /dev/null to suppress unwanted output
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            # Get the list of images
+            list_of_images = sg_cloud_client.get_images(region=region)
+    
+    # Print the list of images 
+    print(list_of_images)
+
+
+def get_ocs_images(server_name, region):
+    sg_cloud_client = sgcloud.Client(
+        os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"]
+    )
+
+    servers_images = {}  # Mapping: server_name -> image_name
+
+    # Fetch the server image IDs (server_name -> image_id)
+    image_data = sg_cloud_client.get_server_image_ids(server_name, region)
+    
+    if not isinstance(image_data, list):
+        logger.error(f"Unexpected data format for image_data: {type(image_data)} - {image_data}")
+        return {}
+
+    # Fetch the image names for each image ID
+    servers_images = sg_cloud_client.get_image_details(image_data, region)
+    
+    return servers_images
+
 
 def parse_list(arg):
     """Parse a string representation of a list into a Python list."""
@@ -54,33 +109,115 @@ def check_deployment_needed(region, installed_image, os_factory):
     print(f"[{region}] Installed OS ({installed_image}) is outdated. Upgrade to {os_factory} is required.")
     return True, os_factory  # Deployment needed, return target image
 
+    
 def main():
-    if len(sys.argv) < 7:
-        print("Usage: compare_latest_ocs_images.py <LATEST_OS_IMAGE_paris> <LATEST_OS_IMAGE_north> "
-              "<LIST_OS_IMAGE_paris> <LIST_OS_IMAGE_north> <IMAGE_INSTALLED_paris> <IMAGE_INSTALLED_north>")
-        sys.exit(1)
+    server_name = sys.argv[1]
+    region = sys.argv[2]
+    regions = region.split(",") if "," in region else [region]
 
-    latest_os_paris = sys.argv[1]
-    latest_os_north = sys.argv[2]
-    list_os_paris = parse_list(sys.argv[3])
-    list_os_north = parse_list(sys.argv[4])
-    image_installed_paris = sys.argv[5]
-    image_installed_north = sys.argv[6]
+    if regions.contains('paris') && regions.contains('north'):
 
-    # Step 1: Determine the latest common OS image
-    os_factory = determine_common_latest_image(latest_os_paris, latest_os_north, list_os_paris, list_os_north)
-    print(f"Selected OS Image for deployment: {os_factory}")
+        for region in regions:
+            get_latest_os_image(region.strip())  # Get and print the latest image
+            get_list_os_image(region.strip())  # Get and print the list of images
 
-    # Step 2: Check if deployment is needed
-    deploy_paris, final_image_paris = check_deployment_needed("Paris", image_installed_paris, os_factory)
-    deploy_north, final_image_north = check_deployment_needed("North", image_installed_north, os_factory)
+            # Get the image details for the provided server name and region
+        servers_images = get_ocs_images(server_name, region)
 
-    # Step 3: Execute Deployment Decision
-    if deploy_paris or deploy_north:
-        print(f"Deployment required in: {'Paris' if deploy_paris else ''} {'North' if deploy_north else ''}".strip())
-        print(f"Use this OS image: {os_factory}")
-    else:
-        print(f"No deployment needed. Installed images: Paris -> {final_image_paris}, North -> {final_image_north}")
+        if not servers_images:
+            print(f"ERROR: No valid image data found for {server_name} in {region}")
+            sys.exit(1)
+
+        # Prepare the output
+        print(f"\nThe OS image deployed on the matching label {server_name} and located in the {region} region is\n")
+
+        print("Deployed OS Images on servers:")
+        for server, image in servers_images.items():
+            print(f"{server} = {image}") 
+
+        # Check if there are mismatched images
+        unique_images = set(servers_images.values())
+
+        if len(unique_images) > 1:
+            mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+            
+            # Trigger notification script if there is a mismatch
+            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            print(f"\nThe Servers have mismatch OS image, Please take the necessary action")
+            print(f"\nNotification triggered ...")
+            sys.exit(1)
+
+        else:
+            image_on_server = next(iter(unique_images))
+            print(f"\nAll Servers have the same OS image: ")
+            print(image_on_server)
+
+        latest_os_paris = sys.argv[1]
+        latest_os_north = sys.argv[2]
+        list_os_paris = parse_list(sys.argv[3])
+        list_os_north = parse_list(sys.argv[4])
+        image_installed_paris = sys.argv[5]
+        image_installed_north = sys.argv[6]
+
+        # Step 1: Determine the latest common OS image
+        os_factory = determine_common_latest_image(latest_os_paris, latest_os_north, list_os_paris, list_os_north)
+        print(f"The latest common OS Image on Both Regions: {os_factory}")
+
+        # Step 2: Check if deployment is needed
+        deploy_paris, final_image_paris = check_deployment_needed("Paris", image_installed_paris, os_factory)
+        deploy_north, final_image_north = check_deployment_needed("North", image_installed_north, os_factory)
+
+        # Step 3: Execute Deployment Decision
+        if deploy_paris or deploy_north:
+            print(f"Deployment required in: {'Paris' if deploy_paris else ''} {'North' if deploy_north else ''}".strip())
+            print(os_factory)
+        else:
+            print(f"No deployment needed")
+            print(final_image_paris)
+            print(final_image_north)
+    else 
+        get_latest_os_image(region)
+
+        # Get the image details for the provided server name and region
+        servers_images = get_ocs_images(server_name, region)
+
+        if not servers_images:
+            print(f"ERROR: No valid image data found for {server_name} in {region}")
+            sys.exit(1)
+
+        # Prepare the output
+        print(f"\nThe OS image deployed on the matching label {server_name} and located in the {region} region is\n")
+
+        print("Deployed OS Images on servers:")
+        for server, image in servers_images.items():
+            print(f"{server} = {image}") 
+
+        # Check if there are mismatched images
+        unique_images = set(servers_images.values())
+
+        if len(unique_images) > 1:
+            mismatch_output = "\n".join(f"{server} = {image}" for server, image in servers_images.items())
+            
+            # Trigger notification script if there is a mismatch
+            subprocess.run(["sh", NOTIFY_SCRIPT, server_name, mismatch_output], check=True)
+            print(f"\nThe Servers have mismatch OS image, Please take the necessary action")
+            print(f"\nNotification triggered ...")
+            sys.exit(1)
+
+        else:
+            image_on_server = next(iter(unique_images))
+            print(f"\nAll Servers have the same OS image: ")
+            print(image_on_server)
+        
+        deploy_{region}, final_image_{region} = check_deployment_needed("{region}", image_installed_{region}s, os_factory)
+        
+        if deploy_{region}
+            print(f"Deployment required in:")
+            print(os_factory)
+        else:
+            print(f"No deployment needed")
+            print(final_image_paris)
+            print(final_image_north)
 
 if __name__ == "__main__":
     main()
