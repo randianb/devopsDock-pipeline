@@ -1,2 +1,15 @@
-+ python /home/jenkins/agent/workspace/XSF/APPS/Latest_OS_Factory/pipeline/lib/scripts/latest_os_factory.py pgadmin4_oat '[paris, north]'
-ERROR: Invalid format for regions: [paris, north]
+stage('Latest OCS Image') {
+    container("python"){
+        echo """
+        +++++++++++++++++++++++ [Latest OCS Image] +++++++++++++++++++++++
+        """
+        LATEST_OS_IMAGE = sh(script: """
+        python ${WORKSPACE}/pipeline/lib/scripts/latest_os_factory.py $server_name '${groovy.json.JsonOutput.toJson(regions)}'
+        """, returnStdout: true).trim()
+    }
+    echo """
+      ********************************************************************************************************************************
+      * $LATEST_OS_IMAGE
+      ********************************************************************************************************************************
+    """
+}
