@@ -1,21 +1,35 @@
-make this 2 script professionale add icons and more signifnat message: 
 #!/bin/bash
 
-# SMTP configuration
+# SMTP Configuration
 SMTP_HOST="smtp-goss.int.world.socgen"
 SMTP_PORT=25
 MAIL_FROM="devops.monitoring@socgen.com"
 MAIL_TO="anouar.harrou@socgen.com"
 
 # Fetch server details
-latest_paris=$1
-latest_north=$2
-account=$3
+latest_paris="$1"
+latest_north="$2"
+account="$3"
 
 # Function to send an email notification
 send_email() {
-    local subject="Image Mismatch Alert in the Regions"
-    local message="<html><body><h3 style='color:red;'>${subject}</h3><h4 style='color:green;'>Account: ${account}</h4><pre>The latest image on Paris (${latest_paris}) differs from North (${latest_north}) ⚠️</pre></body></html>"
+    local subject="🚨 Image Mismatch Alert - Region Discrepancy Detected"
+    local message="<html>
+    <body style='font-family:Arial, sans-serif;'>
+        <h2 style='color:#d9534f;'>🚨 Alert: Image Mismatch Detected</h2>
+        <p style='font-size:14px;'>An inconsistency has been detected in the latest images deployed in different regions.</p>
+        <hr>
+        <h3 style='color:#0275d8;'>🔹 Account: <span style='color:#5cb85c;'>${account}</span></h3>
+        <p style='font-size:16px;'>⚠️ The latest image versions are not aligned:</p>
+        <ul>
+            <li>📍 <b>Paris:</b> <span style='color:#d9534f;'>${latest_paris}</span></li>
+            <li>📍 <b>North:</b> <span style='color:#d9534f;'>${latest_north}</span></li>
+        </ul>
+        <p>🔍 Please investigate the discrepancy and take necessary actions.</p>
+        <hr>
+        <p style='color:#5e5e5e; font-size:12px;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+    </body></html>"
+    
     local temp_file=$(mktemp)
 
     echo -e "Subject: ${subject}\nContent-Type: text/html; charset=UTF-8\n\n${message}" > "${temp_file}"
@@ -28,34 +42,49 @@ send_email() {
 # Execute the email function
 send_email
 
-=======================================
+
+
+
+=======
 
 #!/bin/bash
 
-# Set SMTP details
+# SMTP Configuration
 SMTP_HOST="smtp-goss.int.world.socgen"
 SMTP_PORT=25
 MAIL_FROM="devops.monitoring@socgen.com"
 MAIL_TO="anouar.harrou@socgen.com"
 
-# Read server name from the first argument
-SERVER_NAME=$1
-ACCOUNT=$2
-MISMATCH_DETAILS=$3
+# Read server details
+server_name="$1"
+account="$2"
+mismatch_details="$3"
 
-
-# Function to send an email
-
+# Function to send an email notification
 send_email() {
-    local subject="⚠️ Image Mismatch Alert for $SERVER_NAME on ACCOUNT [$ACCOUNT]"
-    local message="<html><body><h3 style='color:red;'>$subject</h3><pre>$MISMATCH_DETAILS</pre></body></html>"
+    local subject="⚠️ Image Mismatch Alert - Server: ${server_name} (Account: ${account})"
+    local message="<html>
+    <body style='font-family:Arial, sans-serif;'>
+        <h2 style='color:#d9534f;'>⚠️ Image Mismatch Detected on ${server_name}</h2>
+        <p style='font-size:14px;'>A discrepancy has been identified in the image versions on the specified server.</p>
+        <hr>
+        <h3 style='color:#0275d8;'>🔹 Account: <span style='color:#5cb85c;'>${account}</span></h3>
+        <h3 style='color:#0275d8;'>🔹 Server: <span style='color:#5cb85c;'>${server_name}</span></h3>
+        <p>📌 <b>Mismatch Details:</b></p>
+        <pre style='background:#f8f9fa; padding:10px; border-left:4px solid #d9534f;'>${mismatch_details}</pre>
+        <p>🔍 Please review the details and take appropriate actions.</p>
+        <hr>
+        <p style='color:#5e5e5e; font-size:12px;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+    </body></html>"
+
     local temp_file=$(mktemp)
 
-    echo -e "Subject: $subject\nContent-Type: text/html; charset=UTF-8\n\n$message" > "$temp_file"
-    
-    curl -s --url "smtp://$SMTP_HOST:$SMTP_PORT" --mail-from "$MAIL_FROM" --mail-rcpt "$MAIL_TO" --upload-file "$temp_file"
-    
-    rm -f "$temp_file"
+    echo -e "Subject: ${subject}\nContent-Type: text/html; charset=UTF-8\n\n${message}" > "${temp_file}"
+
+    curl -s --url "smtp://${SMTP_HOST}:${SMTP_PORT}" --mail-from "${MAIL_FROM}" --mail-rcpt "${MAIL_TO}" --upload-file "${temp_file}"
+
+    rm -f "${temp_file}"
 }
 
+# Execute the email function
 send_email
