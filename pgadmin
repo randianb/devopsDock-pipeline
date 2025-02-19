@@ -1,4 +1,3 @@
-do the same to this script : 
 #!/bin/bash
 
 # SMTP Configuration
@@ -16,21 +15,28 @@ account="$3"
 send_email() {
     local subject="🚨 Image Mismatch Alert - Region Discrepancy Detected"
     local message="<html>
-    <body style='font-family:Arial, sans-serif;'>
-        <h2 style='color:#d9534f;'>🚨 Alert: Image Mismatch Detected</h2>
-        <p style='font-size:14px;'>An inconsistency has been detected in the latest images deployed in different regions.</p>
-        <hr>
-        <h3 style='color:#0275d8;'>🔹 Account: <span style='color:#07c3ed;'>${account}</span></h3>
-        <p style='font-size:16px;'>⚠️ The latest image versions are not aligned:</p>
-        <ul>
-            <li>📍 <b>Paris:</b> <span style='color:#07ed5f;'>${latest_paris}</span></li>
-            <li>📍 <b>North:</b> <span style='color:#07ed5f;'>${latest_north}</span></li>
-        </ul>
-        <p>🔍 Please investigate the discrepancy and take necessary actions.</p>
-        <hr>
-        <p style='color:#5e5e5e; font-size:12px;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+    <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px;'>
+        <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);'>
+            <h2 style='color:#d9534f; text-align:center;'>🚨 Region Image Mismatch Detected</h2>
+            <p style='font-size:14px; text-align:center;'>An inconsistency has been identified in the latest images deployed across regions.</p>
+            <hr style='border:0; height:1px; background:#ddd;'>
+            <table style='width:100%; font-size:16px; margin-bottom:20px;'>
+                <tr>
+                    <td style='color:#0275d8; font-weight:bold;'>🔹 Account:</td>
+                    <td style='color:#07c3ed;'>${account}</td>
+                </tr>
+            </table>
+            <h3 style='color:#d9534f;'>⚠️ Mismatch Details:</h3>
+            <ul style='font-size:16px; padding-left:20px;'>
+                <li>📍 <b>Paris:</b> <span style='color:#07ed5f; font-weight:bold;'>${latest_paris}</span></li>
+                <li>📍 <b>North:</b> <span style='color:#07ed5f; font-weight:bold;'>${latest_north}</span></li>
+            </ul>
+            <p style='font-size:14px; color:#333;'>🔍 Please review the discrepancy and take necessary actions.</p>
+            <hr style='border:0; height:1px; background:#ddd;'>
+            <p style='color:#5e5e5e; font-size:12px; text-align:center;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+        </div>
     </body></html>"
-    
+
     local temp_file=$(mktemp)
 
     echo -e "Subject: ${subject}\nContent-Type: text/html; charset=UTF-8\n\n${message}" > "${temp_file}"
