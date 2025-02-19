@@ -22,8 +22,8 @@ send_email() {
             <hr style='border:0; height:1px; background:#ddd;'>
             <table style='width:100%; font-size:16px; margin-bottom:20px;'>
                 <tr>
-                    <td style='color:#0275d8; font-weight:bold;'>🔹 Account:</td>
-                    <td style='color:#07c3ed;'>${account}</td>
+                    <td style='color:#0275d8; font-weight:bold;'>👤 Account:</td>
+                    <td style='color:#07c3ed; font-weight:bold;'>${account}</td>
                 </tr>
             </table>
             <h3 style='color:#d9534f;'>⚠️ Mismatch Details:</h3>
