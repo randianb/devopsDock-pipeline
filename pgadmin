@@ -1,3 +1,4 @@
+enhanced the debug print for this fucntion when the name of the server is not found or when the result of the requst is empty ( example : servers [] , no servers on with this name yet) 
 def get_ocs_images(server_name, region):
     """Fetch and return the installed OS image for a given server in a region."""
     sg_cloud_client = sgcloud.Client(os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"])
@@ -14,7 +15,3 @@ def get_ocs_images(server_name, region):
         return {}
 
     return sg_cloud_client.get_image_details(image_data, region)
-
-
-
-
