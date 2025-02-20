@@ -1,17 +1,23 @@
-enhanced the debug print for this fucntion when the name of the server is not found or when the result of the requst is empty ( example : servers [] , no servers on with this name yet) 
+
+
 def get_ocs_images(server_name, region):
     """Fetch and return the installed OS image for a given server in a region."""
     sg_cloud_client = sgcloud.Client(os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"])
+    
     try:
         with open(os.devnull, 'w') as devnull:
             with redirect_stdout(devnull):
                 image_data = sg_cloud_client.get_server_image_ids(server_name, region)
     except Exception as e:
-        print(f"ERROR: Unable to retrieve image data for {server_name} in {region}")
+        print(f"ERROR: Unable to retrieve image data for server '{server_name}' in region '{region}'. Exception: {e}")
         sys.exit(1)
 
     if not isinstance(image_data, list):
-        print("ERROR: Unexpected response format")
+        print(f"ERROR: Unexpected response format for server '{server_name}' in region '{region}'. Response: {image_data}")
+        return {}
+
+    if not image_data:
+        print(f"INFO: No images found for server '{server_name}' in region '{region}'. The server may not exist or have an associated image.")
         return {}
 
     return sg_cloud_client.get_image_details(image_data, region)
