@@ -1,23 +1,36 @@
+make this function more dynamic to errors handling and also to hanlde the cases where the some itteration failed to retry until the respone is 200 then continue to get the full result : 
+    def get_image_details(self, image_data, region, retry=3):
+        access_token = self.get_iam_token(["ccs:read"])
+        
+        servers_images = {}  # Mapping: server_name -> image_name
 
+        for entry in image_data:
+            for server_name, image_id in entry.items():
+                endpoint = OCS_SERVER_IMAGE_ENDPOINT.replace("#region#", region)
+                url = f"{endpoint}/{image_id}"
 
-def get_ocs_images(server_name, region):
-    """Fetch and return the installed OS image for a given server in a region."""
-    sg_cloud_client = sgcloud.Client(os.environ["ACCOUNT_ID"], os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"])
-    
-    try:
-        with open(os.devnull, 'w') as devnull:
-            with redirect_stdout(devnull):
-                image_data = sg_cloud_client.get_server_image_ids(server_name, region)
-    except Exception as e:
-        print(f"ERROR: Unable to retrieve image data for server '{server_name}' in region '{region}'. Exception: {e}")
-        sys.exit(1)
+                res = http_client.get(
+                    url,
+                    headers={
+                        "accept": "application/json",
+                        "Authorization": f"Bearer {access_token}"
+                    }
+                )
 
-    if not isinstance(image_data, list):
-        print(f"ERROR: Unexpected response format for server '{server_name}' in region '{region}'. Response: {image_data}")
-        return {}
+                if res.status_code != 200 and retry > 0:
+                    time.sleep(2)
+                    return self.get_image_details([entry], region, retry - 1)
 
-    if not image_data:
-        print(f"INFO: No images found for server '{server_name}' in region '{region}'. The server may not exist or have an associated image.")
-        return {}
+                if res.status_code != 200:
+                    logger.error(f"Failed to retrieve image details: {res.text}")
+                    continue
 
-    return sg_cloud_client.get_image_details(image_data, region)
+                data = res.json()
+                if "image" not in data:
+                    logger.error("No image details found")
+                    continue
+
+                image_name = data["image"]["name"]
+                servers_images[server_name] = image_name
+
+        return servers_images
