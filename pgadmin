@@ -1,136 +1,15 @@
-#!/bin/bash
-
-# SMTP Configuration
-SMTP_HOST="smtp-goss.int.world.socgen"
-SMTP_PORT=25
-MAIL_FROM="devops.monitoring@socgen.com"
-MAIL_TO="anouar.harrou@socgen.com"
-
-# Read server details
-server_name="$1"
-account="$2"
-mismatch_details="$3"
-
-# Define paths
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-GENERATE_EXCEL_SCRIPT="${SCRIPT_DIR}/generate_excel.py"
-
-# Call Python script to generate the Excel file
-echo "📝 Generating Excel report..."
-excel_file=$(python3 "$GENERATE_EXCEL_SCRIPT" "$server_name" "$account" "$mismatch_details" "Mismatch Found")
-
-if [ $? -ne 0 ]; then
-    echo "❌ ERROR: Excel file generation failed!"
-    exit 1
-else
-    echo "✅ Excel report generated: $excel_file"
-fi
-
-# Email subject
-subject="🚨 Critical Alert: Image Mismatch on ${server_name} (Account: ${account})"
-
-# Email body (HTML)
-email_body="<html>
-<body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px;'>
-    <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);'>
-        <h2 style='color:#d9534f; text-align:center;'>🚨 Image Mismatch Detected</h2>
-        <p style='font-size:14px; text-align:center;'>An inconsistency has been detected in the image versions on the specified server.</p>
-        <hr style='border:0; height:1px; background:#ddd;'>
-        <table style='width:100%; font-size:16px; margin-bottom:20px;'>
-            <tr><td style='color:#0275d8; font-weight:bold;'>👤 Account: ${account}</td></tr>
-            <tr><td style='color:#0275d8; font-weight:bold;'>🖥️ Server: ${server_name}</td></tr>
-        </table>
-        <h3 style='color:#d9534f;'>⚠️ Mismatch Details:</h3>
-        <pre style='background:#f8f9fa; padding:10px; border-left:4px solid #d9534f; font-size:14px;'>${mismatch_details}</pre>
-        <p style='font-size:14px; color:#333;'>🔍 Please review the details and take necessary actions.</p>
-        <hr style='border:0; height:1px; background:#ddd;'>
-        <p style='color:#5e5e5e; font-size:12px; text-align:center;'>📧 This is an automated notification from the DevOps monitoring system.</p>
-    </div>
-</body></html>"
-
-# Create email with attachment
-email_file=$(mktemp)
-boundary="boundary-$(date +%s)"
-
-{
-    echo "Subject: ${subject}"
-    echo "From: ${MAIL_FROM}"
-    echo "To: ${MAIL_TO}"
-    echo "MIME-Version: 1.0"
-    echo "Content-Type: multipart/mixed; boundary=${boundary}"
-    echo
-    echo "--${boundary}"
-    echo "Content-Type: text/html; charset=UTF-8"
-    echo "Content-Transfer-Encoding: 7bit"
-    echo
-    echo "${email_body}"
-    echo
-    echo "--${boundary}"
-    echo "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    echo "Content-Disposition: attachment; filename=\"$(basename "$excel_file")\""
-    echo "Content-Transfer-Encoding: base64"
-    echo
-    base64 "$excel_file"
-    echo
-    echo "--${boundary}--"
-} > "$email_file"
-
-# Send email using curl
-curl -s --url "smtp://${SMTP_HOST}:${SMTP_PORT}" --mail-from "${MAIL_FROM}" --mail-rcpt "${MAIL_TO}" --upload-file "$email_file"
-
-# Cleanup
-rm -f "$email_file"
-
-echo "✅ Email sent successfully with Excel attachment!"
-
-
-
-
-====================================================================
-                    generate_excel.py
-====================================================================
-
-import sys
-import os
-from openpyxl import Workbook
-from datetime import datetime
-
-def generate_excel(server_name, account, mismatch_details, status):
-    """ Create an Excel report and return the filename. """
-
-    # Define Excel file name with timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    excel_file = f"OS_Image_Report_{server_name}_{timestamp}.xlsx"
-
-    # Create a new Excel workbook and worksheet
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "OS Image Report"
-
-    # Add headers
-    headers = ["Server Name", "Account", "Mismatch Details", "Status"]
-    ws.append(headers)
-
-    # Add data
-    ws.append([server_name, account, mismatch_details, status])
-
-    # Auto-adjust column width
-    for col in ws.columns:
-        max_length = max(len(str(cell.value)) for cell in col) + 2
-        ws.column_dimensions[col[0].column_letter].width = max_length
-
-    # Save the file
-    wb.save(excel_file)
-    print(excel_file)  # Return filename
-
-if __name__ == "__main__":
-    if len(sys.argv) < 5:
-        print("❌ ERROR: Missing arguments for Excel generation")
-        sys.exit(1)
-
-    server_name = sys.argv[1]
-    account = sys.argv[2]
-    mismatch_details = sys.argv[3]
-    status = sys.argv[4]
-
-    generate_excel(server_name, account, mismatch_details, status)
+ python /home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_factory.py oat-djd-af107-backend '["paris","north"]'
+Traceback (most recent call last):
+  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/notify/generate_excel.py", line 3, in <module>
+    from openpyxl import Workbook
+ModuleNotFoundError: No module named 'openpyxl'
+Traceback (most recent call last):
+  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_factory.py", line 201, in <module>
+    final_result = main()
+  File "/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/latest_os_factory.py", line 151, in main
+    subprocess.run(["sh", NOTIFY_SERVER_MISMATCH, server_name, account, mismatch_output], check=True)
+  File "/usr/local/lib/python3.10/subprocess.py", line 524, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['sh', '/home/jenkins/agent/workspace/DJD/CD-Deploy/openr-pipeline-int/pipeline/lib/scripts/../scripts/notify/notify_image_server_mismatch.sh', 'oat-djd-af107-backend', 'DJD_AF107_DEV', 'Server Name: [oat-djd-af107-backend-green-new-eu-fr-paris-1] = Image Name: [ocs_dev_RHEL_9_2025_w08]\nServer Name: [oat-djd-af107-backend-green-new-eu-fr-paris-2] = Image Name: [ocs_dev_RHEL_9_2025_w08]\nServer Name: [oat-djd-af107-backend-blue-new-eu-fr-paris-1] = Image Name: [ocs_dev_RHEL_9_2025_w08]\nServer Name: [oat-djd-af107-backend-blue-new-eu-fr-paris-2] = Image Name: [ocs_dev_RHEL_9_2025_w08]\nServer Name: [oat-djd-af107-backend-blue-new-eu-fr-north-1] = Image Name: [OS_dev_RHEL_9_2024_w51]\nServer Name: [oat-djd-af107-backend-green-new-eu-fr-north-1] = Image Name: [OS_dev_RHEL_9_2024_w51]']' returned non-zero exit status 1.
+���� Generating Excel report...
+��� ERROR: Excel file generation failed!
