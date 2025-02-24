@@ -1,13 +1,15 @@
 def print_banner():
     banner = """
-   ____             ____        _____ _____       _____  __  __ ______ ____   _____     _____ ____  
-  |  _ \ __ _ _ __ |  _ \ ___  |  ___|_   _|     |  _  |  \/  |  ____|  _ \ |_   _|   |  __/| __ \ 
-  | |_) / _` | '_ \| |_) / _ \ | |_     | |       | |_) | |\/| | |__    |_) |  | |    |  |   |__) |
-  |  __/ (_| | |_) |  __/  __/ |  _|    | |       |  __/ |    |  __|   |  __/   | |    |  |   __/
-  |_|    \__,_| .__/|_|   \___| |_|      |_|       |_|    |_|    |_|      |_|    |_|    |_|  |_|
-                 |__|  Vulnerable OS Factory Patching Script
+   ____             ____        _____ _____       _____  ____   ____   ____  
+  |  _ \ __ _ _ __ |  _ \ ___  |  ___|_   _|     |  _ \| __ ) | __ ) | __ ) 
+  | |_) / _` | '_ \| |_) / _ \ | |_     | |       | | | |  _ \ |  _ \ |  _ \ 
+  |  __/ (_| | |_) |  __/  __/ |  _|    | |       | |_| | |_) | |_) | |_) |
+  |_|    \__,_| .__/|_|   \___| |_|      |_|       |____/|____/|____/|____/  
+                 |__|  DEVOPS SGABS Vulnerable OS Factory Patching Script
 
         DevOps - Secure and Maintain OS Images Across Regions  
+        
+                              ~ Anouar Harry
     """
     print(banner)
 
@@ -15,12 +17,4 @@ def main():
     print_banner()  # Call the print_banner function to display the banner
     # Rest of your code...
 
-update only this part 
-   ____             ____        _____ _____       _____  __  __ ______ ____   _____     _____ ____  
-  |  _ \ __ _ _ __ |  _ \ ___  |  ___|_   _|     |  _  |  \/  |  ____|  _ \ |_   _|   |  __/| __ \ 
-  | |_) / _` | '_ \| |_) / _ \ | |_     | |       | |_) | |\/| | |__    |_) |  | |    |  |   |__) |
-  |  __/ (_| | |_) |  __/  __/ |  _|    | |       |  __/ |    |  __|   |  __/   | |    |  |   __/
-  |_|    \__,_| .__/|_|   \___| |_|      |_|       |_|    |_|    |_|      |_|    |_|    |_|  |_|
-                 |__|  Vulnerable OS Factory Patching Script
-
-with this Words DEVOPS SGABS  Vulnerable OS Factory Patching Script and add my name as signature Anouar Harry
+main()
