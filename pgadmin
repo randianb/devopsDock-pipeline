@@ -1,33 +1,21 @@
 def print_banner():
-    banner = """
-   ____             ____        _____ _____       _____  __  __ ______ ____   _____     _____ ____  
-  |  _ \ __ _ _ __ |  _ \ ___  |  ___|_   _|     |  _  |  \/  |  ____|  _ \ |_   _|   |  __/| __ \ 
-  | |_) / _` | '_ \| |_) / _ \ | |_     | |       | |_) | |\/| | |__    |_) |  | |    |  |   |__) |
-  |  __/ (_| | |_) |  __/  __/ |  _|    | |       |  __/ |    |  __|   |  __/   | |    |  |   __/
-  |_|    \__,_| .__/|_|   \___| |_|      |_|       |_|    |_|    |_|      |_|    |_|    |_|  |_|
-                 |__|  Vulnerable OS Factory Patching Script
-
-        DevOps - Secure and Maintain OS Images Across Regions  
+    banner = r"""
+    ######################################################################
+    #                                                                    #
+    #     ____               _       _      ____  _____          _       #
+    #    |  _ \  ___   ___ | |_   _| |_   |  _ \|  ___|   ___  | |      #
+    #    | | | |/ _ \ / _ \| | | | | __|  | | | | |_     / _ \ | |      #
+    #    | |_| |  __/|  __/| | |_| | |_   | |_| |  _|   | (_) || |      #
+    #    |____/ \___| \___||_|\__,_|\__|  |____/|_|      \___/ |_|      #
+    #                                                                    #
+    #      DevOps OS Factory | Patching & Securing Your Systems          #
+    #                                                                    #
+    ######################################################################
     """
     print(banner)
 
 def main():
-    print_banner()  # Call the print_banner function to display the banner
+    print_banner()  # Display the banner
     # Rest of your code...
 
-
-
-
-def print_banner():
-    banner = """
-    =======================================================
-    =                DevOps OS Factory Patching           =
-    =      Vulnerability Management and Updates          =
-    =        Securing and Patching OS Images             =
-    =======================================================
-    """
-    print(banner)
-
-def main():
-    print_banner()  # Call the print_banner function to display the banner
-    # Rest of your code...
+main()
