@@ -1,1 +1,90 @@
-nous avons modiifer le logique pour créé un seul python script qui va faire toutes les traitment mentione sur le text recree cette text alors : "Objectif : Automatiser le processus de déploiement des dernières images OCS depuis le fournisseur d'images Cloud GTS sur les deux régions (Paris et North) afin de garantir que les serveurs disposent toujours de la dernière version sécurisée et optimisée de l'image OCS. Étapes Nécessaires : Analyse des Besoins : Identifier les besoins : Automatiser le déploiement des dernières images OCS pour éviter les vulnérabilités détectées par Qualys et garantir une conformité continue. Définir les critères de réussite : Créer des images identiques sur les deux régions (Paris et North). Assurer que la dernière image RHEL 9 est déployée sur tous les serveurs des différents trigrammes. Notifier l'équipe en cas de divergence entre les images des deux régions. Conception et Planification : Architecture des scripts Python : Utiliser les bonnes pratiques de développement (modularité, gestion des erreurs, logging). Définir les fonctionnalités principales dans une classe principale (sgcloud) et les utiliser dans les scripts. Planification des étapes : Déterminer la dernière image OCS disponible. Comparer les images entre les régions et avec celles déployées sur les serveurs. Déployer la dernière image si nécessaire. Développement des Scripts : Créer des scripts Python pour automatiser le processus : Script 1 : Récupérer un List d'images et la dernière image OCS disponible dans chaque région (Paris et North). ( Fait) Script 2: créé un script Python pour récupérer les serveurs en fonction d'une étiquette correspondante (par exemple : les serveurs dont le nom contient "frontend"), extraire leurs ID d'image, puis interroger le nom de l'image en utilisant les ID. ( Fait) Script 3 : Comparer les images entre les régions et avec celles des serveurs, puis déployer la dernière image si nécessaire. (Fait ) Déploiement de l'image finale sur les serveurs (Actuellement en cours d'optimisation de la logique de traitement finale ) **Intégrer un déclencheur Jenkins pour automatiser l'exécution des scripts. Action (Réalisation) : Création des Scripts Python : Script 1 : Récupérer la dernière image OCS Objectif : Retourner la dernière image OCS disponible dans le fournisseur d'images Cloud GTS pour les deux régions (Paris et North). Fonctionnalités : Rechercher les images disponibles dans chaque région. Identifier la dernière image OCS pour chaque région. Retourner les informations de la dernière image. Script 2 : Comparer et déployer les images Objectif : Comparer les images des deux régions et déployer la dernière image si nécessaire. Fonctionnalités : Comparer les images des deux régions pour vérifier si elles sont identiques. Si les images sont identiques : Comparer l'image avec celle déployée sur les serveurs. Si l'image déployée est différente, déployer la dernière version. Si l'image déployée est la même, ne rien faire. Si les images des deux régions sont différentes : Prendre la dernière image commune aux deux régions. Notifier l'équipe si la région Paris ne contient pas la dernière image. Comparer cette image avec celle déployée sur les serveurs et déployer si nécessaire. Exemples de Scénarios : Scénario 1 : Images différentes entre les régions Région Paris : Images disponibles : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03 (Dernière image : OS_V1_RHEL_9_2025_W03) Région North : Images disponibles : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04( Dernière image : OS_V1_RHEL_9_2025_W04) Action du script : Prendre la dernière image commune : OS_V1_RHEL_9_2025_W03. Comparer avec l'image déployée sur les serveurs. Si l'image déployée est différente, déployer OS_V1_RHEL_9_2025_W03. Si l'image déployée est la même, ne rien faire. Notifier l'équipe que la région Paris ne contient pas la dernière image (OS_V1_RHEL_9_2025_W04). Scénario 2 : Images identiques entre les régions Région Paris : Images disponibles : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04 Dernière image : OS_V1_RHEL_9_2025_W04 Région North : Images disponibles : OS_V1_RHEL_9_2025_W01, OS_V1_RHEL_9_2025_W02, OS_V1_RHEL_9_2025_W03, OS_V1_RHEL_9_2025_W04 Dernière image : OS_V1_RHEL_9_2025_W04 Action du script : Prendre la dernière image : OS_V1_RHEL_9_2025_W04. Comparer avec l'image déployée sur les serveurs. Si l'image déployée est différente, déployer OS_V1_RHEL_9_2025_W04. Si l'image déployée est la même, ne rien faire. Test et Validation : Tests unitaires : Vérifier que chaque fonctionnalité des scripts fonctionne correctement (récupération des images, comparaison, déploiement). Tests d'intégration : Valider le bon fonctionnement des scripts dans un environnement de test (DEV/HF/HT). Validation des résultats : Assurer que les critères de réussite sont respectés (images identiques, dernière version déployée). Déploiement et Suivi : Utilisation des scripts : Déployer les scripts en environnement DEV/HF/HT pour validation. Surveillance : Suivre le processus pour détecter toute anomalie ou échec. Mises à jour : Mettre à jour les scripts en fonction des retours d'expérience ou des évolutions des besoins. Conclusion : Ce projet permettra d'automatiser le déploiement des dernières images OCS, garantissant que les serveurs disposent toujours de la version la plus récente et sécurisée. Cela réduira les efforts manuels, minimisera les risques de vulnérabilités et assurera une conformité continue avec les standards de sécurité."
+Objectif : Automatiser le processus de déploiement des dernières images OCS depuis le fournisseur d'images Cloud GTS sur les deux régions (Paris et North) afin de garantir que les serveurs disposent toujours de la dernière version sécurisée et optimisée de l'image OCS.
+
+
+---
+
+Approche Mise à Jour : Au lieu d'utiliser plusieurs scripts Python distincts, une solution centralisée a été adoptée : un seul script Python gère l'ensemble du processus. Cette approche améliore la maintenance, optimise les performances et assure une gestion plus efficace des erreurs et des logs.
+
+
+---
+
+Fonctionnalités du Script Unique :
+
+Récupération des images disponibles dans chaque région (Paris et North).
+
+Identification de la dernière image OCS disponible dans chaque région.
+
+Comparaison des images entre les régions et avec celles déployées sur les serveurs.
+
+Vérification de la nécessité de déploiement en fonction des différences d'images.
+
+Déploiement automatique de la dernière image si nécessaire.
+
+Notification de l'équipe en cas de divergence entre les régions.
+
+Intégration avec Jenkins pour un déclenchement automatisé.
+
+
+
+---
+
+Déroulement du Processus :
+
+1. Identification des images disponibles dans les deux régions.
+
+
+2. Détermination de la dernière image commune aux deux régions.
+
+
+3. Comparaison avec l'image déjà déployée sur les serveurs.
+
+
+4. Prise de décision automatisée :
+
+Si l'image déployée est obsolète, déploiement de la dernière version.
+
+Si les images sont identiques, aucune action n'est nécessaire.
+
+Si les images des régions diffèrent, prendre la dernière version commune et alerter l'équipe.
+
+
+
+
+
+---
+
+Exemples de Scénarios :
+
+Scénario 1 : Images différentes entre les régions
+
+Paris : OS_V1_RHEL_9_2025_W03 (dernière image disponible)
+
+North : OS_V1_RHEL_9_2025_W04 (dernière image disponible)
+
+Action du script : Déploiement de l'image commune (OS_V1_RHEL_9_2025_W03) et notification de l'équipe.
+
+
+Scénario 2 : Images identiques entre les régions
+
+Paris & North : OS_V1_RHEL_9_2025_W04 (dernière image disponible)
+
+Action du script : Comparaison avec l'image déployée et mise à jour si nécessaire.
+
+
+
+---
+
+Validation et Déploiement :
+
+Tests unitaires et d'intégration pour vérifier le bon fonctionnement du script.
+
+Déploiement progressif en environnement DEV, puis HF/HT.
+
+Suivi et mise à jour pour assurer une évolution continue.
+
+
+
+---
+
+Conclusion : L'automatisation via un script unique simplifie le processus, réduit les erreurs manuelles et garantit une mise à jour rapide et fiable des images OCS. Cette approche optimise la sécurité et la conformité des serveurs tout en assurant une meilleure traçabilité et gestion des déploiements.
+
