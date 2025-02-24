@@ -1,16 +1,15 @@
 def print_banner():
     banner = """
-  ____  ______ __      __  ____   _____  
- |  _ \|  ____|\ \    / / |  _ \ |  __ \ 
- | | | | |__    \ \  / /  | |_) || |  | |
- | | | |  __|    \ \/ /   |  _ < | |  | |
- | |_| | |____    \  /    | |_) || |__| |
- |____/|______|    \/     |____/ |_____/ 
+       ____  _____    _________   ________________  ______  __
+      / __ \/ ___/   / ____/   | / ____/_  __/ __ \/ __ \ \/ /
+     / / / /\__ \   / /_  / /| |/ /     / / / / / / /_/ /\  / 
+    / /_/ /___/ /  / __/ / ___ / /___  / / / /_/ / _, _/ / /  
+    \____//____/  /_/   /_/  |_\____/ /_/  \____/_/ |_| /_/   
 
-    DEVOPS SGABS - Vulnerable OS Factory Patching Script
-       Secure and Maintain OS Images Across Regions  
-
-                         ~ Anouar Harry
+        DEVOPS SGABS - Vulnerable OS Factory Patching Script
+           Secure and Maintain OS Images Across Regions  
+    
+                                                 ~ Anouar Harrou
     """
     print(banner)
 
