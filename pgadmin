@@ -7,7 +7,7 @@ def print_banner():
 ##     ## ##        ##   ##  ##     ## ##              ##          ## ##    ##  ######### ##     ##       ## 
 ##     ## ##         ## ##   ##     ## ##        ##    ##    ##    ## ##    ##  ##     ## ##     ## ##    ## 
 ########  ########    ###     #######  ##         ######      ######   ######   ##     ## ########   ######  
-Vulnerable OS Factory Patching Script
+     DEVOPS SGABS - Vulnerable OS Factory Patching Script
 
         DevOps - Secure and Maintain OS Images Across Regions  
         
