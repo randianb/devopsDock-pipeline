@@ -14,3 +14,20 @@ def print_banner():
 def main():
     print_banner()  # Call the print_banner function to display the banner
     # Rest of your code...
+
+
+
+
+def print_banner():
+    banner = """
+    =======================================================
+    =                DevOps OS Factory Patching           =
+    =      Vulnerability Management and Updates          =
+    =        Securing and Patching OS Images             =
+    =======================================================
+    """
+    print(banner)
+
+def main():
+    print_banner()  # Call the print_banner function to display the banner
+    # Rest of your code...
