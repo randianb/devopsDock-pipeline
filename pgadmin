@@ -1,20 +1,51 @@
-def print_banner():
-    banner = """
-       ____  _____    _________   ________________  ______  __
-      / __ \/ ___/   / ____/   | / ____/_  __/ __ \/ __ \ \/ /
-     / / / /\__ \   / /_  / /| |/ /     / / / / / / /_/ /\  / 
-    / /_/ /___/ /  / __/ / ___ / /___  / / / /_/ / _, _/ / /  
-    \____//____/  /_/   /_/  |_\____/ /_/  \____/_/ |_| /_/   
+custom the table bellow and make on center with the contents of the ${mismatch_details}
 
-        DEVOPS SGABS - Vulnerable OS Factory Patching Script
-           Secure and Maintain OS Images Across Regions  
-    
-                                                 ~ Anouar Harrou
-    """
-    print(banner)
+#!/bin/bash
 
-def main():
-    print_banner()  # Call the print_banner function to display the banner
-    # Rest of your code...
+# SMTP Configuration
+SMTP_HOST="smtp-goss.int.world.socgen"
+SMTP_PORT=25
+MAIL_FROM="devops.monitoring@socgen.com"
+MAIL_TO="anouar.harrou@socgen.com"
 
-main()
+# Read server details
+server_name="$1"
+account="$2"
+mismatch_details="$3"
+
+# Function to send an email notification
+send_email() {
+    local subject="🚨 Critical Alert: Image Mismatch on ${server_name} (Account: ${account})"
+    local message="<html>
+    <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px;'>
+        <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);'>
+            <h2 style='color:#d9534f; text-align:center;'>🚨 Image Mismatch Detected</h2>
+            <p style='font-size:14px; text-align:center;'>An inconsistency has been detected in the image versions on the specified server.</p>
+            <hr style='border:0; height:1px; background:#ddd;'>
+            <table style='width:100%; font-size:16px; margin-bottom:20px;'>
+                <tr>
+                    <td style='color:#0275d8; font-weight:bold;'>👤 Account: ${account}</td>
+                </tr>
+                <tr>
+                    <td style='color:#0275d8; font-weight:bold;'>🖥️ Server: ${server_name}</td>
+                </tr>
+            </table>
+            <h3 style='color:#d9534f;'>⚠️ Mismatch Details:</h3>
+            <pre style='background:#f8f9fa; padding:10px; border-left:4px solid #d9534f; font-size:14px;'>${mismatch_details}</pre>
+            <p style='font-size:14px; color:#333;'>🔍 Please review the details and take the necessary actions.</p>
+            <hr style='border:0; height:1px; background:#ddd;'>
+            <p style='color:#5e5e5e; font-size:12px; text-align:center;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+        </div>
+    </body></html>"
+
+    local temp_file=$(mktemp)
+
+    echo -e "Subject: ${subject}\nContent-Type: text/html; charset=UTF-8\n\n${message}" > "${temp_file}"
+
+    curl -s --url "smtp://${SMTP_HOST}:${SMTP_PORT}" --mail-from "${MAIL_FROM}" --mail-rcpt "${MAIL_TO}" --upload-file "${temp_file}"
+
+    rm -f "${temp_file}"
+}
+
+# Execute the email function
+send_email
