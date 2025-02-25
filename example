@@ -29,7 +29,7 @@ send_email() {
             .header {background-color: #e68e0b; color: #ffffff; text-align: center; font-size: 24px; border-radius: 4px 4px 0 0; padding: 10px;}
             .title {text-align: center; font-size: 20px; font-weight: bold; margin: 15px 0;}
             .sub-header {padding: 10px; font-size: 16px; font-weight: bold;}
-            .info-table {width: 100%; font-size: 13px; margin: 10px 0;}
+            .info-table {width: 50%; font-size: 13px; margin: 10px 0;}
             .info-table td {padding: 5px 15px;}
             .summary {background-color: #e68e0b; color: #ffffff; font-size: 20px; padding: 10px;}
             .description, .solution {padding: 10px 15px; font-size: 13px;}
@@ -41,13 +41,13 @@ send_email() {
             <tr>
                 <td align="center">
                     <div class="container">
-                        <div class="header">Vulnerable OS Factory Patching Script</div>
+                        <div class="header">🚨  Vulnerable OS Factory Patching Script</div>
                         <div class="title">[DEVOPS][SGABS][OS FACTORY]: Critical Alert: Image Mismatch on '"${server_name}"' (Account: '"${account}"')</div>
                         <div class="sub-header">DEVOPS Vulnerable Control</div>
                         <table class="info-table">
                             <tr>
                                 <td><strong>Date</strong></td>
-                                <td>'"${date_now}"'</td>
+                                <td>'"${date_now}"' GMT</td>
                             </tr>
                         </table>
                         <table class="info-table">
@@ -68,6 +68,7 @@ send_email() {
                             <strong>Solution:</strong>
                             <p>🔍 Please review the details and take the necessary actions.</p>
                         </div>
+                        <div class="footer">Devops Team ~ Anouar Harrou</div>
                         <div class="footer">© 2025 - Tous droits réservés.</div>
                     </div>
                 </td>
