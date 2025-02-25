@@ -49,3 +49,6 @@ send_email() {
 
 # Execute the email function
 send_email
+
+
+can you make it somehting similra to this :
