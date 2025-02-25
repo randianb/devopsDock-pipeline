@@ -1,3 +1,47 @@
+the result of mismatch_ouput it not look good and align .. please make the necessary action it look like this ; 
+
+🚨 Vulnerable OS Factory Patching Script
+[DEVOPS][SGABS][OS FACTORY]: Critical Alert: Image Mismatch on djd-af107 (Account: DJD_AF107_DEV)
+Critical Alert: Image Mismatch on djd-af107 (Account: DJD_AF107_DEV)
+DEVOPS Vulnerable Control
+📅 Date	25/02/2025 à 17:10 GMT+1
+👤 Account:	DJD_AF107_DEV
+🖥️ Server:	djd-af107
+⚠️ Mismatch Details:
+❌The Script found a mismatch on the region: 🌍 paris, for the server: 🖥️ [djd-af107]: 
+[SERVER]: uat-djd-af107-backend-green--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: uat-djd-af107-frontend-green--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: uat-djd-af107-backend-blue--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: uat-djd-af107-frontend-blue--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: int-djd-af107-backend-blue--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: int-djd-af107-frontend-green--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: int-djd-af107-frontend-blue--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: int-djd-af107-backend-green--eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w09
+[SERVER]: oat-djd-af107-backend-green-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-green-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-green-new-eu-fr-paris-2-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-blue-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-green-new-eu-fr-paris-1-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-blue-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-green-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-blue-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-green-new-eu-fr-paris-2-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-green-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-green-new-eu-fr-paris-1-0, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-blue-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-blue-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-blue-new-eu-fr-paris-2, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-backend-blue-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+[SERVER]: oat-djd-af107-frontend-blue-new-eu-fr-paris-1, [IMAGE INSTALLED]: ocs_dev_RHEL_9_2025_w08
+Solution: 
+🔍 Please review the details and take the necessary actions.
+Devops Team ~ Anouar Harrou
+© 2025 - Tous droits réservés.
+
+
+
+here the full script :
+
 this scirpt take too lang to send email : 
 #!/bin/bash
 
@@ -24,15 +68,15 @@ send_email() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>[DEVOPS] [SGABS] : Mismatch Alerts ** Sous Surveillance **</title>
         <style>
-            body {background-color: #fcfeff; font-family: Calibri, Arial, sans-serif; font-size: 14px; line-height: 1.4; margin: 0; padding: 0; min-width: 300px;}
+            body {background-color: #fcfeff; font-family: Calibri, Arial, sans-serif; font-size: 14px; line-height: 1.2; margin: 0; padding: 0; min-width: 100px;}
             .container {width: 580px; max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 4px; border: 1px solid #e68e0b;}
             .header {background-color: #e68e0b; color: #ffffff; text-align: center; font-size: 24px; border-radius: 4px 4px 0 0; padding: 10px;}
             .title {text-align: center; font-size: 20px; font-weight: bold; margin: 15px 0;}
             .sub-header {padding: 10px; font-size: 16px; font-weight: bold;}
-            .info-table {width: 50%; font-size: 13px; margin: 10px 0;}
+            .info-table {width: 100%; font-size: 13px; margin: 10px 0;}
             .info-table td {padding: 5px 15px;}
             .summary {background-color: #e68e0b; color: #ffffff; font-size: 20px; padding: 10px;}
-            .description, .solution {padding: 10px 15px; font-size: 13px;}
+            .description, .solution {padding: 10px 10px; font-size: 12px;}
             .footer {font-size: 12px; text-align: center; padding: 10px; color: #555;}
         </style>
     </head>
@@ -43,11 +87,12 @@ send_email() {
                     <div class="container">
                         <div class="header">🚨  Vulnerable OS Factory Patching Script</div>
                         <div class="title">[DEVOPS][SGABS][OS FACTORY]: Critical Alert: Image Mismatch on '"${server_name}"' (Account: '"${account}"')</div>
+                        <div class="title">Critical Alert: Image Mismatch on '"${server_name}"' (Account: '"${account}"')</div>
                         <div class="sub-header">DEVOPS Vulnerable Control</div>
                         <table class="info-table">
                             <tr>
-                                <td><strong>Date</strong></td>
-                                <td>'"${date_now}"' GMT</td>
+                                <td><strong>📅 Date</strong></td>
+                                <td>'"${date_now}"' GMT+1</td>
                             </tr>
                         </table>
                         <table class="info-table">
