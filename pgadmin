@@ -1,5 +1,3 @@
-custom the table bellow and make on center with the contents of the ${mismatch_details}
-
 #!/bin/bash
 
 # SMTP Configuration
@@ -17,12 +15,12 @@ mismatch_details="$3"
 send_email() {
     local subject="🚨 Critical Alert: Image Mismatch on ${server_name} (Account: ${account})"
     local message="<html>
-    <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px;'>
-        <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);'>
-            <h2 style='color:#d9534f; text-align:center;'>🚨 Image Mismatch Detected</h2>
-            <p style='font-size:14px; text-align:center;'>An inconsistency has been detected in the image versions on the specified server.</p>
+    <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px; text-align:center;'>
+        <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); text-align:center;'>
+            <h2 style='color:#d9534f;'>🚨 Image Mismatch Detected</h2>
+            <p style='font-size:14px;'>An inconsistency has been detected in the image versions on the specified server.</p>
             <hr style='border:0; height:1px; background:#ddd;'>
-            <table style='width:100%; font-size:16px; margin-bottom:20px;'>
+            <table style='width:100%; font-size:16px; margin-bottom:20px; margin-left:auto; margin-right:auto;'>
                 <tr>
                     <td style='color:#0275d8; font-weight:bold;'>👤 Account: ${account}</td>
                 </tr>
@@ -31,10 +29,12 @@ send_email() {
                 </tr>
             </table>
             <h3 style='color:#d9534f;'>⚠️ Mismatch Details:</h3>
-            <pre style='background:#f8f9fa; padding:10px; border-left:4px solid #d9534f; font-size:14px;'>${mismatch_details}</pre>
+            <div style='text-align:center;'>
+                <pre style='background:#f8f9fa; padding:10px; border-left:4px solid #d9534f; font-size:14px; display:inline-block; text-align:left;'>${mismatch_details}</pre>
+            </div>
             <p style='font-size:14px; color:#333;'>🔍 Please review the details and take the necessary actions.</p>
             <hr style='border:0; height:1px; background:#ddd;'>
-            <p style='color:#5e5e5e; font-size:12px; text-align:center;'>📧 This is an automated notification from the DevOps monitoring system.</p>
+            <p style='color:#5e5e5e; font-size:12px;'>📧 This is an automated notification from the DevOps monitoring system.</p>
         </div>
     </body></html>"
 
