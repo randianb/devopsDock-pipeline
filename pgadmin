@@ -14,31 +14,114 @@ mismatch_details="$3"
 # Function to send an email notification
 send_email() {
     local subject="🚨 Critical Alert: Image Mismatch on ${server_name} (Account: ${account})"
-    local message="<html>
-    <body style='font-family:Arial, sans-serif; background-color:#f4f4f4; padding:20px; text-align:center;'>
-        <div style='max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); text-align:center;'>
-            <h2 style='color:#d9534f;'>🚨 Image Mismatch Detected</h2>
-            <p style='font-size:16px; color:#333;'>An inconsistency has been detected in the image versions on the specified server.</p>
-            <hr style='border:0; height:1px; background:#ddd;'>
-            <table style='width:80%; margin:auto; font-size:16px; border-collapse:collapse;'>
-                <tr style='background:#f8f9fa;'>
-                    <td style='padding:10px; font-weight:bold; color:#0275d8;'>👤 Account:</td>
-                    <td style='padding:10px;'>${account}</td>
-                </tr>
-                <tr style='background:#f8f9fa;'>
-                    <td style='padding:10px; font-weight:bold; color:#0275d8;'>🖥️ Server:</td>
-                    <td style='padding:10px;'>${server_name}</td>
+    local message="<!DOCTYPE html><html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>[DEVOPS] [SGABS] : Mismatch Alerts ** Sous Surveillance **</title>
+            <style>
+                body {
+                    background-color: #fcfeff;
+                    font-family: Calibri, NotoSans, Roboto, Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    margin: 0;
+                    padding: 0;
+                    min-width: 300px;
+                }
+                .container {
+                    width: 580px;
+                    max-width: 580px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    border-radius: 4px;
+                    border: 1px solid #01b289;
+                }
+                .header {
+                    background-color: #01b289;
+                    color: #ffffff;
+                    text-align: center;
+                    font-size: 24px;
+                    border-top-left-radius: 4px;
+                    border-top-right-radius: 4px;
+                    padding: 10px;
+                }
+                .title {
+                    text-align: center;
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin: 15px 0;
+                }
+                .sub-header {
+                    padding: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                .info-table {
+                    width: 100%;
+                    font-size: 13px;
+                    margin: 10px 0;
+                }
+                .info-table td {
+                    padding: 5px 15px;
+                }
+                .summary {
+                    background-color: #01b289;
+                    color: #ffffff;
+                    font-size: 20px;
+                    padding: 10px;
+                }
+                .description, .root-cause, .solution {
+                    padding: 10px 15px;
+                    font-size: 13px;
+                }
+                .footer {
+                    font-size: 12px;
+                    text-align: center;
+                    padding: 10px;
+                    color: #555;
+                }
+            </style>
+        </head>
+        <body>
+            <table width="100%" align="center">
+                <tr>
+                    <td align="center">
+                        <div class="container">
+                            <div class="header">Vulnerable OS Factory Patching Script</div>
+                            <div class="title">[DEVOPS][SGABS][OS FACTORY]: Critical Alert: Image Mismatch on ${server_name} (Account: ${account})</div>
+                            <div class="sub-header">DEVOPS Vulnerable Control</div>
+                            <table class="info-table">
+                                <tr>
+                                    <td><strong>Date</strong></td>
+                                    <td>25/02/2025 à 08:00</td>
+                                </tr>
+                            </table>
+                            <table class="info-table">
+                                <tr>
+                                    <td>👤 Account:</td>
+                                    <td>${account}</td>
+                                </tr>
+                                <tr>
+                                    <td>🖥️ Server:</td>
+                                    <td>${server_name}</td>
+                                </tr>
+                            </table>
+                            <div class="summary">⚠️ Mismatch Details:</div>
+                            <div class="description">
+                                <pre>${mismatch_details}</pre>
+                            </div>
+                            <div class="solution">
+                                <strong>Solution:</strong>
+                                <p>🔍 Please review the details and take the necessary actions.</p>
+                            </div>
+                            <div class="footer">© 2025 - Tous droits réservés.</div>
+                        </div>
+                    </td>
                 </tr>
             </table>
-            <h3 style='color:#d9534f; margin-top:20px;'>⚠️ Mismatch Details:</h3>
-            <div style='text-align:center;'>
-                <pre style='background:#f8f9fa; padding:15px; border-left:4px solid #d9534f; font-size:14px; display:inline-block; text-align:left;'>${mismatch_details}</pre>
-            </div>
-            <p style='font-size:14px; color:#333;'>🔍 Please review the details and take the necessary actions.</p>
-            <hr style='border:0; height:1px; background:#ddd;'>
-            <p style='color:#5e5e5e; font-size:12px;'>📧 This is an automated notification from the DevOps monitoring system.</p>
-        </div>
-    </body></html>"
+        </body>
+        </html>"
 
     local temp_file=$(mktemp)
 
