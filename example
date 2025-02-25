@@ -1,8 +1,27 @@
+[Pipeline] End of Pipeline
+Also:   org.jenkinsci.plugins.workflow.actions.ErrorAction$ErrorId: a081ee8c-bb23-4059-8d20-f959c59c87fe
+groovy.json.JsonException: Unable to determine the current character, it is not a string, number, array, or object
+
+The current character read is ''' with an int value of 39
+Unable to determine the current character, it is not a string, number, array, or object
+line number 1
+index number 0
+'["paris","north"]'
+^
+	at groovy.json.internal.JsonParserCharArray.decodeValueInternal(JsonParserCharArray.java:206)
+	at groovy.json.internal.JsonParserCharArray.decodeValue(JsonParserCharArray.java:157)
+	at groovy.json.internal.JsonParserCharArray.decodeFromChars(JsonParserCharArray.java:46)
+	at groovy.json.internal.JsonParserCharArray.parse(JsonParserCharArray.java:384)
+	at groovy.json.internal.BaseJsonParser.parse(BaseJsonParser.java:112)
+	at groovy.json.JsonSlurper.parseText(JsonSlurper.java:205)
+
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def REGIONS = "${params.REGION}" // Example: '["paris"]'
+// Define variable
+def pipelineLibLocation = "pipeline/lib"
+def REGIONS = "${params.REGION}"
 def jsonSlurper = new JsonSlurper()
 def regionList = jsonSlurper.parseText(REGIONS) // Converts to a List
 
-println(regionList) // Output: [paris]
-println(regionList[0]) // Output: paris (first element)
+the REGIONS = '["paris","north"]'
