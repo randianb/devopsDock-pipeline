@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="fr">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,39 +72,32 @@
         <tr>
             <td align="center">
                 <div class="container">
-                    <div class="header">Incident résolu</div>
+                    <div class="header">Vulnerable OS Factory Patching Script</div>
                     <div class="title">[DEVOPS][SGABS][OS FACTORY]: Critical Alert: Image Mismatch on ${server_name} (Account: ${account})</div>
-                    <div class="sub-header">DEVOPS Vul Control</div>
+                    <div class="sub-header">DEVOPS Vulnerable Control</div>
                     <table class="info-table">
                         <tr>
-                            <td><strong>Début d'incident:</strong></td>
+                            <td><strong>Date</strong></td>
                             <td>25/02/2025 à 08:00</td>
                         </tr>
+                    </table>
+                    <table class="info-table">
                         <tr>
-                            <td><strong>Prise en charge:</strong></td>
-                            <td>25/02/2025 à 08:04</td>
+                            <td>👤 Account:</td>
+                            <td>${account}</td>
                         </tr>
                         <tr>
-                            <td><strong>Fin d'impact technique:</strong></td>
-                            <td>25/02/2025 à 13:31</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Durée de l'impact technique:</strong></td>
-                            <td>00j-05h-31m</td>
+                            <td>🖥️ Server:</td>
+                            <td>${server_name}</td>
                         </tr>
                     </table>
-                    <div class="summary">Résumé</div>
+                    <div class="summary">⚠️ Mismatch Details:</div>
                     <div class="description">
-                        <p>La filiale constate une instabilité d'amplitude et les retraits n'impactent pas les comptes.</p>
-                        <p>Certains utilisateurs n'arrivent pas à ouvrir leurs caisses.</p>
-                    </div>
-                    <div class="root-cause">
-                        <strong>Root cause de l'incident:</strong>
-                        <p>Investigation en cours.</p>
+                        <pre>${mismatch_details}</pre>
                     </div>
                     <div class="solution">
                         <strong>Solution:</strong>
-                        <p>Killer les processus. Redémarrer les services concernés.</p>
+                        <p>🔍 Please review the details and take the necessary actions.</p>
                     </div>
                     <div class="footer">© 2025 - Tous droits réservés.</div>
                 </div>
