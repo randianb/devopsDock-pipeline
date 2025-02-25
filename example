@@ -1,5 +1,8 @@
-modify the regionList
-def REGIONS = "${params.REGION}"
-def regionList = REGIONS.split(",")
- the REGION ='["paris"]'
-the regionList must be paris
+import groovy.json.JsonSlurper
+
+def REGIONS = "${params.REGION}" // Example: '["paris"]'
+def jsonSlurper = new JsonSlurper()
+def regionList = jsonSlurper.parseText(REGIONS) // Converts to a List
+
+println(regionList) // Output: [paris]
+println(regionList[0]) // Output: paris (first element)
