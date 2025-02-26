@@ -1,11 +1,11 @@
-this scirpt take too lang to send email : 
+make the HTML more respensive to all device :
 #!/bin/bash
 
 # SMTP Configuration
 SMTP_HOST="smtp-goss.int.world.socgen"
 SMTP_PORT=25
-MAIL_FROM="devops.monitoring@socgen.com"
-MAIL_TO="anouar.harrou@socgen.com"
+MAIL_FROM="no-reply.devops-monitoring@socgen.com"
+MAIL_TO="list.sgabs-df-devops@socgen.com"
 
 # Read server details
 server_name="$1"
@@ -50,8 +50,6 @@ send_email() {
                                 <td><strong>📅 Date</strong></td>
                                 <td>'"${date_now}"' GMT+1</td>
                             </tr>
-                        </table>
-                        <table class="info-table">
                             <tr>
                                 <td>👤 Account:</td>
                                 <td>'"${account}"'</td>
@@ -62,10 +60,11 @@ send_email() {
                             </tr>
                         </table>
                         <div class="summary">⚠️ Mismatch Details:</div>
-                        <pre style="background:#f8f9fa; padding:10px; border-left:2px border-right:2 pxsolid #d9534f; font-size:12px;">'"${mismatch_details}"'</pre>
+                        <pre style="font-family: Calibri, Arial, sans-serif; background:#f8f9fa; padding:10px; border-left:2px border-right:2 pxsolid #d9534f; font-size:10px;">'"${mismatch_details}"'</pre>
                         <div class="solution">
                             <strong>Solution:</strong>
                             <p>🔍 Please review the details and take the necessary actions.</p>
+                            <p>📧 This is an automated notification from the DevOps monitoring system.</p>
                         </div>
                         <div class="footer">Devops Team ~ Anouar Harrou</div>
                         <div class="footer">SG ABS Boulevard Sidi Mohamed Ben Abdellah, Tour Ivoire 2, Marina Casablanca Tél : +212 (0) 5 22 02 57 57 Mail : list.sgabs-df-devops@socgen.com</div>
