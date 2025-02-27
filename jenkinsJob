@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+    stages {
+        stage('Get Last Success Build') {
+            steps {
+                script {
+                    def jenkinsUrl = "http://<JENKINS_URL>"
+                    def jobName = "<JOB_NAME>"
+                    def user = "user"
+                    def token = "token"
+
+                    // Execute curl command
+                    def response = sh(script: """curl -s --user "${user}:${token}" "${jenkinsUrl}/job/${jobName}/lastSuccessfulBuild/api/json" """, returnStdout: true).trim()
+
+                    // Print the response
+                    echo "Latest Successful Build Details: ${response}"
+                }
+            }
+        }
+    }
+}
