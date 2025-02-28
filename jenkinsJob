@@ -1,3 +1,35 @@
+this pipeline 
+
+def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Get Last Success Build') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
+                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
+                ]) {
+                    script {
+                        // Get the last successful build number
+                        def buildNumber = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber" """, returnStdout: true).trim()
+
+                        echo "Latest Successful Build Number: ${buildNumber}"
+
+                        // Replay the last successful build
+                        def replayResponse = sh(script: """curl -s -X POST --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${buildNumber}/replay/run" """, returnStdout: true).trim()
+
+                        echo "Replay Response: ${replayResponse}"
+                    }
+                }
+            }
+        }
+    }
+
+return  this : 
+
 Masking supported pattern matches of $JENKINS_USER or $JENKINS_TOKEN
 [Pipeline] {
 [Pipeline] script
@@ -13,12 +45,32 @@ Latest Successful Build Number: 794
 Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
 		 Affected argument(s) used the following variable(s): [JENKINS_TOKEN, JENKINS_USER]
 		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
-+ curl -s --user '****:****' 'https://cdp-jenkins-paas-xsf.fr.world.socgen/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,:,//crumb)'
-[Pipeline] sh
-Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
-		 Affected argument(s) used the following variable(s): [JENKINS_TOKEN, JENKINS_USER]
-		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
-+ curl -s -X POST --user '****:****'
-curl: no URL specified!
-curl: try 'curl --help' or 'curl --manual' for more information
++ curl -s -X POST --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/794/replay/run
+[Pipeline] echo
+Replay Response: <html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
+<title>Error 400 Nothing is submitted</title>
+</head>
+<body><h2>HTTP ERROR 400 Nothing is submitted</h2>
+<table>
+<tr><th>URI:</th><td>/job/DJD/job/CD-Deploy/job/openr-pipeline-int/794/replay/run</td></tr>
+<tr><th>STATUS:</th><td>400</td></tr>
+<tr><th>MESSAGE:</th><td>Nothing is submitted</td></tr>
+<tr><th>SERVLET:</th><td>Stapler</td></tr>
+</table>
+<hr/><a href="https://eclipse.org/jetty">Powered by Jetty:// 10.0.20</a><hr/>
+
+</body>
+</html>
 [Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+/var/jenkins_home/jobs/DJD/jobs/Build-Archived/workspace/JenkinsCron@tmp/jfrog/9/.jfrog deleted
+Finished: SUCCESS
