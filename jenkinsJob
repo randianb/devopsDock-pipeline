@@ -16,10 +16,16 @@ pipeline {
 
                         echo "Latest Successful Build Number: ${buildNumber}"
 
-                        // Replay the last successful build
-                        def replayResponse = sh(script: """curl -s -X POST --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${buildNumber}/replay" """, returnStdout: true).trim()
+                        // First, get the replay page to extract the necessary form data (CSRF token, etc.)
+                        def crumb = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)" """, returnStdout: true).trim()
 
-                        echo "Replay Response: ${replayResponse}"
+                        def replayResponse = sh(script: """
+                            curl -s -X POST --user "${JENKINS_USER}:${JENKINS_TOKEN}" 
+                            -H "${crumb}" 
+                            "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${buildNumber}/replay/run"
+                        """, returnStdout: true).trim()
+
+                        echo "Replay Trigger Response: ${replayResponse}"
                     }
                 }
             }
