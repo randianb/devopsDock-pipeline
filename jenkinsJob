@@ -7,7 +7,8 @@ pipeline {
         stage('Get Last Success Build') {
             steps {
                 withCredentials([
-                    usernamePassword(credentialsId: 'jenkins-user', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN')
+                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
+                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
                         // Get the last successful build number
