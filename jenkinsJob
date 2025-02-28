@@ -11,18 +11,15 @@ pipeline {
                     string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
-                        // Execute curl command
-                        def response = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber" """, returnStdout: true).trim()
+                        // Get the last successful build number
+                        def buildNumber = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber" """, returnStdout: true).trim()
 
-                        // Print the response
-                        echo "Latest Successful Build Details: ${response}"
+                        echo "Latest Successful Build Number: ${buildNumber}"
 
-                        def reply = sh (script: """curl -s --user  "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${response}/replay" """, returnStdout: true).trim()
+                        // Replay the last successful build
+                        def replayResponse = sh(script: """curl -s -X POST --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${buildNumber}/replay" """, returnStdout: true).trim()
 
-                        // Print the response of the replying job 
-                        echo "Latest Successful Build Details: ${reply}"
-
-
+                        echo "Replay Response: ${replayResponse}"
                     }
                 }
             }
