@@ -1,34 +1,24 @@
-def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
-
-pipeline {
-    agent any
-
-    stages {
-        stage('Get Last Success Build') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
-                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
-                ]) {
-                    script {
-                        // Get the last successful build number
-                        def buildNumber = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber" """, returnStdout: true).trim()
-
-                        echo "Latest Successful Build Number: ${buildNumber}"
-
-                        // First, get the replay page to extract the necessary form data (CSRF token, etc.)
-                        def crumb = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)" """, returnStdout: true).trim()
-
-                        def replayResponse = sh(script: """
-                            curl -s -X POST --user "${JENKINS_USER}:${JENKINS_TOKEN}" 
-                            -H "${crumb}" 
-                            "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${buildNumber}/replay/run"
-                        """, returnStdout: true).trim()
-
-                        echo "Replay Trigger Response: ${replayResponse}"
-                    }
-                }
-            }
-        }
-    }
-}
+Masking supported pattern matches of $JENKINS_USER or $JENKINS_TOKEN
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [JENKINS_TOKEN, JENKINS_USER]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ curl -s --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber
+[Pipeline] echo
+Latest Successful Build Number: 794
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [JENKINS_TOKEN, JENKINS_USER]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ curl -s --user '****:****' 'https://cdp-jenkins-paas-xsf.fr.world.socgen/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,:,//crumb)'
+[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [JENKINS_TOKEN, JENKINS_USER]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ curl -s -X POST --user '****:****'
+curl: no URL specified!
+curl: try 'curl --help' or 'curl --manual' for more information
+[Pipeline] }
