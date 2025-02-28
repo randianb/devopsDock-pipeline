@@ -1,19 +1,29 @@
+def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
+
 pipeline {
     agent any
+
     stages {
         stage('Get Last Success Build') {
             steps {
-                script {
-                    def jenkinsUrl = "http://<JENKINS_URL>"
-                    def jobName = "<JOB_NAME>"
-                    def user = "user"
-                    def token = "token"
+                withCredentials([
+                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
+                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
+                ]) {
+                    script {
+                        // Execute curl command
+                        def response = sh(script: """curl -s --user "${JENKINS_USER}:${JENKINS_TOKEN}" "${jenkinsUrl}/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber" """, returnStdout: true).trim()
 
-                    // Execute curl command
-                    def response = sh(script: """curl -s --user "${user}:${token}" "${jenkinsUrl}/job/${jobName}/lastSuccessfulBuild/api/json" """, returnStdout: true).trim()
+                        // Print the response
+                        echo "Latest Successful Build Details: ${response}"
 
-                    // Print the response
-                    echo "Latest Successful Build Details: ${response}"
+                        def reply = sh (script: """curl -s --user  "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/${response}/replay" """, returnStdout: true).trim()
+
+                        // Print the response of the replying job 
+                        echo "Latest Successful Build Details: ${reply}"
+
+
+                    }
                 }
             }
         }
