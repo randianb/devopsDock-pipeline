@@ -58,7 +58,5 @@ pipeline {
 }
 
 ================================================
-curl -X POST https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/buildWithParameters \
-     --user utilisateur:token_api \
-     --data-urlencode "param1=valeur1" --data-urlencode "param2=valeur2"
+
 
