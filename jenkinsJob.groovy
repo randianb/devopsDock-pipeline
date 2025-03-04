@@ -24,9 +24,10 @@ pipeline {
                         // Fetch build details (parameters and environment variables)
                         def buildInfoJson = sh(
                             script: """curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \\
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'""",
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'""",
                             returnStdout: true
                         ).trim()
+
                         
                         echo "Build Info JSON: ${buildInfoJson}"
 
@@ -55,22 +56,3 @@ pipeline {
         }
     }
 }
-
-
-=================================================
-
-    + curl -s --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber
-[Pipeline] echo
-Latest Successful Build Number: 806
-[Pipeline] sh
-+ curl -s --user '****:****' 'https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/806/api/json?tree=actions[parameters[*]]'
-[Pipeline] }
-[Pipeline] // script
-[Pipeline] }
-[Pipeline] // withCredentials
-[Pipeline] }
-[Pipeline] // stage
-[Pipeline] }
-[Pipeline] // node
-[Pipeline] End of Pipeline
-ERROR: script returned exit code 3
