@@ -58,5 +58,7 @@ pipeline {
 }
 
 ================================================
-Vous devez utiliser la méthode "POST" pour déclencher des builds (depuis des scripts, vous pouvez à la place émettre un token d'authentification, ou vous authentifier avec un jeton d'API) Si vous voyez cette page, la raison est peut-être qu'un plugin expose un lien "GET" ; veuillez reporter un problème pour ce plugin.
+curl -X POST https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/buildWithParameters \
+     --user utilisateur:token_api \
+     --data-urlencode "param1=valeur1" --data-urlencode "param2=valeur2"
 
