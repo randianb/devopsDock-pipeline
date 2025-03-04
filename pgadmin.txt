@@ -1,88 +1,138 @@
-make the HTML more respensive to all device :
-#!/bin/bash
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[DEVOPS] [SGABS] : Mismatch Alerts ** Sous Surveillance **</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #fcfeff;
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 580px;
+            margin: 10px auto;
+            background-color: #ffffff;
+            border-radius: 4px;
+            border: 1px solid #e68e0b;
+            padding: 15px;
+        }
+        .header {
+            background-color: #e68e0b;
+            color: #ffffff;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 4px 4px 0 0;
+        }
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .sub-header {
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .info-table {
+            width: 100%;
+            font-size: 14px;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        .info-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .summary {
+            background-color: #e68e0b;
+            color: #ffffff;
+            font-size: 18px;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .description, .solution {
+            padding: 10px;
+            font-size: 14px;
+        }
+        .footer {
+            font-size: 12px;
+            text-align: center;
+            padding: 10px;
+            color: #555;
+        }
+        pre, p {
+            font-family: Calibri, Arial, sans-serif;
+            background: #f8f9fa;
+            padding: 12px;
+            border-left: 3px solid #e68e0b;
+            border-right: 3px solid #e68e0b;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        a {
+            color: #e68e0b;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
 
-# SMTP Configuration
-SMTP_HOST="smtp-goss.int.world.socgen"
-SMTP_PORT=25
-MAIL_FROM="no-reply.devops-monitoring@socgen.com"
-MAIL_TO="list.sgabs-df-devops@socgen.com"
+        /* Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .container { width: 95%; padding: 10px; }
+            .header { font-size: 20px; padding: 10px; }
+            .title { font-size: 16px; }
+            .info-table td { padding: 6px; font-size: 13px; }
+            .summary { font-size: 16px; padding: 8px; }
+            pre, p { font-size: 12px; padding: 8px; }
+        }
 
-# Read server details
-server_name="$1"
-account="$2"
-mismatch_details="$3"
-
-# Function to send an email notification
-send_email() {
-    local subject="🚨 Critical Alert: Image Mismatch on ${server_name} (Account: ${account})"
-    local date_now=$(date '+%d/%m/%Y à %H:%M')
-
-    local message='<!DOCTYPE html>
-    <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>[DEVOPS] [SGABS] : Mismatch Alerts ** Sous Surveillance **</title>
-        <style>
-            body {background-color: #fcfeff; font-family: Calibri, Arial, sans-serif; font-size: 14px; line-height: 1.2; margin: 0; padding: 0; min-width: 100px;}
-            .container {width: 580px; max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 4px; border: 1px solid #e68e0b;}
-            .header {background-color: #e68e0b; color: #ffffff; text-align: center; font-size: 24px; border-radius: 4px 4px 0 0; padding: 10px;}
-            .title {text-align: center; font-size: 20px; font-weight: bold; margin: 15px 0;}
-            .sub-header {padding: 10px; font-size: 16px; font-weight: bold;}
-            .info-table {width: 100%; font-size: 13px; margin: 10px 0;}
-            .info-table td {padding: 5px 15px;}
-            .summary {background-color: #e68e0b; color: #ffffff; font-size: 20px; padding: 10px;}
-            .description, .solution {padding: 10px 10px; font-size: 12px;}
-            .footer {font-size: 12px; text-align: center; padding: 10px; color: #555;}
-        </style>
-    </head>
-    <body>
-        <table width="50%" align="center">
-            <tr>
-                <td align="center">
-                    <div class="container">
-                        <div class="header">🚨  Vulnerable OS Factory Patching Script</div>
-                        <div class="title">[DEVOPS][SGABS][OS FACTORY]</div>
-                        <div class="title">Critical Alert: Image Mismatch on '"${server_name}"' (Account: '"${account}"')</div>
-                        <div class="sub-header">DEVOPS Vulnerable Control</div>
-                        <table class="info-table">
-                            <tr>
-                                <td><strong>📅 Date</strong></td>
-                                <td>'"${date_now}"' GMT+1</td>
-                            </tr>
-                            <tr>
-                                <td>👤 Account:</td>
-                                <td>'"${account}"'</td>
-                            </tr>
-                            <tr>
-                                <td>🖥️ Server:</td>
-                                <td>'"${server_name}"'</td>
-                            </tr>
-                        </table>
-                        <div class="summary">⚠️ Mismatch Details:</div>
-                        <pre style="font-family: Calibri, Arial, sans-serif; background:#f8f9fa; padding:10px; border-left:2px border-right:2 pxsolid #d9534f; font-size:10px;">'"${mismatch_details}"'</pre>
-                        <div class="solution">
-                            <strong>Solution:</strong>
-                            <p>🔍 Please review the details and take the necessary actions.</p>
-                            <p>📧 This is an automated notification from the DevOps monitoring system.</p>
-                        </div>
-                        <div class="footer">Devops Team ~ Anouar Harrou</div>
-                        <div class="footer">SG ABS Boulevard Sidi Mohamed Ben Abdellah, Tour Ivoire 2, Marina Casablanca Tél : +212 (0) 5 22 02 57 57 Mail : list.sgabs-df-devops@socgen.com</div>
-                        <div class="footer">© 2025 - Tous droits réservés.</div>
-                    </div>
-                </td>
-            </tr>
+        @media screen and (max-width: 480px) {
+            .container { width: 100%; padding: 8px; }
+            .header { font-size: 18px; padding: 8px; }
+            .title { font-size: 14px; }
+            .info-table td { padding: 5px; font-size: 12px; }
+            .summary { font-size: 14px; padding: 6px; }
+            pre, p { font-size: 11px; padding: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">🚨 Vulnerable OS Factory Patching Script 🚨</div>
+        <div class="title">[DEVOPS][SGABS][OS FACTORY]</div>
+        <div class="title">Urgent Alert: Image Discrepancy on '"${server_name}"' (Account: '"${account}"')</div>
+        <div class="sub-header">DEVOPS Vulnerable Control</div>
+        <table class="info-table">
+            <tr><td><strong>📅 Date</strong></td><td>'"${date_now}"' GMT+1</td></tr>
+            <tr><td><strong>👤 Account:</strong></td><td>'"${account}"'</td></tr>
+            <tr><td><strong>🖥️ Server:</strong></td><td>'"${server_name}"'</td></tr>
+            <tr><td><strong>🔗 Build URL:</strong></td><td><a href="'"${build_url}"'">Go to Jenkins</a></td></tr>
+            <tr><td><strong>👤 Triggered By:</strong></td><td>'"${build_user}"'</td></tr>
         </table>
-    </body>
-    </html>'
-
-    local temp_file=$(mktemp)
-    echo -e "Subject: ${subject}\nContent-Type: text/html; charset=UTF-8\n\n${message}" > "${temp_file}"
-
-    curl -s --url "smtp://${SMTP_HOST}:${SMTP_PORT}" --mail-from "${MAIL_FROM}" --mail-rcpt "${MAIL_TO}" --upload-file "${temp_file}"
-
-    rm -f "${temp_file}"
-}
-
-# Execute the email function
-send_email
+        <div class="summary">⚠️ Mismatch Details:</div>
+        <pre>'"${mismatch_details}"'</pre>
+        <div class="solution">
+            <strong>Solution:</strong>
+            <p>🔍 Please review the details and take the necessary actions.</p>
+            <p>📧 This is an automated notification from the DevOps monitoring system.</p>
+        </div>
+        <div class="footer">DevOps Team</div>
+        <div class="footer">SG ABS Boulevard Sidi Mohamed Ben Abdellah, Tour Ivoire 2, Marina Casablanca<br>
+            Tél : +212 (0) 5 22 02 57 57 | Mail : list.sgabs-df-devops@socgen.com</div>
+        <div class="footer">© 2025 - Tous droits réservés.</div>
+    </div>
+</body>
+</html>
