@@ -1,4 +1,4 @@
-def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.com"
+def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
 def jobPath = "job/DJD/job/CD-Deploy/job/openr-pipeline-int"
 
 pipeline {
@@ -8,7 +8,8 @@ pipeline {
         stage('Get Last Success Build') {
             steps {
                 withCredentials([
-                    usernamePassword(credentialsId: 'jenkins-user', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN')
+                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
+                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
                         // Get the last successful build number
@@ -54,3 +55,22 @@ pipeline {
         }
     }
 }
+
+
+=================================================
+
+    + curl -s --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber
+[Pipeline] echo
+Latest Successful Build Number: 806
+[Pipeline] sh
++ curl -s --user '****:****' 'https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/806/api/json?tree=actions[parameters[*]]'
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 3
