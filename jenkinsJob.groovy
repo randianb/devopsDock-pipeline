@@ -79,10 +79,18 @@ pipeline {
 
                         echo "Build Trigger Response: ${triggerResponse}"
 
-                        // Parse the trigger response to get the queueId
-                        def triggerResponseJson = readJSON text: triggerResponse
-                        def queueId = triggerResponseJson.id // assuming the response contains a field 'id' for queueId
+                        // Check if the response contains the expected data
+                        if (!triggerResponse.contains("Queue")) {
+                            error "Failed to trigger build or missing expected response. Response: ${triggerResponse}"
+                        }
 
+                        // Parse the trigger response to get the queueId (Inspecting the response structure)
+                        def triggerResponseJson = readJSON text: triggerResponse
+                        if (!triggerResponseJson.id) {
+                            error "Queue ID not found in the trigger response: ${triggerResponse}"
+                        }
+
+                        def queueId = triggerResponseJson.id
                         echo "Queue ID: ${queueId}"
 
                         // Poll until the build starts
