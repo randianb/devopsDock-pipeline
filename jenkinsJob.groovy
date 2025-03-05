@@ -1,3 +1,5 @@
+this script work now probbaly howver i want to make it more dynamique, the jobPath will be a list of multiple job that the script triggred each of theme and monitor thme one by one and the ned must return a repoort with the detials of each job
+
 import java.net.URLEncoder
 import groovy.json.JsonSlurper
 
@@ -89,7 +91,7 @@ pipeline {
                                 def builds = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds%5Bnumber,status,building%5D'
+                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds%5Bnumber,status,building%5B*%5D%5D'
                                     """,
                                     returnStdout: true
                                 ).trim()
