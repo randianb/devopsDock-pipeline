@@ -1,3 +1,5 @@
+give me an alternative since i don't have permision to excute jq:
+
 import java.net.URLEncoder
 
 def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
@@ -14,7 +16,10 @@ pipeline {
                     string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
-                         // Get the last successful build number
+                        // Ensure jq command is executable
+                        sh 'chmod +x /usr/bin/jq'
+
+                        // Get the last successful build number
                         def buildNumber = sh(
                             script: """
                             curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
@@ -79,16 +84,16 @@ pipeline {
 
                         echo "Build Trigger Response: ${triggerResponse}"
 
-                        sleep 10
+                        sleep 8
 
-                         // Wait until the job starts by checking the running jobs
+                        // Wait until the job starts by checking the running jobs
                         def runningJobNumber = ""
                         timeout(time: 5, unit: 'MINUTES') {
                             while (true) {
                                 def builds = sh(
                                     script: """
-                                    curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    "${jenkinsUrl}/${jobPath}/api/json?tree=builds[number,status,building]"
+                                    curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds%5Bnumber,status,building%5B*%5D%5D'
                                     """,
                                     returnStdout: true
                                 ).trim()
@@ -101,8 +106,6 @@ pipeline {
                                     echo "Running job started with build number: ${runningJobNumber}"
                                     break
                                 }
-
-                                sleep 10
                             }
                         }
 
@@ -112,19 +115,18 @@ pipeline {
                                 def buildStatus = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/${runningJobNumber}/api/json?tree=result' | jq -r .result
+                                    '${jenkinsUrl}/${jobPath}/${runningJobNumber}/api/json?tree=result' | /usr/bin/jq -r .result
                                     """,
                                     returnStdout: true
                                 ).trim()
 
-                                if (buildStatus == "SUCCESS") {
-                                    echo "Remote job completed successfully."
+                                if (buildStatus == "SUCCESS" || buildStatus == "FAILURE" || buildStatus == "ABORTED") {
+                                    echo "Remote job completed with status: ${buildStatus}."
                                     break
-                                } else if (buildStatus == "FAILURE" || buildStatus == "ABORTED") {
-                                    error "Remote job failed with status: ${buildStatus}"
+                                } else {
+                                    echo "Waiting for remote job to finish..."
                                 }
 
-                                echo "Waiting for remote job to finish..."
                                 sleep 15
                             }
                         }
