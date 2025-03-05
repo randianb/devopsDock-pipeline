@@ -1,3 +1,5 @@
+import java.net.URLEncoder
+
 def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
 def jobPath = "job/DJD/job/CD-Deploy/job/Reboot"
 
@@ -15,9 +17,8 @@ pipeline {
                         // Get the last successful build number
                         def buildNumber = sh(
                             script: """
-                            curl -s --user ${JENKINS_USER}:${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'
-                            """,
+                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'""",
                             returnStdout: true
                         ).trim()
 
@@ -26,17 +27,16 @@ pipeline {
                         // Fetch build details (parameters and environment variables)
                         def buildInfoJson = sh(
                             script: """
-                            curl -s --user ${JENKINS_USER}:${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'
-                            """,
+                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'""",
                             returnStdout: true
                         ).trim()
 
                         // Check if curl returned an error code
                         def buildInfoStatus = sh(
                             script: """
-                            curl -s -o /dev/null -w "%{http_code}" --user ${JENKINS_USER}:${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'
+                            curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'
                             """,
                             returnStdout: true
                         ).trim()
@@ -50,14 +50,8 @@ pipeline {
 
                         echo "Build Info JSON: ${buildInfoJson}"
 
-                        // Attempt to parse the JSON and extract parameters
-                        def buildInfo = [:]
-                        try {
-                            buildInfo = readJSON text: buildInfoJson
-                        } catch (Exception e) {
-                            echo "Error parsing JSON: ${e.message}"
-                            error "Failed to parse JSON response"
-                        }
+                        // Parse the JSON response
+                        def buildInfo = readJSON text: buildInfoJson
 
                         def parameters = []
                         buildInfo.actions.each { action ->
@@ -66,14 +60,11 @@ pipeline {
                             }
                         }
 
-                        // Clean REGION value
+                        // Encode parameters safely
                         def paramString = parameters.collect { 
-                            if (it.name == 'REGION') {
-                                // Fix REGION parameter to remove extra quotes
-                                return "${it.name}=${URLEncoder.encode(it.value.replace("'", ""), 'UTF-8')}"
-                            } else {
-                                return "${it.name}=${it.value}"
-                            }
+                            def encodedName = URLEncoder.encode(it.name, "UTF-8")
+                            def encodedValue = URLEncoder.encode(it.value.toString(), "UTF-8")
+                            return "${encodedName}=${encodedValue}"
                         }.join('&')
 
                         echo "Parameters for New Build: ${paramString}"
@@ -81,8 +72,8 @@ pipeline {
                         // Fetch Jenkins crumb for CSRF protection
                         def crumbResponse = sh(
                             script: """
-                            curl -s --user ${JENKINS_USER}:${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
+                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            "\${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,':',//crumb)"
                             """,
                             returnStdout: true
                         ).trim()
@@ -92,11 +83,13 @@ pipeline {
 
                         // Trigger a new build with the same parameters
                         def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
+                        echo "Triggering build with URL: ${triggerUrl}"
+
                         def triggerResponse = sh(
                             script: """
-                            curl -s -X POST --user ${JENKINS_USER}:${JENKINS_TOKEN} \
-                            -H "${crumbHeader}:${crumbValue}" \
-                            '${triggerUrl}'
+                            curl -s -X POST --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            -H "\${crumbHeader}:\${crumbValue}" \
+                            "\${triggerUrl}"
                             """,
                             returnStdout: true
                         ).trim()
