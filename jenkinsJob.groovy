@@ -41,11 +41,16 @@ pipeline {
                         }.join('&')
 
                         echo "Parameters for New Build: ${paramString}"
+                        def CRUMB = sh(
+                            script: """curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} '${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)'""",
+                            returnStdout: true
+                        ).trim()
 
                         // Trigger a new build with the same parameters
                         def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
                         def triggerResponse = sh(
-                            script: """curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} '${triggerUrl}'""",
+                            script: """curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} '${triggerUrl} \
+                             -H "$CRUMB" \'""",
                             returnStdout: true
                         ).trim()
 
@@ -59,16 +64,4 @@ pipeline {
 
 ================================================
 
-CRUMB=$(curl -s -u "your_user:your_api_token" "https://cdp-jenkins-paas-xsf.fr.world.socgen/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
 
-curl -X POST "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/buildWithParameters" \
-     --user "your_user:your_api_token" \
-     -H "$CRUMB" \
-     --data-urlencode "LATEST_IMAGE=false" \
-     --data-urlencode "INFRA=false" \
-     --data-urlencode "DEPLOY_FRONTEND=true" \
-     --data-urlencode "DEPLOY_BACKEND=false" \
-     --data-urlencode "FRONTEND_VERSION=2.1.1-SNAPSHOT" \
-     --data-urlencode "BACKEND_VERSION=0" \
-     --data-urlencode "VERSION_TYPE=snapshots" \
-     --data-urlencode "REGION=paris"
