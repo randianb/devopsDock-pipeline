@@ -1,7 +1,18 @@
-rewrite and customum this bash script that send a summary report for the jenkisn jeob that is been trigred, make tha ccount on upper "
+rewrite and customum this bash script that send a summary report for the jenkisn jeob that is been trigred "
+
+#!/bin/bash
+
+# SMTP Configuration
+SMTP_HOST="smtp.com"
+SMTP_PORT=25
+MAIL_FROM="no-reply.jenkins@com"
+MAIL_TO="anouar@scom"
+
 # Read server details
 jobResults="$1"
 account="$2"
+
+account=$(echo "$account" | tr '[:lower:]' '[:upper:]')
 
 # Function to send an email notifications
 send_email() {
@@ -146,7 +157,7 @@ send_email() {
                             <p>📧 This is an automated notification from the DevOps monitoring system.</p>
                         </div>
                         <div class="footer">Devops Team</div>
-                        <div class="footer">SG ABS Boulevard Sidi Mohamed Ben Abdellah, Tour Ivoire 2, Marina Casablanca Tél : +212 (0) 5 22 02 57 57 Mail : list.sgabs-df-devops@socgen.com</div>
+                        <div class="footer">SG ABS Boulevard Sidi Mohamed Ben Abdellah, Tour Ivoire 2, Marina Casablanca Tél : +212 (0) 5 22 02 57 57 Mail : list.sgabs-df-devops@com</div>
                         <div class="footer">© 2025 - Tous droits réservés.</div>
                     </div>
                 </td>
@@ -165,4 +176,4 @@ send_email() {
 }
 
 # Execute the email function
-send_email"
+send_email
