@@ -1,7 +1,3 @@
-the build function return this "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/Reboot/api/json?tree=builds[number,status,building" instaed of this "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/Reboot/api/json?tree=builds[number,status,building]"
-for exampel this work " def buildInfoStatus = sh( script: """ curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \ '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D' """, returnStdout: true ).trim()" do the same for the " def builds = sh( script: """ curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \ "${jenkinsUrl}/${jobPath}/api/json?tree=builds[number,status,building]" """, returnStdout: true ).trim() "
-
-here's the full groovy : 
 import java.net.URLEncoder
 
 def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
@@ -91,7 +87,7 @@ pipeline {
                             while (true) {
                                 def builds = sh(
                                     script: """
-                                    curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                                    curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
                                     "${jenkinsUrl}/${jobPath}/api/json?tree=builds[number,status,building]"
                                     """,
                                     returnStdout: true
