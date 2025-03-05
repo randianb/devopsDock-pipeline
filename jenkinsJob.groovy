@@ -59,11 +59,6 @@ pipeline {
 
 ================================================
 
-curl -X POST https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/buildWithParameters \
-     --user ********:************ \
-     --data-urlencode "LATEST_IMAGE=false" --data-urlencode "INFRA=false" --data-urlencode "DEPLOY_FRONTEND=true" --data-urlencode "DEPLOY_BACKEND=false" --data-urlencode "FRONTEND_VERSION=2.1.1-SNAPSHOT" --data-urlencode "BACKEND_VERSION=0" --data-urlencode "VERSION_TYPE=snapshots" --data-urlencode "REGION=paris"
-
-
 CRUMB=$(curl -s -u "your_user:your_api_token" "https://cdp-jenkins-paas-xsf.fr.world.socgen/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
 
 curl -X POST "https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/buildWithParameters" \
