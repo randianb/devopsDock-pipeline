@@ -79,37 +79,23 @@ pipeline {
 
                         echo "Build Trigger Response: ${triggerResponse}"
 
-                        // Check if the response contains the expected data
-                        if (!triggerResponse.contains("Queue")) {
-                            error "Failed to trigger build or missing expected response. Response: ${triggerResponse}"
-                        }
-
-                        // Parse the trigger response to get the queueId (Inspecting the response structure)
-                        def triggerResponseJson = readJSON text: triggerResponse
-                        if (!triggerResponseJson.id) {
-                            error "Queue ID not found in the trigger response: ${triggerResponse}"
-                        }
-
-                        def queueId = triggerResponseJson.id
-                        echo "Queue ID: ${queueId}"
-
-                        // Poll until the build starts
+                        // Wait for the job to start
                         def newBuildNumber = ""
                         timeout(time: 5, unit: 'MINUTES') {
                             while (true) {
                                 newBuildNumber = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/queue/item/${queueId}/api/json?tree=executable[number]' | jq -r .executable.number
+                                    '${jenkinsUrl}/${jobPath}/lastBuild/buildNumber'
                                     """,
                                     returnStdout: true
                                 ).trim()
-                                
-                                if (newBuildNumber.isInteger()) {
+
+                                if (newBuildNumber.isInteger() && newBuildNumber != buildNumber) {
                                     echo "Build started with number: ${newBuildNumber}"
                                     break
                                 }
-                                
+
                                 sleep 10
                             }
                         }
