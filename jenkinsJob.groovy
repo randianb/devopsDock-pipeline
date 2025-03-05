@@ -1,6 +1,5 @@
-give me an alternative since i don't have permision to excute jq:
-
 import java.net.URLEncoder
+import groovy.json.JsonSlurper
 
 def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
 def jobPath = "job/DJD/job/CD-Deploy/job/Reboot"
@@ -16,9 +15,6 @@ pipeline {
                     string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
-                        // Ensure jq command is executable
-                        sh 'chmod +x /usr/bin/jq'
-
                         // Get the last successful build number
                         def buildNumber = sh(
                             script: """
@@ -93,7 +89,7 @@ pipeline {
                                 def builds = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds%5Bnumber,status,building%5B*%5D%5D'
+                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds%5Bnumber,status,building%5D'
                                     """,
                                     returnStdout: true
                                 ).trim()
@@ -112,13 +108,16 @@ pipeline {
                         // Monitor build status
                         timeout(time: 15, unit: 'MINUTES') {
                             while (true) {
-                                def buildStatus = sh(
+                                def buildStatusJson = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/${runningJobNumber}/api/json?tree=result' | /usr/bin/jq -r .result
+                                    '${jenkinsUrl}/${jobPath}/${runningJobNumber}/api/json?tree=result'
                                     """,
                                     returnStdout: true
                                 ).trim()
+
+                                def jsonSlurper = new JsonSlurper()
+                                def buildStatus = jsonSlurper.parseText(buildStatusJson).result
 
                                 if (buildStatus == "SUCCESS" || buildStatus == "FAILURE" || buildStatus == "ABORTED") {
                                     echo "Remote job completed with status: ${buildStatus}."
