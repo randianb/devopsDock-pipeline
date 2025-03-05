@@ -13,26 +13,33 @@ account="$2"
 account=$(echo "$account" | tr '[:lower:]' '[:upper:]')
 date_now=$(date '+%d/%m/%Y %H:%M')
 
-# Function to format job details
+# Function to format job details with color-coded status
 format_job_results() {
     local json="$1"
-    local formatted_jobs="<table style='width:100%; border-collapse: collapse;'>
-        <tr style='background:#e68e0b; color:#ffffff; text-align:left;'>
-            <th style='padding:8px;'>Job Path</th>
-            <th style='padding:8px;'>Status</th>
-            <th style='padding:8px;'>Build Number</th>
+    local formatted_jobs="<table style='width:100%; border-collapse: collapse; text-align:center;'>
+        <tr style='background:#1E7D22; color:#ffffff; text-align:center; font-weight:bold;'>
+            <th style='padding:10px;'>Job Path</th>
+            <th style='padding:10px;'>Status</th>
+            <th style='padding:10px;'>Build Number</th>
         </tr>"
     
-    # Extract and format each job result
     while [[ "$json" =~ jobPath:([^,]+),\ status:([^,]+),\ buildNumber:([0-9]+) ]]; do
         job_path="${BASH_REMATCH[1]}"
         job_status="${BASH_REMATCH[2]}"
         build_number="${BASH_REMATCH[3]}"
-        
+
+        # Status-based color
+        case "$job_status" in
+            SUCCESS) status_color="#28a745" ;;  # Green
+            ABORTED) status_color="#ffc107" ;; # Yellow
+            FAILURE) status_color="#dc3545" ;; # Red
+            *) status_color="#6c757d" ;;       # Default Gray
+        esac
+
         formatted_jobs+="<tr>
-            <td style='padding:8px; border-bottom:1px solid #ddd;'>$job_path</td>
-            <td style='padding:8px; border-bottom:1px solid #ddd;'>$job_status</td>
-            <td style='padding:8px; border-bottom:1px solid #ddd;'>$build_number</td>
+            <td style='padding:10px; border-bottom:1px solid #ddd;'>$job_path</td>
+            <td style='padding:10px; border-bottom:1px solid #ddd; font-weight:bold; color:$status_color;'>$job_status</td>
+            <td style='padding:10px; border-bottom:1px solid #ddd;'>$build_number</td>
         </tr>"
         
         json=${json#*]} # Move past the matched job entry
@@ -51,12 +58,20 @@ email_content='<!DOCTYPE html>
     <meta charset="UTF-8">
     <title>Jenkins Job Report</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; background: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px #ccc; }
-        .header { background-color: #e68e0b; color: #fff; padding: 10px; text-align: center; font-size: 18px; font-weight: bold; border-radius: 5px 5px 0 0; }
-        .content { padding: 15px; }
-        .footer { text-align: center; font-size: 12px; color: #555; padding: 10px; }
-        .highlight { font-weight: bold; color: #e68e0b; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
+        .container { max-width: 600px; background: #2ECC71; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin: auto; text-align: center; }
+        .header { background-color: #1E7D22; color: #fff; padding: 12px; font-size: 20px; font-weight: bold; border-radius: 10px 10px 0 0; }
+        .content { padding: 15px; color: #fff; }
+        .footer { text-align: center; font-size: 12px; color: #fff; padding: 10px; }
+        .highlight { font-weight: bold; color: #fff; }
+        table { width: 100%; background: #ffffff; border-radius: 5px; }
+        th, td { padding: 8px; text-align: center; }
+        th { background: #1E7D22; color: #ffffff; }
+        @media (max-width: 600px) {
+            .container { width: 90%; padding: 15px; }
+            .header { font-size: 18px; }
+            .content { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
