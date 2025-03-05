@@ -1,4 +1,3 @@
-modify this script and give me the final version : 
 import java.net.URLEncoder
 
 def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
@@ -8,7 +7,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Get Last Success Build') {
+        stage('Get Last Successful Build') {
             steps {
                 withCredentials([
                     string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
@@ -19,53 +18,50 @@ pipeline {
                         def buildNumber = sh(
                             script: """
                             curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'""",
-                            returnStdout: true
-                        ).trim()
-
-                        echo "Latest Successful Build Number: ${buildNumber}"
-
-                        // Fetch build details (parameters and environment variables)
-                        def buildInfoJson = sh(
-                            script: """
-                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'""",
-                            returnStdout: true
-                        ).trim()
-
-                        // Check if curl returned an error code
-                        def buildInfoStatus = sh(
-                            script: """
-                            curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'
+                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'
                             """,
                             returnStdout: true
                         ).trim()
 
-                        echo "Curl Status: ${buildInfoStatus}"
+                        if (!buildNumber.isInteger()) {
+                            error "Failed to retrieve valid build number. Response: ${buildNumber}"
+                        }
+
+                        echo "Latest Successful Build Number: ${buildNumber}"
+
+                        // Fetch build details (parameters)
+                        def buildInfoJson = sh(
+                            script: """
+                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        def buildInfoStatus = sh(
+                            script: """
+                            curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'
+                            """,
+                            returnStdout: true
+                        ).trim()
 
                         if (buildInfoStatus != "200") {
-                            echo "Error: Received invalid response or error code ${buildInfoStatus}"
-                            error "Failed to fetch valid build info"
+                            error "Failed to fetch build info. HTTP Status: ${buildInfoStatus}"
                         }
 
                         echo "Build Info JSON: ${buildInfoJson}"
 
-                        // Parse the JSON response
                         def buildInfo = readJSON text: buildInfoJson
+                        def parameters = buildInfo.actions.findAll { it.parameters }.collectMany { it.parameters }
 
-                        def parameters = []
-                        buildInfo.actions.each { action ->
-                            if (action.parameters) {
-                                parameters.addAll(action.parameters)
-                            }
+                        if (parameters.isEmpty()) {
+                            error "No parameters found in the last successful build."
                         }
 
                         // Encode parameters safely
                         def paramString = parameters.collect { 
-                            def encodedName = URLEncoder.encode(it.name, "UTF-8")
-                            def encodedValue = URLEncoder.encode(it.value.toString(), "UTF-8")
-                            return "${encodedName}=${encodedValue}"
+                            "${URLEncoder.encode(it.name, 'UTF-8')}=${URLEncoder.encode(it.value.toString(), 'UTF-8')}"
                         }.join('&')
 
                         echo "Parameters for New Build: ${paramString}"
@@ -78,22 +74,21 @@ pipeline {
                             """,
                             returnStdout: true
                         ).trim()
-                        
+
                         if (!crumbResponse.contains(":")) {
                             error "Failed to retrieve Jenkins crumb. Response: ${crumbResponse}"
                         }
-                        
-                        def crumbHeader = crumbResponse.split(":")[0]
-                        def crumbValue = crumbResponse.split(":")[1]
 
-                        // Trigger a new build with the same parameters
+                        def (crumbHeader, crumbValue) = crumbResponse.tokenize(':')
+
+                        // Trigger a new build with parameters
                         def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
                         echo "Triggering build with URL: ${triggerUrl}"
 
                         def triggerResponse = sh(
                             script: """
                             curl -s -X POST --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            -H "\${crumbHeader}:\${crumbValue}" \
+                            -H "\${crumbHeader}: \${crumbValue}" \
                             "\${triggerUrl}"
                             """,
                             returnStdout: true
