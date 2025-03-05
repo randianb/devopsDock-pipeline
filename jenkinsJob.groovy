@@ -14,61 +14,9 @@ pipeline {
                     string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
                 ]) {
                     script {
-                         // Get the last successful build number
-                        def buildNumber = sh(
-                            script: """
-                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        if (!buildNumber.isInteger()) {
-                            error "Failed to retrieve valid build number. Response: ${buildNumber}"
-                        }
-
-                        echo "Latest Successful Build Number: ${buildNumber}"
-
-                        // Fetch build details (parameters)
-                        def buildInfoJson = sh(
-                            script: """
-                            curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        def buildInfoStatus = sh(
-                            script: """
-                            curl -s -o /dev/null -w "%{http_code}" --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        if (buildInfoStatus != "200") {
-                            error "Failed to fetch build info. HTTP Status: ${buildInfoStatus}"
-                        }
-
-                        echo "Build Info JSON: ${buildInfoJson}"
-
-                        def buildInfo = readJSON text: buildInfoJson
-                        def parameters = buildInfo.actions.findAll { it.parameters }.collectMany { it.parameters }
-
-                        if (parameters.isEmpty()) {
-                            error "No parameters found in the last successful build."
-                        }
-
-                        // Encode parameters safely
-                        def paramString = parameters.collect { 
-                            "${URLEncoder.encode(it.name, 'UTF-8')}=${URLEncoder.encode(it.value.toString(), 'UTF-8')}"
-                        }.join('&')
-
-                        echo "Parameters for New Build: ${paramString}"
-
-                        // Trigger a new build with parameters
-                        def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
-                        echo "Triggering build with URL: ${triggerUrl}"
+                        // Trigger the job
+                        def triggerUrl = "${jenkinsUrl}/${jobPath}/build"
+                        echo "Triggering job with URL: ${triggerUrl}"
 
                         def triggerResponse = sh(
                             script: """
@@ -79,20 +27,24 @@ pipeline {
 
                         echo "Build Trigger Response: ${triggerResponse}"
 
-                        // Wait for the job to start
-                        def newBuildNumber = ""
+                        // Wait until the job starts by checking the running jobs
+                        def runningJobNumber = ""
                         timeout(time: 5, unit: 'MINUTES') {
                             while (true) {
-                                newBuildNumber = sh(
+                                def builds = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/lastBuild/buildNumber'
+                                    '${jenkinsUrl}/${jobPath}/api/json?tree=builds[number,status,building]'
                                     """,
                                     returnStdout: true
                                 ).trim()
 
-                                if (newBuildNumber.isInteger() && newBuildNumber != buildNumber) {
-                                    echo "Build started with number: ${newBuildNumber}"
+                                def buildsJson = readJSON text: builds
+                                def runningBuild = buildsJson.builds.find { it.building == true }
+
+                                if (runningBuild) {
+                                    runningJobNumber = runningBuild.number.toString()
+                                    echo "Running job started with build number: ${runningJobNumber}"
                                     break
                                 }
 
@@ -106,7 +58,7 @@ pipeline {
                                 def buildStatus = sh(
                                     script: """
                                     curl -s --user "\$JENKINS_USER:\$JENKINS_TOKEN" \
-                                    '${jenkinsUrl}/${jobPath}/${newBuildNumber}/api/json?tree=result' | jq -r .result
+                                    '${jenkinsUrl}/${jobPath}/${runningJobNumber}/api/json?tree=result' | jq -r .result
                                     """,
                                     returnStdout: true
                                 ).trim()
@@ -117,7 +69,7 @@ pipeline {
                                 } else if (buildStatus == "FAILURE" || buildStatus == "ABORTED") {
                                     error "Remote job failed with status: ${buildStatus}"
                                 }
-                                
+
                                 echo "Waiting for remote job to finish..."
                                 sleep 15
                             }
