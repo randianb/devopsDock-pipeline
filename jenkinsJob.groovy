@@ -14,7 +14,8 @@ pipeline {
                     script {
                         // Get the last successful build number
                         def buildNumber = sh(
-                            script: """curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \\
+                            script: """
+                            curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
                             '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'""",
                             returnStdout: true
                         ).trim()
@@ -23,11 +24,11 @@ pipeline {
 
                         // Fetch build details (parameters and environment variables)
                         def buildInfoJson = sh(
-                            script: """curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \\
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions%5Bparameters%5B*%5D%5D'""",
+                            script: """
+                            curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
+                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'""",
                             returnStdout: true
                         ).trim()
-
                         
                         echo "Build Info JSON: ${buildInfoJson}"
 
@@ -41,16 +42,25 @@ pipeline {
                         }.join('&')
 
                         echo "Parameters for New Build: ${paramString}"
-                        def CRUMB = sh(
-                            script: """curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} '${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)'""",
+
+                        // Fetch Jenkins crumb for CSRF protection
+                        def crumbResponse = sh(
+                            script: """
+                        curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
+                        '${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'""",
                             returnStdout: true
                         ).trim()
+
+                        def crumbHeader = crumbResponse.split(":")[0]
+                        def crumbValue = crumbResponse.split(":")[1]
 
                         // Trigger a new build with the same parameters
                         def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
                         def triggerResponse = sh(
-                            script: """curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} '${triggerUrl} \
-                             -H "$CRUMB" \'""",
+                            script: """
+                        curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
+                        -H "${crumbHeader}: ${crumbValue}" \
+                        '${triggerUrl}'""",
                             returnStdout: true
                         ).trim()
 
@@ -62,6 +72,5 @@ pipeline {
     }
 }
 
-================================================
 
 
