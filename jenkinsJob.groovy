@@ -1,76 +1,19 @@
-def jenkinsUrl = "https://cdp-jenkins-paas-xsf.fr.world.socgen"
-def jobPath = "job/DJD/job/CD-Deploy/job/openr-pipeline-int"
-
-pipeline {
-    agent any
-
-    stages {
-        stage('Get Last Success Build') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'jenkins-user', variable: 'JENKINS_USER'),
-                    string(credentialsId: 'jenkins-token', variable: 'JENKINS_TOKEN')
-                ]) {
-                    script {
-                        // Get the last successful build number
-                        def buildNumber = sh(
-                            script: """
-                            curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/${jobPath}/lastSuccessfulBuild/buildNumber'""",
-                            returnStdout: true
-                        ).trim()
-                        
-                        echo "Latest Successful Build Number: ${buildNumber}"
-
-                        // Fetch build details (parameters and environment variables)
-                        def buildInfoJson = sh(
-                            script: """
-                            curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
-                            '${jenkinsUrl}/${jobPath}/${buildNumber}/api/json?tree=actions[parameters[*]]'""",
-                            returnStdout: true
-                        ).trim()
-                        
-                        echo "Build Info JSON: ${buildInfoJson}"
-
-                        // Extract parameters (convert JSON response into a map)
-                        def buildInfo = readJSON text: buildInfoJson
-                        def parameters = buildInfo.actions.find { it.parameters }?.parameters ?: []
-
-                        // Construct parameters string for the new build
-                        def paramString = parameters.collect { 
-                            "${it.name}=${it.value}"
-                        }.join('&')
-
-                        echo "Parameters for New Build: ${paramString}"
-
-                        // Fetch Jenkins crumb for CSRF protection
-                        def crumbResponse = sh(
-                            script: """
-                        curl -s --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
-                        '${jenkinsUrl}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'""",
-                            returnStdout: true
-                        ).trim()
-
-                        def crumbHeader = crumbResponse.split(":")[0]
-                        def crumbValue = crumbResponse.split(":")[1]
-
-                        // Trigger a new build with the same parameters
-                        def triggerUrl = "${jenkinsUrl}/${jobPath}/buildWithParameters?${paramString}"
-                        def triggerResponse = sh(
-                            script: """
-                        curl -s -X POST --user \${JENKINS_USER}:\${JENKINS_TOKEN} \
-                        -H "${crumbHeader}: ${crumbValue}" \
-                        '${triggerUrl}'""",
-                            returnStdout: true
-                        ).trim()
-
-                        echo "Build Trigger Response: ${triggerResponse}"
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ curl -s --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber
+[Pipeline] echo
+Latest Successful Build Number: 810
+[Pipeline] sh
++ curl -s --user '****:****' 'https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/810/api/json?tree=actions[parameters[*]]'
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 3
