@@ -1,5 +1,4 @@
-rewrite and customum this bash script that send a summary report for the jenkisn jeob that is been trigred "
-
+rewrite and customum this bash script that send a summary report for the jenkisn jeob that is been trigred, note that the details messgae is something like this "./jenkins_report.sh '[[jobPath:job/DJD/job/CD-Deploy/job/Reboot, status:ABORTED, buildNumber:62], [jobPath:job/DJD/job/CD-Deploy/job/openr-pipeline-int, status:ABORTED, buildNumber:819]]' djd_af107_int" som make the necessary adujstment to make look pretty and professional
 #!/bin/bash
 
 # SMTP Configuration
