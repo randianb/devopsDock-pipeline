@@ -203,7 +203,7 @@ def call(Map config) {
 ========================================================
                     new version 
 ========================================================
-    import java.net.URLEncoder
+import java.net.URLEncoder
 import groovy.json.JsonSlurper
 
 def call(Map config) {
@@ -390,7 +390,9 @@ def call(Map config) {
                                     error("No job results found. Skipping report generation.")
                                 }
                                 
-                                def account = "${env.TRIGRAM}_${env.IRT}_${env.ENV}"
+                                def account = "${TRIGRAM}_${IRT}_${ENV}"
+                                // def account = "${env.get('TRIGRAM', '')}_${env.get('IRT', '')}_${env.get('ENV', '')}"
+
                                 echo "Sending summary report email.."
 
                                 sh(
@@ -425,4 +427,3 @@ def call(Map config) {
         }
     }
 }
-
