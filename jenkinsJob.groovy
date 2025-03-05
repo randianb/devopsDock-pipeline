@@ -1,3 +1,8 @@
+
+
+for info thsi url work : https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/810/api/json?tree=actions[parameters[*]]
+
+  but with the pipeline it return this error : 
 + curl -s --user '****:****' https://cdp-jenkins-paas-xsf.fr.world.socgen/job/DJD/job/CD-Deploy/job/openr-pipeline-int/lastSuccessfulBuild/buildNumber
 [Pipeline] echo
 Latest Successful Build Number: 810
