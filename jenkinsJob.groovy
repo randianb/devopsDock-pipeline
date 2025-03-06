@@ -1,4 +1,4 @@
-import java.net.URLEncoder
+on the funtion buildstatus add the following if buildstatus equal to  "FAILURE" on the first attmept retry againt if it failure agan then just continue "import java.net.URLEncoder
 import groovy.json.JsonSlurper
 
 def call(Map config) {
@@ -206,4 +206,4 @@ def call(Map config) {
             }
         }
     }
-}
+}"
