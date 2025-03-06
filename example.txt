@@ -1,103 +1,98 @@
-<style>
-    body {
-        background-color: #fcfeff;
-        font-family: Calibri, Arial, sans-serif;
-        font-size: 14px;
-        line-height: 1.4;
-        margin: 0;
-        padding: 0;
-    }
-    .container {
-        width: 90%;
-        max-width: 580px;
-        margin: 10px auto;
-        background-color: #ffffff;
-        border-radius: 8px;
-        border: 1px solid #e68e0b;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 10px;
-    }
-    .header {
-        background-color: #e68e0b;
-        color: #ffffff;
-        text-align: center;
-        font-size: 20px;
-        font-weight: bold;
-        border-radius: 8px 8px 0 0;
-        padding: 12px;
-    }
-    .title {
-        text-align: center;
-        font-size: 18px;
-        font-weight: bold;
-        margin: 15px 0;
-    }
-    .sub-header {
-        font-size: 16px;
-        font-weight: bold;
-        padding: 10px;
-    }
-    .info-table {
-        width: 100%;
-        font-size: 14px;
-        margin: 10px 0;
-        border-collapse: collapse;
-    }
-    .info-table td {
-        padding: 8px 12px;
-        border-bottom: 1px solid #ddd;
-    }
-    .summary {
-        background-color: #e68e0b;
-        color: #ffffff;
-        font-size: 18px;
-        font-weight: bold;
-        text-align: center;
-        padding: 10px;
-        margin-top: 15px;
-        border-radius: 4px;
-    }
-    .description, .solution {
-        padding: 10px;
-        font-size: 14px;
-    }
-    .footer {
-        font-size: 12px;
-        text-align: center;
-        padding: 10px;
-        color: #555;
-    }
-    pre {
-        font-family: Consolas, Monaco, monospace;
-        background: #f8f9fa;
-        padding: 12px;
-        border-left: 4px solid #d9534f;
-        font-size: 13px;
-        overflow-x: auto;
-    }
-    /* Responsive Design */
-    @media screen and (max-width: 600px) {
-        .container {
-            width: 95%;
-            padding: 8px;
+#!/bin/bash
+
+# SMTP Configuration
+SMTP_HOST="smtp-goss.int.world.socgen"
+SMTP_PORT=25
+MAIL_FROM="no-reply.devops-monitoring@socgen.com"
+MAIL_TO="anouar.harrou@socgen.com"
+
+
+# Read inputs
+jobResults="$1"
+account="$2"
+
+account=$(echo "$account" | tr '[:lower:]' '[:upper:]')
+date_now=$(date '+%d/%m/%Y %H:%M')
+
+# Function to format job details with color-coded status
+format_job_results() {
+    local json="$1"
+    local formatted_jobs="<table style='width:100%; border-collapse: collapse; text-align:center;'>
+        <tr style='background:#1E7D22; color:#ffffff; text-align:center; font-weight:bold;'>
+            <th style='padding:10px;'>Job Path</th>
+            <th style='padding:10px;'>Status</th>
+            <th style='padding:10px;'>Build Number</th>
+        </tr>"
+    
+    while [[ "$json" =~ jobPath:([^,]+),\ status:([^,]+),\ buildNumber:([0-9]+) ]]; do
+        job_path="${BASH_REMATCH[1]}"
+        job_status="${BASH_REMATCH[2]}"
+        build_number="${BASH_REMATCH[3]}"
+
+        # Status-based color
+        case "$job_status" in
+            SUCCESS) status_color="#28a745" ;;  # Green
+            ABORTED) status_color="#ffc107" ;; # Yellow
+            FAILURE) status_color="#dc3545" ;; # Red
+            *) status_color="#6c757d" ;;       # Default Gray
+        esac
+
+        formatted_jobs+="<tr>
+            <td style='padding:10px; border-bottom:1px solid #ddd;'>$job_path</td>
+            <td style='padding:10px; border-bottom:1px solid #ddd; font-weight:bold; color:$status_color;'>$job_status</td>
+            <td style='padding:10px; border-bottom:1px solid #ddd;'>$build_number</td>
+        </tr>"
+        
+        json=${json#*]} # Move past the matched job entry
+    done
+
+    formatted_jobs+="</table>"
+    echo "$formatted_jobs"
+}
+
+# Generate HTML email
+job_details=$(format_job_results "$jobResults")
+
+email_content='<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jenkins Job Summary Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
+        .container { max-width: 600px; background: #2ECC71; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin: auto; text-align: center; }
+        .header { background-color: #1E7D22; color: #fff; padding: 12px; font-size: 20px; font-weight: bold; border-radius: 10px 10px 0 0; }
+        .content { padding: 15px; color: #fff; }
+        .footer { text-align: center; font-size: 12px; color: #fff; padding: 10px; }
+        .highlight { font-weight: bold; color: #fff; }
+        table { width: 100%; background: #ffffff; border-radius: 5px; }
+        th, td { padding: 8px; text-align: center; }
+        th { background: #1E7D22; color: #ffffff; }
+        @media (max-width: 600px) {
+            .container { width: 90%; padding: 15px; }
+            .header { font-size: 18px; }
+            .content { font-size: 14px; }
         }
-        .header {
-            font-size: 18px;
-            padding: 10px;
-        }
-        .title {
-            font-size: 16px;
-        }
-        .info-table td {
-            padding: 6px;
-        }
-        .summary {
-            font-size: 16px;
-            padding: 8px;
-        }
-        pre {
-            font-size: 12px;
-            padding: 8px;
-        }
-    }
-</style>
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Jenkins Job Summary Report</div>
+        <div class="content">
+            <p><strong>📅 Date:</strong> '"${date_now}"' GMT+1</p>
+            <p><strong>👤 Account:</strong> '"${account}"'</p>
+            <h3>Job Scheduling Summary Report:</h3>
+            '"${job_details}"'
+        </div>
+        <div class="footer">This is an automated email from Jenkins Server. Do not reply.</div>
+    </div>
+</body>
+</html>'
+
+# Send email
+temp_file=$(mktemp)
+echo -e "From: Jenkins Automation Bot <${MAIL_FROM}>\nSubject: Jenkins Job Summary Report - ${account}\nContent-Type: text/html; charset=UTF-8\n\n${email_content}" > "$temp_file"
+
+curl -s --url "smtp://${SMTP_HOST}:${SMTP_PORT}" --mail-from "${MAIL_FROM}" --mail-rcpt "${MAIL_TO}" --upload-file "$temp_file"
+
+rm -f "$temp_file"
