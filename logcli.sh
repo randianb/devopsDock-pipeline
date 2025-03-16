@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Usage: ./logcli.sh <START_DATE> <END_DATE>  <TYPE>  <JOB_NAME>
-if [[ $# -ne 3 ]]; then
+# Usage: ./logcli.sh <START_DATE> <END_DATE> <TYPE> <JOB_NAME>
+if [[ $# -ne 4 ]]; then
     echo "Usage: $0 <START_DATE> <END_DATE> <TYPE> <JOB_NAME>"
     echo "Example: $0 2025-03-04 2025-03-06 service service_name"
     exit 1
@@ -31,8 +31,8 @@ for (( DAY_EPOCH=START_EPOCH; DAY_EPOCH<=END_EPOCH; DAY_EPOCH+=86400 )); do
     DATE=$(date -d "@$DAY_EPOCH" +%Y-%m-%d)
     echo "Processing logs for date: $DATE"
 
-    for HOUR in {13..18}; do
-        for MINUTE in {0..59}; do
+    for HOUR in {00..23}; do
+        for MINUTE in {00..59}; do
             for (( S_IDX=0; S_IDX<${#SECONDS[@]}-1; S_IDX++ )); do
                 FROM="${DATE}T$(printf "%02d:%02d:%02d" "$HOUR" "$MINUTE" "${SECONDS[$S_IDX]}")Z"
                 TO="${DATE}T$(printf "%02d:%02d:%02d" "$HOUR" "$MINUTE" "${SECONDS[$S_IDX + 1]}")Z"
@@ -40,7 +40,7 @@ for (( DAY_EPOCH=START_EPOCH; DAY_EPOCH<=END_EPOCH; DAY_EPOCH+=86400 )); do
                 ./logcli --addr="$LOKI_URL" query --from="$FROM" --to="$TO" "{$TYPE=\"$JOB_NAME\"}" \
                     --forward --part-path-prefix . --parallel-duration=30s --parallel-max-workers=3 --merge-parts >> complete.log
 
-                sleep 5s
+                sleep 1s  # Reduced sleep time to optimize execution
             done
         done
     done
