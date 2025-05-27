@@ -1,0 +1,14 @@
+tls:
+  certificates:
+    - certFile: /etc/certs/traefik-devops.com.pem
+      keyFile: /etc/certs/traefik-devops.com-key.pem
+    - certFile: /etc/certs/nexus-devops.com.pem
+      keyFile: /etc/certs/nexus-devops.com-key.pem
+    - certFile: /etc/certs/jenkins-devops.com.pem
+      keyFile: /etc/certs/jenkins-devops.com-key.pem
+    - certFile: /etc/certs/sonarqube-devops.com.pem
+      keyFile: /etc/certs/sonarqube-devops.com-key.pem
+    - certFile: /etc/certs/pgadmin-devops.com.pem
+      keyFile: /etc/certs/pgadmin-devops.com-key.pem
+    - certFile: /etc/certs/gitlab-devops.com.pem
+      keyFile: /etc/certs/gitlab-devops.com-key.pem
